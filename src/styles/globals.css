@@ -1,0 +1,248 @@
+@custom-variant dark (&:is(.dark *));
+
+:root {
+  /* Zimbabwe Agricultural Marketplace Design System */
+  
+  /* Primary Colors */
+  --agricultural-green: #2D5016;
+  --harvest-gold: #F5A623;
+  --sky-blue: #4A90E2;
+  
+  /* Secondary Colors */
+  --rich-soil-brown: #6B4423;
+  --fresh-leaf-green: #7CB342;
+  --sunset-orange: #FF6B35;
+  
+  /* Neutral Colors */
+  --dark-charcoal: #2C2C2C;
+  --medium-gray: #757575;
+  --light-gray: #F5F5F5;
+  --white: #FFFFFF;
+  
+  /* Status Colors */
+  --success-green: #4CAF50;
+  --warning-amber: #FFA726;
+  --error-red: #EF5350;
+  --info-blue: #42A5F5;
+  
+  /* Theme Tokens */
+  --font-size: 16px;
+  --background: #FFFFFF;
+  --foreground: #2C2C2C;
+  --card: #FFFFFF;
+  --card-foreground: #2C2C2C;
+  --popover: #FFFFFF;
+  --popover-foreground: #2C2C2C;
+  --primary: #2D5016;
+  --primary-foreground: #FFFFFF;
+  --secondary: #F5A623;
+  --secondary-foreground: #2C2C2C;
+  --muted: #F5F5F5;
+  --muted-foreground: #757575;
+  --accent: #4A90E2;
+  --accent-foreground: #FFFFFF;
+  --destructive: #EF5350;
+  --destructive-foreground: #FFFFFF;
+  --border: rgba(0, 0, 0, 0.1);
+  --input: transparent;
+  --input-background: #F5F5F5;
+  --switch-background: #cbced4;
+  --font-weight-medium: 500;
+  --font-weight-semibold: 600;
+  --font-weight-bold: 700;
+  --font-weight-normal: 400;
+  --ring: #2D5016;
+  --chart-1: #2D5016;
+  --chart-2: #F5A623;
+  --chart-3: #4A90E2;
+  --chart-4: #7CB342;
+  --chart-5: #FF6B35;
+  --radius: 0.5rem;
+  
+  /* Spacing System (8px base grid) */
+  --spacing-xs: 4px;
+  --spacing-s: 8px;
+  --spacing-m: 16px;
+  --spacing-l: 24px;
+  --spacing-xl: 32px;
+  --spacing-xxl: 48px;
+  --spacing-xxxl: 64px;
+  
+  /* Border Radius */
+  --radius-small: 4px;
+  --radius-medium: 8px;
+  --radius-large: 12px;
+  --radius-xlarge: 16px;
+  --radius-round: 50%;
+  
+  /* Shadows */
+  --shadow-card: 0 2px 8px rgba(0,0,0,0.08);
+  --shadow-hover: 0 4px 16px rgba(0,0,0,0.12);
+  --shadow-modal: 0 8px 32px rgba(0,0,0,0.16);
+}
+
+.dark {
+  --background: #1a1a1a;
+  --foreground: #F5F5F5;
+  --card: #2C2C2C;
+  --card-foreground: #F5F5F5;
+  --popover: #2C2C2C;
+  --popover-foreground: #F5F5F5;
+  --primary: #7CB342;
+  --primary-foreground: #FFFFFF;
+  --secondary: #F5A623;
+  --secondary-foreground: #2C2C2C;
+  --muted: #2C2C2C;
+  --muted-foreground: #9E9E9E;
+  --accent: #4A90E2;
+  --accent-foreground: #FFFFFF;
+  --destructive: #EF5350;
+  --destructive-foreground: #FFFFFF;
+  --border: rgba(255, 255, 255, 0.1);
+  --input: rgba(255, 255, 255, 0.1);
+  --ring: #7CB342;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-input-background: var(--input-background);
+  --color-switch-background: var(--switch-background);
+  --color-ring: var(--ring);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
+  }
+}
+
+/**
+ * Base typography for Zimbabwe Agricultural Marketplace
+ */
+@layer base {
+  :where(:not(:has([class*=' text-']), :not(:has([class^='text-'])))) {
+    h1 {
+      font-size: 32px;
+      font-weight: var(--font-weight-bold);
+      line-height: 40px;
+    }
+
+    h2 {
+      font-size: 24px;
+      font-weight: var(--font-weight-semibold);
+      line-height: 32px;
+    }
+
+    h3 {
+      font-size: 20px;
+      font-weight: var(--font-weight-semibold);
+      line-height: 28px;
+    }
+
+    h4 {
+      font-size: 18px;
+      font-weight: var(--font-weight-medium);
+      line-height: 24px;
+    }
+
+    label {
+      font-size: 14px;
+      font-weight: var(--font-weight-medium);
+      line-height: 20px;
+    }
+
+    button {
+      font-size: 14px;
+      font-weight: var(--font-weight-medium);
+      line-height: 20px;
+    }
+
+    input, textarea, select {
+      font-size: 16px;
+      font-weight: var(--font-weight-normal);
+      line-height: 24px;
+    }
+  }
+}
+
+html {
+  font-size: var(--font-size);
+}
+
+/* PWA Offline Indicator */
+.offline-banner {
+  background-color: var(--warning-amber);
+  color: var(--dark-charcoal);
+  padding: 8px 16px;
+  text-align: center;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--light-gray);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--medium-gray);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--dark-charcoal);
+}
+
+/* Animation Classes */
+@keyframes shimmer {
+  0% {
+    background-position: -1000px 0;
+  }
+  100% {
+    background-position: 1000px 0;
+  }
+}
+
+.shimmer {
+  animation: shimmer 1.5s infinite linear;
+  background: linear-gradient(to right, #f0f0f0 0%, #e0e0e0 50%, #f0f0f0 100%);
+  background-size: 2000px 100%;
+}

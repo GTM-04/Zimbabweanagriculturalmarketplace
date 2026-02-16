@@ -1,32 +1,52 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router";
-import { ArrowLeft, Search, TrendingUp, TrendingDown, Minus, RefreshCw } from "lucide-react";
+import { ArrowLeft, Search, TrendingUp, TrendingDown, Minus, RefreshCw, Loader2 } from "lucide-react";
 import { BottomNav } from "../BottomNav";
-import { marketPrices } from "../../lib/data";
+import { pricingApi } from "../../lib/api";
+import type { MarketPrice } from "../../lib/types";
 
 export function MarketPrices() {
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState("");
+  const [prices, setPrices] = useState<MarketPrice[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+  const [error, setError] = useState("");
+  const [lastUpdated, setLastUpdated] = useState<Date>(new Date());
 
-  const filteredPrices = marketPrices.filter(item =>
-    item.produce.toLowerCase().includes(searchQuery.toLowerCase())
-  );
-
-  const getTrendIcon = (trend: string) => {
-    switch (trend) {
-      case "up":
-        return <TrendingUp className="w-5 h-5 text-[#4CAF50]" />;
-      case "down":
-        return <TrendingDown className="w-5 h-5 text-[#EF5350]" />;
-      default:
-        return <Minus className="w-5 h-5 text-[#757575]" />;
+  const fetchPrices = async (isRefresh = false) => {
+    try {
+      if (isRefresh) {
+        setRefreshing(true);
+      } else {
+        setLoading(true);
+      }
+      const data = await pricingApi.getMarketPrices();
+      setPrices(data);
+      setLastUpdated(new Date());
+      setError("");
+    } catch (err: any) {
+      setError(err.message || "Failed to load market prices");
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
     }
   };
 
-  const getTrendColor = (change: number) => {
-    if (change > 0) return "text-[#4CAF50]";
-    if (change < 0) return "text-[#EF5350]";
-    return "text-[#757575]";
+  useEffect(() => {
+    fetchPrices();
+  }, []);
+
+  const filteredPrices = prices.filter(item =>
+    item.produce_type.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
+  const getTimeSinceUpdate = () => {
+    const minutes = Math.floor((Date.now() - lastUpdated.getTime()) / 60000);
+    if (minutes < 1) return "Just now";
+    if (minutes < 60) return `${minutes} min ago`;
+    const hours = Math.floor(minutes / 60);
+    return `${hours} hour${hours > 1 ? 's' : ''} ago`;
   };
 
   return (
@@ -42,10 +62,14 @@ export function MarketPrices() {
           </button>
           <div className="flex-1">
             <h1 className="text-xl font-semibold text-[#2C2C2C]">Market Prices</h1>
-            <p className="text-xs text-[#757575]">Last updated: 2 hours ago</p>
+            <p className="text-xs text-[#757575]">Last updated: {getTimeSinceUpdate()}</p>
           </div>
-          <button className="p-2 hover:bg-[#F5F5F5] rounded-full transition-colors">
-            <RefreshCw className="w-5 h-5 text-[#2C2C2C]" />
+          <button 
+            onClick={() => fetchPrices(true)}
+            disabled={refreshing}
+            className="p-2 hover:bg-[#F5F5F5] rounded-full transition-colors disabled:opacity-50"
+          >
+            <RefreshCw className={`w-5 h-5 text-[#2C2C2C] ${refreshing ? 'animate-spin' : ''}`} />
           </button>
         </div>
 
@@ -66,38 +90,65 @@ export function MarketPrices() {
 
       {/* Price Cards */}
       <div className="p-4 space-y-3">
-        {filteredPrices.map((item) => (
-          <div
-            key={item.produce}
-            className="bg-white rounded-xl shadow-sm overflow-hidden hover:shadow-md transition-shadow"
-          >
-            <div className="p-4">
-              <div className="flex items-start justify-between mb-3">
-                <div className="flex-1">
-                  <h3 className="font-semibold text-[#2C2C2C] mb-1">{item.produce}</h3>
-                  <p className="text-xs text-[#757575]">per {item.unit}</p>
+        {loading ? (
+          <div className="flex flex-col items-center justify-center py-12">
+            <Loader2 className="w-10 h-10 text-[#2D5016] animate-spin mb-3" />
+            <p className="text-[#757575]">Loading market prices...</p>
+          </div>
+        ) : error ? (
+          <div className="text-center py-12">
+            <p className="text-[#EF5350] mb-2">{error}</p>
+            <button
+              onClick={() => fetchPrices()}
+              className="text-[#2D5016] text-sm font-medium hover:underline"
+            >
+              Try again
+            </button>
+          </div>
+        ) : filteredPrices.length === 0 ? (
+          <div className="text-center py-12">
+            <p className="text-[#757575]">No market prices found</p>
+          </div>
+        ) : (
+          filteredPrices.map((item) => (
+            <div
+              key={`${item.produce_type}-${item.district}`}
+              className="bg-white rounded-xl shadow-sm overflow-hidden hover:shadow-md transition-shadow"
+            >
+              <div className="p-4">
+                <div className="flex items-start justify-between mb-3">
+                  <div className="flex-1">
+                    <h3 className="font-semibold text-[#2C2C2C] mb-1">{item.produce_type}</h3>
+                    <p className="text-xs text-[#757575]">{item.district} • per {item.unit}</p>
+                  </div>
                 </div>
-                <div className="flex items-center gap-1">
-                  {getTrendIcon(item.trend)}
+
+                <div className="flex items-baseline gap-2 mb-3">
+                  <span className="text-2xl font-bold text-[#2D5016]">
+                    {item.price_avg.toFixed(2)}
+                  </span>
+                  <span className="text-sm text-[#757575]">ZWL</span>
+                </div>
+
+                <div className="flex items-center justify-between pt-3 border-t border-[#E0E0E0]">
+                  <div>
+                    <p className="text-xs text-[#757575]">Price Range</p>
+                    <p className="text-sm font-medium text-[#2C2C2C]">
+                      ZWL {item.price_min.toFixed(2)} - {item.price_max.toFixed(2)}
+                    </p>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-xs text-[#757575]">Recorded</p>
+                    <p className="text-sm font-medium text-[#2C2C2C]">
+                      {new Date(item.recorded_date).toLocaleDateString()}
+                    </p>
+                  </div>
                 </div>
               </div>
-
-              <div className="flex items-baseline gap-2 mb-3">
-                <span className="text-2xl font-bold text-[#2D5016]">
-                  ZWL {item.currentPrice}
-                </span>
-                <span className={`text-sm font-medium ${getTrendColor(item.change)}`}>
-                  {item.change > 0 ? "+" : ""}{item.change}%
-                </span>
-              </div>
-
-              <div className="flex items-center justify-between pt-3 border-t border-[#E0E0E0]">
-                <div>
-                  <p className="text-xs text-[#757575]">Price Range</p>
-                  <p className="text-sm font-medium text-[#2C2C2C]">
-                    ZWL {item.min} - {item.max}
-                  </p>
-                </div>
+            </div>
+          ))
+        )}
+      </div>
                 <button
                   onClick={() => {/* In real app, would show detailed trend */}}
                   className="text-sm text-[#4A90E2] font-medium hover:underline"

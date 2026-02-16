@@ -1,11 +1,14 @@
+import { ArrowLeft, Calendar, Camera, Loader2 } from "lucide-react";
 import { useState } from "react";
 import { useNavigate } from "react-router";
-import { ArrowLeft, Camera, MapPin, Calendar } from "lucide-react";
+import { listingsApi } from "../../lib/api";
+import { categories, zimbabweDistricts } from "../../lib/data";
+import { useAuth } from "../../lib/useAuth";
+import { Alert } from "../ui/alert";
 import { Button } from "../ui/button";
 import { Input } from "../ui/input";
 import { Label } from "../ui/label";
 import { Textarea } from "../ui/textarea";
-import { categories, zimbabweDistricts } from "../../lib/data";
 
 const units = ["kg", "tonnes", "bags", "crates", "heads", "trays", "birds"];
 
@@ -20,6 +23,10 @@ const specificProduce: Record<string, string[]> = {
 
 export function ListProduce() {
   const navigate = useNavigate();
+  const { user } = useAuth();
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  const [uploadedImages, setUploadedImages] = useState<File[]>([]);
   const [formData, setFormData] = useState({
     category: "",
     produce: "",
@@ -28,17 +35,54 @@ export function ListProduce() {
     unit: "kg",
     price: "",
     negotiable: false,
-    district: "Harare",
+    district: user?.district || "Harare",
     availableFrom: "",
     availableUntil: "",
     delivery: false,
     description: "",
+    isOrganic: false,
   });
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>, index: number) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setUploadedImages((prev) => {
+        const newImages = [...prev];
+        newImages[index] = file;
+        return newImages;
+      });
+    }
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // In real app, would save listing
-    navigate("/farmer/my-listings");
+    setError("");
+    setLoading(true);
+
+    try {
+      // Create listing
+      const listing = await listingsApi.create({
+        produce_type_id: parseInt(formData.produce) || 1, // Map produce name to ID
+        quantity_available: parseFloat(formData.quantity),
+        unit: formData.unit,
+        price_per_unit: parseFloat(formData.price),
+        description: formData.description || `${formData.produce} ${formData.variety ? `- ${formData.variety}` : ''}`.trim(),
+        is_organic: formData.isOrganic,
+        harvest_date: formData.availableFrom,
+      });
+
+      // Upload images if any
+      if (uploadedImages.length > 0 && listing.id) {
+        await listingsApi.uploadImages(listing.id, uploadedImages);
+      }
+
+      // Navigate to my listings
+      navigate("/farmer/my-listings");
+    } catch (err: any) {
+      setError(err.message || "Failed to create listing. Please try again.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -55,6 +99,15 @@ export function ListProduce() {
       </div>
 
       <form onSubmit={handleSubmit} className="p-4 max-w-2xl mx-auto pb-24">
+        {/* Error Alert */}
+        {error && (
+          <div className="mb-4">
+            <Alert variant="destructive">
+              <p className="text-sm">{error}</p>
+            </Alert>
+          </div>
+        )}
+
         {/* Section 1: Produce Details */}
         <div className="bg-white rounded-xl p-4 shadow-sm mb-4">
           <h2 className="text-lg font-semibold text-[#2C2C2C] mb-4">Produce Details</h2>
@@ -157,7 +210,7 @@ export function ListProduce() {
             <p className="text-xs text-[#757575] mt-1">Market price range: ZWL 150-200/kg</p>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 mb-3">
             <input
               type="checkbox"
               id="negotiable"
@@ -167,6 +220,17 @@ export function ListProduce() {
             />
             <Label htmlFor="negotiable" className="cursor-pointer">Price is negotiable</Label>
           </div>
+
+          <div className="flex items-center gap-2">
+            <input
+              type="checkbox"
+              id="isOrganic"
+              checked={formData.isOrganic}
+              onChange={(e) => setFormData({ ...formData, isOrganic: e.target.checked })}
+              className="w-4 h-4 text-[#2D5016] rounded focus:ring-[#2D5016]"
+            />
+            <Label htmlFor="isOrganic" className="cursor-pointer">Organic produce</Label>
+          </div>
         </div>
 
         {/* Section 3: Photos */}
@@ -174,14 +238,29 @@ export function ListProduce() {
           <h2 className="text-lg font-semibold text-[#2C2C2C] mb-4">Photos</h2>
           
           <div className="grid grid-cols-3 gap-3">
-            {[1, 2, 3].map((i) => (
+            {[0, 1, 2].map((i) => (
               <div
                 key={i}
                 className="aspect-square rounded-lg bg-[#F5F5F5] border-2 border-dashed border-[#E0E0E0] flex flex-col items-center justify-center cursor-pointer hover:border-[#2D5016] transition-colors relative group"
               >
-                <Camera className="w-8 h-8 text-[#757575] group-hover:text-[#2D5016]" />
-                <span className="text-xs text-[#757575] mt-1 group-hover:text-[#2D5016]">Add Photo</span>
-                <input type="file" accept="image/*" className="absolute inset-0 opacity-0 cursor-pointer" />
+                {uploadedImages[i] ? (
+                  <img
+                    src={URL.createObjectURL(uploadedImages[i])}
+                    alt={`Upload ${i + 1}`}
+                    className="w-full h-full object-cover rounded-lg"
+                  />
+                ) : (
+                  <>
+                    <Camera className="w-8 h-8 text-[#757575] group-hover:text-[#2D5016]" />
+                    <span className="text-xs text-[#757575] mt-1 group-hover:text-[#2D5016]">Add Photo</span>
+                  </>
+                )}
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={(e) => handleImageUpload(e, i)}
+                  className="absolute inset-0 opacity-0 cursor-pointer"
+                />
               </div>
             ))}
           </div>
@@ -269,15 +348,25 @@ export function ListProduce() {
           <Button
             type="button"
             variant="outline"
+            onClick={() => navigate(-1)}
+            disabled={loading}
             className="flex-1 h-12 border-2 border-[#E0E0E0] hover:bg-[#F5F5F5]"
           >
-            Save as Draft
+            Cancel
           </Button>
           <Button
             type="submit"
-            className="flex-1 h-12 bg-[#2D5016] hover:bg-[#234010] text-white"
+            disabled={loading || !formData.category || !formData.produce || !formData.quantity || !formData.price}
+            className="flex-1 h-12 bg-[#2D5016] hover:bg-[#234010] text-white disabled:opacity-50"
           >
-            Publish Listing
+            {loading ? (
+              <>
+                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                Publishing...
+              </>
+            ) : (
+              "Publish Listing"
+            )}
           </Button>
         </div>
       </form>

@@ -1,50 +1,107 @@
-import { useState } from "react";
+import { ArrowLeft, Loader2, MoreVertical, Paperclip, Send, WifiOff } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router";
-import { ArrowLeft, MoreVertical, Send, Paperclip, WifiOff } from "lucide-react";
+import { messagingApi } from "../../lib/api";
+import type { Message } from "../../lib/types";
+import { useWebSocket } from "../../lib/useWebSocket";
 
 export function ChatScreen() {
-  const { userId } = useParams();
+  const { conversationId } = useParams();
   const navigate = useNavigate();
   const [message, setMessage] = useState("");
+  const [messages, setMessages] = useState<Message[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  const [otherUserTyping, setOtherUserTyping] = useState(false);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const isOnline = navigator.onLine;
 
-  const messages = [
-    {
-      id: "1",
-      text: "Hi! I'm interested in your White Maize listing.",
-      sender: "them",
-      timestamp: "10:30 AM",
+  // Scroll to bottom when messages change
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  };
+
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages]);
+
+  // Load initial messages
+  useEffect(() => {
+    const loadMessages = async () => {
+      if (!conversationId) return;
+      
+      try {
+        setLoading(true);
+        const data = await messagingApi.getMessages(conversationId);
+        setMessages(data);
+      } catch (err: any) {
+        setError(err.message || "Failed to load messages");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadMessages();
+  }, [conversationId]);
+
+  // WebSocket connection
+  const { connected, sendMessage: wsSendMessage, sendTyping, sendReadReceipt } = useWebSocket({
+    conversationId: conversationId || "",
+    onMessage: (newMessage) => {
+      setMessages((prev) => [...prev, newMessage]);
+      // Send read receipt
+      if (newMessage.id) {
+        sendReadReceipt(newMessage.id);
+      }
     },
-    {
-      id: "2",
-      text: "Hello! Yes, it's still available. I have 5 tonnes ready.",
-      sender: "me",
-      timestamp: "10:32 AM",
+    onTyping: (userId, userName, isTyping) => {
+      setOtherUserTyping(isTyping);
+      if (isTyping) {
+        // Auto-hide typing indicator after 3 seconds
+        if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
+        typingTimeoutRef.current = setTimeout(() => {
+          setOtherUserTyping(false);
+        }, 3000);
+      }
     },
-    {
-      id: "3",
-      text: "Great! Can you deliver to Harare CBD?",
-      sender: "them",
-      timestamp: "10:35 AM",
+    onError: (errorMsg) => {
+      console.error("WebSocket error:", errorMsg);
     },
-    {
-      id: "4",
-      text: "Yes, I can arrange delivery. There will be a small delivery fee.",
-      sender: "me",
-      timestamp: "10:37 AM",
-    },
-    {
-      id: "5",
-      text: "That works for me. What's the price for 2 tonnes including delivery?",
-      sender: "them",
-      timestamp: "10:40 AM",
-    },
-  ];
+  });
+
+  // Handle typing indicator
+  const handleTyping = () => {
+    if (connected) {
+      sendTyping(true);
+      // Clear typing after 1 second of no input
+      if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
+      typingTimeoutRef.current = setTimeout(() => {
+        sendTyping(false);
+      }, 1000);
+    }
+  };
 
   const handleSend = () => {
-    if (message.trim()) {
-      // In real app, would send message
+    if (message.trim() && conversationId) {
+      // Send via WebSocket
+      const clientId = wsSendMessage(message.trim());
+      
+      // Optimistically add message to UI
+      if (clientId) {
+        const optimisticMessage: Message = {
+          id: clientId,
+          sender_id: "me",
+          text: message.trim(),
+          created_at: new Date().toISOString(),
+          is_read: false,
+          client_id: clientId,
+        };
+        setMessages((prev) => [...prev, optimisticMessage]);
+      }
+      
       setMessage("");
+      sendTyping(false);
     }
   };
 
@@ -55,6 +112,14 @@ export function ChatScreen() {
         <div className="bg-[#FFA726] text-[#2C2C2C] px-4 py-2 flex items-center justify-center gap-2 text-sm font-medium">
           <WifiOff className="w-4 h-4" />
           <span>Messages will send when online</span>
+        </div>
+      )}
+
+      {/* Connection Status */}
+      {isOnline && !connected && (
+        <div className="bg-[#FFA726] text-[#2C2C2C] px-4 py-2 flex items-center justify-center gap-2 text-sm font-medium">
+          <Loader2 className="w-4 h-4 animate-spin" />
+          <span>Connecting to chat...</span>
         </div>
       )}
 
@@ -111,25 +176,63 @@ export function ChatScreen() {
 
       {/* Messages */}
       <div className="flex-1 overflow-y-auto px-4 py-4 space-y-4">
-        {messages.map((msg) => (
-          <div
-            key={msg.id}
-            className={`flex ${msg.sender === "me" ? "justify-end" : "justify-start"}`}
-          >
-            <div className={`max-w-[75%] ${msg.sender === "me" ? "items-end" : "items-start"} flex flex-col gap-1`}>
-              <div
-                className={`rounded-2xl px-4 py-2 ${
-                  msg.sender === "me"
-                    ? "bg-[#2D5016] text-white rounded-br-sm"
-                    : "bg-white text-[#2C2C2C] rounded-bl-sm"
-                }`}
-              >
-                <p className="text-sm leading-relaxed">{msg.text}</p>
-              </div>
-              <span className="text-xs text-[#757575] px-2">{msg.timestamp}</span>
-            </div>
+        {loading ? (
+          <div className="flex items-center justify-center h-full">
+            <Loader2 className="w-8 h-8 text-[#2D5016] animate-spin" />
           </div>
-        ))}
+        ) : error ? (
+          <div className="flex items-center justify-center h-full">
+            <p className="text-[#EF5350]">{error}</p>
+          </div>
+        ) : (
+          <>
+            {messages.map((msg) => {
+              const isMe = msg.sender_id === "me";
+              const timestamp = new Date(msg.created_at).toLocaleTimeString([], { 
+                hour: '2-digit', 
+                minute: '2-digit' 
+              });
+
+              return (
+                <div
+                  key={msg.id}
+                  className={`flex ${isMe ? "justify-end" : "justify-start"}`}
+                >
+                  <div className={`max-w-[75%] ${isMe ? "items-end" : "items-start"} flex flex-col gap-1`}>
+                    <div
+                      className={`rounded-2xl px-4 py-2 ${
+                        isMe
+                          ? "bg-[#2D5016] text-white rounded-br-sm"
+                          : "bg-white text-[#2C2C2C] rounded-bl-sm"
+                      }`}
+                    >
+                      <p className="text-sm leading-relaxed">{msg.text}</p>
+                    </div>
+                    <span className="text-xs text-[#757575] px-2">
+                      {timestamp}
+                      {isMe && msg.is_read && " • Read"}
+                    </span>
+                  </div>
+                </div>
+              );
+            })}
+            
+            {/* Typing Indicator */}
+            {otherUserTyping && (
+              <div className="flex justify-start">
+                <div className="bg-white rounded-2xl rounded-bl-sm px-4 py-2">
+                  <div className="flex gap-1">
+                    <span className="w-2 h-2 bg-[#757575] rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></span>
+                    <span className="w-2 h-2 bg-[#757575] rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></span>
+                    <span className="w-2 h-2 bg-[#757575] rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></span>
+                  </div>
+                </div>
+              </div>
+            )}
+            
+            <div ref={messagesEndRef} />
+          </>
+        )}
       </div>
 
       {/* Quick Replies */}
@@ -157,10 +260,14 @@ export function ChatScreen() {
           <div className="flex-1 bg-[#F5F5F5] rounded-2xl border border-[#E0E0E0] px-4 py-2 focus-within:ring-2 focus-within:ring-[#2D5016] focus-within:border-transparent">
             <textarea
               value={message}
-              onChange={(e) => setMessage(e.target.value)}
-              placeholder={isOnline ? "Type a message..." : "Offline - message will send when connected"}
+              onChange={(e) => {
+                setMessage(e.target.value);
+                handleTyping();
+              }}
+              placeholder={isOnline && connected ? "Type a message..." : "Connecting..."}
               rows={1}
-              className="w-full bg-transparent focus:outline-none resize-none text-sm text-[#2C2C2C] placeholder:text-[#757575]"
+              disabled={!connected}
+              className="w-full bg-transparent focus:outline-none resize-none text-sm text-[#2C2C2C] placeholder:text-[#757575] disabled:opacity-50"
               onKeyDown={(e) => {
                 if (e.key === "Enter" && !e.shiftKey) {
                   e.preventDefault();
@@ -172,9 +279,9 @@ export function ChatScreen() {
 
           <button
             onClick={handleSend}
-            disabled={!message.trim() || !isOnline}
+            disabled={!message.trim() || !connected}
             className={`p-3 rounded-full mb-1 transition-all ${
-              message.trim() && isOnline
+              message.trim() && connected
                 ? "bg-[#2D5016] hover:bg-[#234010] text-white"
                 : "bg-[#E0E0E0] text-[#757575] cursor-not-allowed"
             }`}

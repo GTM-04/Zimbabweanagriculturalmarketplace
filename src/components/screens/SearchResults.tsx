@@ -1,27 +1,39 @@
-import { useState } from "react";
+import { ArrowLeft, Grid, Heart, List as ListIcon, Loader2, MapPin, Search, SlidersHorizontal } from "lucide-react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router";
-import { ArrowLeft, Search, SlidersHorizontal, Grid, List as ListIcon, Heart, MapPin } from "lucide-react";
+import { listingsApi } from "../../lib/api";
+import type { Listing } from "../../lib/types";
 import { BottomNav } from "../BottomNav";
-import { produceListings, categories, getFarmerById } from "../../lib/data";
 
 export function SearchResults() {
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState("");
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [showFilters, setShowFilters] = useState(false);
+  const [listings, setListings] = useState<Listing[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
 
-  const getImageUrl = (keywords: string[]) => {
-    const imageMap: Record<string, string> = {
-      "maize-field-zimbabwe": "https://images.unsplash.com/photo-1649251037465-72c9d378acb6?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxtYWl6ZSUyMGNvcm4lMjBmaWVsZCUyMGhhcnZlc3R8ZW58MXx8fHwxNzcwNzY5Nzg0fDA&ixlib=rb-4.1.0&q=80&w=1080",
-      "tomatoes-harvest": "https://images.unsplash.com/photo-1700064165267-8fa68ef07167?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxmcmVzaCUyMHRvbWF0b2VzJTIwcHJvZHVjZXxlbnwxfHx8fDE3NzA3MDk4NDd8MA&ixlib=rb-4.1.0&q=80&w=1080",
-      "butternut-squash": "https://images.unsplash.com/photo-1695590293008-50388acdd7fc?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxidXR0ZXJudXQlMjBzcXVhc2glMjB2ZWdldGFibGVzfGVufDF8fHx8MTc3MDc2OTc4NHww&ixlib=rb-4.1.0&q=80&w=1080",
+  // Fetch listings
+  useEffect(() => {
+    const fetchListings = async () => {
+      try {
+        setLoading(true);
+        const data = await listingsApi.list({ status: "active" });
+        setListings(data);
+      } catch (err: any) {
+        setError(err.message || "Failed to load listings");
+      } finally {
+        setLoading(false);
+      }
     };
-    return imageMap[keywords[0]] || "https://images.unsplash.com/photo-1761370980657-22586ea44093?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxBZnJpY2FuJTIwbWFya2V0JTIwZnJlc2glMjBwcm9kdWNlfGVufDF8fHx8MTc3MDc2OTc5MXww&ixlib=rb-4.1.0&q=80&w=1080";
-  };
 
-  const filteredListings = produceListings.filter(listing =>
-    listing.produceName.toLowerCase().includes(searchQuery.toLowerCase()) &&
-    listing.status === "active"
+    fetchListings();
+  }, []);
+
+  const filteredListings = listings.filter(listing =>
+    listing.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    listing.produce_type.name.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   return (
@@ -106,11 +118,24 @@ export function SearchResults() {
 
       {/* Results */}
       <div className="p-4">
-        {viewMode === "grid" ? (
+        {loading ? (
+          <div className="flex flex-col items-center justify-center py-12">
+            <Loader2 className="w-10 h-10 text-[#2D5016] animate-spin mb-3" />
+            <p className="text-[#757575]">Loading listings...</p>
+          </div>
+        ) : error ? (
+          <div className="text-center py-12">
+            <p className="text-[#EF5350] mb-2">{error}</p>
+            <button
+              onClick={() => window.location.reload()}
+              className="text-[#2D5016] text-sm font-medium hover:underline"
+            >
+              Try again
+            </button>
+          </div>
+        ) : viewMode === "grid" ? (
           <div className="grid grid-cols-2 gap-3">
-            {filteredListings.map((listing) => {
-              const farmer = getFarmerById(listing.farmerId);
-              return (
+            {filteredListings.map((listing) => (
                 <div
                   key={listing.id}
                   onClick={() => navigate(`/product/${listing.id}`)}
@@ -118,10 +143,15 @@ export function SearchResults() {
                 >
                   <div className="relative aspect-[4/3] bg-[#F5F5F5]">
                     <img
-                      src={getImageUrl(listing.images)}
-                      alt={listing.produceName}
+                      src={listing.images[0] || "https://images.unsplash.com/photo-1761370980657-22586ea44093?w=400"}
+                      alt={listing.title}
                       className="w-full h-full object-cover"
                     />
+                    {listing.is_organic && (
+                      <div className="absolute top-2 left-2 px-2 py-1 bg-[#4CAF50] text-white text-xs font-medium rounded">
+                        Organic
+                      </div>
+                    )}
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
@@ -134,15 +164,15 @@ export function SearchResults() {
 
                   <div className="p-3">
                     <h3 className="font-semibold text-[#2C2C2C] truncate mb-1">
-                      {listing.produceName}
+                      {listing.produce_type.name}
                     </h3>
                     <p className="text-xs text-[#757575] mb-2">
-                      {listing.quantity} {listing.unit}
+                      {listing.quantity_available} {listing.unit}
                     </p>
 
                     <div className="flex items-baseline gap-1 mb-2">
                       <span className="text-lg font-bold text-[#2D5016]">
-                        ZWL {listing.pricePerUnit}
+                        {listing.currency} {listing.price_per_unit}
                       </span>
                       <span className="text-xs text-[#757575]">/{listing.unit}</span>
                     </div>
@@ -153,14 +183,11 @@ export function SearchResults() {
                     </div>
                   </div>
                 </div>
-              );
-            })}
+              ))}
           </div>
         ) : (
           <div className="space-y-3">
-            {filteredListings.map((listing) => {
-              const farmer = getFarmerById(listing.farmerId);
-              return (
+            {filteredListings.map((listing) => (
                 <div
                   key={listing.id}
                   onClick={() => navigate(`/product/${listing.id}`)}
@@ -169,31 +196,32 @@ export function SearchResults() {
                   <div className="flex gap-4 p-4">
                     <div className="w-24 h-24 rounded-lg overflow-hidden bg-[#F5F5F5] flex-shrink-0">
                       <img
-                        src={getImageUrl(listing.images)}
-                        alt={listing.produceName}
+                        src={listing.images[0] || "https://images.unsplash.com/photo-1761370980657-22586ea44093?w=400"}
+                        alt={listing.title}
                         className="w-full h-full object-cover"
                       />
                     </div>
 
                     <div className="flex-1 min-w-0">
                       <h3 className="font-semibold text-[#2C2C2C] truncate mb-1">
-                        {listing.produceName}
+                        {listing.produce_type.name}
                       </h3>
                       <p className="text-sm text-[#757575] mb-2">
-                        {listing.quantity} {listing.unit} • {listing.district}
+                        {listing.quantity_available} {listing.unit} • {listing.district}
                       </p>
 
                       <div className="flex items-baseline gap-1 mb-2">
                         <span className="text-xl font-bold text-[#2D5016]">
-                          ZWL {listing.pricePerUnit}
+                          {listing.currency} {listing.price_per_unit}
                         </span>
                         <span className="text-sm text-[#757575]">/{listing.unit}</span>
                       </div>
 
-                      <div className="flex items-center gap-2 text-xs text-[#757575]">
-                        <div className="w-4 h-4 rounded-full bg-[#E0E0E0]"></div>
-                        <span className="truncate">{farmer?.name}</span>
-                      </div>
+                      {listing.is_organic && (
+                        <span className="inline-block px-2 py-0.5 bg-[#4CAF50] text-white text-xs font-medium rounded">
+                          Organic
+                        </span>
+                      )}
                     </div>
 
                     <button
@@ -206,8 +234,7 @@ export function SearchResults() {
                     </button>
                   </div>
                 </div>
-              );
-            })}
+              ))}
           </div>
         )}
 

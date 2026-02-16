@@ -1,11 +1,13 @@
+import { ArrowLeft, Camera, Eye, EyeOff, Loader2 } from "lucide-react";
 import { useState } from "react";
 import { useNavigate } from "react-router";
-import { ArrowLeft, Camera } from "lucide-react";
+import { zimbabweDistricts } from "../../lib/data";
+import { useAuth } from "../../lib/useAuth";
+import { Alert } from "../ui/alert";
 import { Button } from "../ui/button";
+import { Checkbox } from "../ui/checkbox";
 import { Input } from "../ui/input";
 import { Label } from "../ui/label";
-import { Checkbox } from "../ui/checkbox";
-import { zimbabweDistricts } from "../../lib/data";
 
 const buyerTypes = [
   "Individual",
@@ -17,17 +19,54 @@ const buyerTypes = [
 
 export function BuyerRegistration() {
   const navigate = useNavigate();
+  const { register, loading } = useAuth();
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [error, setError] = useState("");
   const [formData, setFormData] = useState({
     businessName: "",
     phone: "+263 ",
     buyerType: "",
     district: "",
+    ward: "",
+    password: "",
+    confirmPassword: "",
     terms: false,
   });
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    navigate("/buyer/dashboard");
+    setError("");
+
+    if (formData.password !== formData.confirmPassword) {
+      setError("Passwords do not match");
+      return;
+    }
+
+    if (formData.password.length < 8) {
+      setError("Password must be at least 8 characters long");
+      return;
+    }
+
+    const cleanPhone = formData.phone.replace(/\s/g, "");
+    if (!cleanPhone.startsWith("+263") || cleanPhone.length < 12) {
+      setError("Please enter a valid Zimbabwe phone number");
+      return;
+    }
+
+    try {
+      await register({
+        full_name: formData.businessName,
+        phone_number: cleanPhone,
+        password: formData.password,
+        user_type: "buyer",
+        district: formData.district,
+        ward: formData.ward || "Ward 1",
+      });
+      navigate("/buyer/dashboard");
+    } catch (err: any) {
+      setError(err.message || "Registration failed. Please try again.");
+    }
   };
 
   return (
@@ -45,6 +84,15 @@ export function BuyerRegistration() {
 
       {/* Form */}
       <form onSubmit={handleSubmit} className="p-6 max-w-2xl mx-auto pb-24">
+        {/* Error Alert */}
+        {error && (
+          <div className="mb-6">
+            <Alert variant="destructive">
+              <p className="text-sm">{error}</p>
+            </Alert>
+          </div>
+        )}
+
         {/* Profile Photo */}
         <div className="mb-8 flex flex-col items-center">
           <div className="w-24 h-24 rounded-full bg-[#F5F5F5] border-2 border-dashed border-[#E0E0E0] flex items-center justify-center mb-3 relative group cursor-pointer hover:border-[#4A90E2] transition-colors">
@@ -121,6 +169,66 @@ export function BuyerRegistration() {
           </select>
         </div>
 
+        {/* Ward */}
+        <div className="mb-6">
+          <Label htmlFor="ward">Ward (Optional)</Label>
+          <Input
+            id="ward"
+            type="text"
+            placeholder="e.g., Ward 5"
+            value={formData.ward}
+            onChange={(e) => setFormData({ ...formData, ward: e.target.value })}
+            className="mt-2"
+          />
+        </div>
+
+        {/* Password */}
+        <div className="mb-6">
+          <Label htmlFor="password">Password *</Label>
+          <div className="relative mt-2">
+            <Input
+              id="password"
+              type={showPassword ? "text" : "password"}
+              placeholder="Create a strong password"
+              value={formData.password}
+              onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+              required
+              className="pr-12"
+            />
+            <button
+              type="button"
+              onClick={() => setShowPassword(!showPassword)}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-[#757575] hover:text-[#2C2C2C]"
+            >
+              {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+            </button>
+          </div>
+          <p className="text-xs text-[#757575] mt-1">At least 8 characters</p>
+        </div>
+
+        {/* Confirm Password */}
+        <div className="mb-6">
+          <Label htmlFor="confirmPassword">Confirm Password *</Label>
+          <div className="relative mt-2">
+            <Input
+              id="confirmPassword"
+              type={showConfirmPassword ? "text" : "password"}
+              placeholder="Re-enter your password"
+              value={formData.confirmPassword}
+              onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
+              required
+              className="pr-12"
+            />
+            <button
+              type="button"
+              onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-[#757575] hover:text-[#2C2C2C]"
+            >
+              {showConfirmPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+            </button>
+          </div>
+        </div>
+
         {/* Terms & Conditions */}
         <div className="mb-8 flex items-start gap-3">
           <Checkbox
@@ -138,10 +246,26 @@ export function BuyerRegistration() {
         {/* Submit Button */}
         <Button
           type="submit"
-          disabled={!formData.terms || !formData.businessName || !formData.phone || !formData.buyerType || !formData.district}
+          disabled={
+            !formData.terms || 
+            !formData.businessName || 
+            !formData.phone || 
+            !formData.buyerType || 
+            !formData.district || 
+            !formData.password || 
+            !formData.confirmPassword ||
+            loading
+          }
           className="w-full h-12 bg-[#4A90E2] hover:bg-[#3A7BC2] text-white rounded-lg disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          Create Account
+          {loading ? (
+            <>
+              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+              Creating Account...
+            </>
+          ) : (
+            "Create Account"
+          )}
         </Button>
 
         {/* Login Link */}

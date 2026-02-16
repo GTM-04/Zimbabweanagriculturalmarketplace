@@ -1,14 +1,18 @@
+import { ArrowLeft, Eye, EyeOff, Loader2, Sprout, WifiOff } from "lucide-react";
 import { useState } from "react";
 import { useNavigate } from "react-router";
-import { ArrowLeft, Eye, EyeOff, Sprout, WifiOff } from "lucide-react";
+import { useAuth } from "../../lib/useAuth";
+import { Alert } from "../ui/alert";
 import { Button } from "../ui/button";
+import { Checkbox } from "../ui/checkbox";
 import { Input } from "../ui/input";
 import { Label } from "../ui/label";
-import { Checkbox } from "../ui/checkbox";
 
 export function LoginScreen() {
   const navigate = useNavigate();
+  const { login, loading, error } = useAuth();
   const [showPassword, setShowPassword] = useState(false);
+  const [localError, setLocalError] = useState("");
   const [formData, setFormData] = useState({
     phone: "+263 ",
     password: "",
@@ -16,10 +20,32 @@ export function LoginScreen() {
   });
   const isOnline = navigator.onLine;
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Simulate login - in real app would authenticate
-    navigate("/farmer/dashboard");
+    setLocalError("");
+
+    // Validate phone number format
+    const cleanPhone = formData.phone.replace(/\s/g, "");
+    if (!cleanPhone.startsWith("+263") || cleanPhone.length < 12) {
+      setLocalError("Please enter a valid Zimbabwe phone number");
+      return;
+    }
+
+    try {
+      const user = await login({
+        phone_number: cleanPhone,
+        password: formData.password,
+      });
+
+      // Navigate based on user type
+      if (user.user_type === "farmer") {
+        navigate("/farmer/dashboard");
+      } else {
+        navigate("/buyer/dashboard");
+      }
+    } catch (err: any) {
+      setLocalError(err.message || "Login failed. Please check your credentials.");
+    }
   };
 
   return (
@@ -54,6 +80,15 @@ export function LoginScreen() {
         {/* Title */}
         <h1 className="text-2xl font-bold text-[#2C2C2C] mb-2">Welcome Back</h1>
         <p className="text-base text-[#757575] mb-8">Sign in to continue</p>
+
+        {/* Error Alert */}
+        {(localError || error) && (
+          <div className="w-full max-w-md mb-4">
+            <Alert variant="destructive">
+              <p className="text-sm">{localError || error}</p>
+            </Alert>
+          </div>
+        )}
 
         {/* Form */}
         <form onSubmit={handleSubmit} className="w-full max-w-md">
@@ -114,10 +149,17 @@ export function LoginScreen() {
           {/* Sign In Button */}
           <Button
             type="submit"
-            disabled={!formData.phone || !formData.password}
+            disabled={!formData.phone || !formData.password || loading}
             className="w-full h-12 bg-[#2D5016] hover:bg-[#234010] text-white rounded-lg disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            Sign In
+            {loading ? (
+              <>
+                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                Signing In...
+              </>
+            ) : (
+              "Sign In"
+            )}
           </Button>
 
           {/* Register Link */}

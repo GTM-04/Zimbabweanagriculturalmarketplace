@@ -1,9 +1,9 @@
-import { useState, useEffect } from "react";
+import { ArrowLeft, Loader2, RefreshCw, Search } from "lucide-react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router";
-import { ArrowLeft, Search, TrendingUp, TrendingDown, Minus, RefreshCw, Loader2 } from "lucide-react";
-import { BottomNav } from "../BottomNav";
 import { pricingApi } from "../../lib/api";
 import type { MarketPrice } from "../../lib/types";
+import { BottomNav } from "../BottomNav";
 
 export function MarketPrices() {
   const navigate = useNavigate();
@@ -148,33 +148,6 @@ export function MarketPrices() {
             </div>
           ))
         )}
-      </div>
-                <button
-                  onClick={() => {/* In real app, would show detailed trend */}}
-                  className="text-sm text-[#4A90E2] font-medium hover:underline"
-                >
-                  View Trend →
-                </button>
-              </div>
-
-              {/* Price indicator bar */}
-              <div className="mt-3">
-                <div className="h-2 bg-[#F5F5F5] rounded-full overflow-hidden">
-                  <div
-                    className="h-full bg-[#2D5016] rounded-full transition-all"
-                    style={{
-                      width: `${((item.currentPrice - item.min) / (item.max - item.min)) * 100}%`,
-                    }}
-                  ></div>
-                </div>
-                <div className="flex justify-between mt-1">
-                  <span className="text-xs text-[#757575]">Low</span>
-                  <span className="text-xs text-[#757575]">High</span>
-                </div>
-              </div>
-            </div>
-          </div>
-        ))}
       </div>
 
       {/* Market Summary */}

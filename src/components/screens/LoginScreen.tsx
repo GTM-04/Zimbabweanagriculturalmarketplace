@@ -1,6 +1,7 @@
 import { ArrowLeft, Eye, EyeOff, Loader2, Sprout, WifiOff } from "lucide-react";
 import { useState } from "react";
 import { useNavigate } from "react-router";
+import { toast } from "sonner";
 import { useAuth } from "../../lib/useAuth";
 import { Alert } from "../ui/alert";
 import { Button } from "../ui/button";
@@ -37,14 +38,25 @@ export function LoginScreen() {
         password: formData.password,
       });
 
+      // Show success message
+      toast.success("Login successful!", {
+        description: `Welcome back, ${user.full_name}`
+      });
+
       // Navigate based on user type
-      if (user.user_type === "farmer") {
-        navigate("/farmer/dashboard");
-      } else {
-        navigate("/buyer/dashboard");
-      }
+      setTimeout(() => {
+        if (user.user_type === "farmer") {
+          navigate("/farmer/dashboard");
+        } else {
+          navigate("/buyer/dashboard");
+        }
+      }, 500);
     } catch (err: any) {
-      setLocalError(err.message || "Login failed. Please check your credentials.");
+      const errorMsg = err.message || "Login failed. Please check your credentials.";
+      setLocalError(errorMsg);
+      toast.error("Login Failed", {
+        description: errorMsg
+      });
     }
   };
 

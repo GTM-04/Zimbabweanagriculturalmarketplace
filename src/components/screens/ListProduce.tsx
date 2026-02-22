@@ -1,6 +1,7 @@
 import { ArrowLeft, Calendar, Camera, Loader2 } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router";
+import { toast } from "sonner";
 import { listingsApi } from "../../lib/api";
 import { categories, zimbabweDistricts } from "../../lib/data";
 import { useAuth } from "../../lib/useAuth";
@@ -43,6 +44,17 @@ export function ListProduce() {
     isOrganic: false,
   });
 
+  // Check authentication on mount
+  useEffect(() => {
+    const token = localStorage.getItem('access_token');
+    if (!token) {
+      toast.error("Authentication Required", {
+        description: "Please login to list your produce"
+      });
+      navigate("/login");
+    }
+  }, [navigate]);
+
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>, index: number) => {
     const file = e.target.files?.[0];
     if (file) {
@@ -76,10 +88,19 @@ export function ListProduce() {
         await listingsApi.uploadImages(listing.id, uploadedImages);
       }
 
+      // Show success message
+      toast.success("Listing Created!", {
+        description: "Your produce has been listed successfully"
+      });
+
       // Navigate to my listings
-      navigate("/farmer/my-listings");
+      setTimeout(() => navigate("/farmer/my-listings"), 500);
     } catch (err: any) {
-      setError(err.message || "Failed to create listing. Please try again.");
+      const errorMsg = err.message || "Failed to create listing. Please try again.";
+      setError(errorMsg);
+      toast.error("Failed to Create Listing", {
+        description: errorMsg
+      });
     } finally {
       setLoading(false);
     }

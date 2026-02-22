@@ -4,23 +4,23 @@
 
 import axios, { AxiosError, AxiosInstance } from 'axios';
 import type {
-    ApiError,
-    AuthResponse,
-    Conversation,
-    CreateListingRequest,
-    Listing,
-    ListingsQueryParams,
-    LoginRequest,
-    MarketPrice,
-    MarketPricesQueryParams,
-    Message,
-    Notification,
-    Order,
-    RefreshTokenRequest,
-    RegisterRequest,
-    SyncRequest,
-    SyncResponse,
-    User,
+  ApiError,
+  AuthResponse,
+  Conversation,
+  CreateListingRequest,
+  Listing,
+  ListingsQueryParams,
+  LoginRequest,
+  MarketPrice,
+  MarketPricesQueryParams,
+  Message,
+  Notification,
+  Order,
+  RefreshTokenRequest,
+  RegisterRequest,
+  SyncRequest,
+  SyncResponse,
+  User,
 } from './types';
 
 // ============================================================================
@@ -49,8 +49,19 @@ const api: AxiosInstance = axios.create({
 api.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem('access_token');
+    const isAuthEndpoint = config.url?.includes('/auth/');
+    
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
+      console.log('🔐 Request with token:', {
+        url: config.url,
+        method: config.method,
+        hasToken: !!token,
+        tokenPreview: token.substring(0, 20) + '...'
+      });
+    } else if (!isAuthEndpoint) {
+      // Only warn about missing token for non-auth endpoints
+      console.warn('⚠️ No token found for request:', config.url);
     }
     return config;
   },
@@ -147,14 +158,29 @@ const handleLogout = () => {
 };
 
 const handleApiError = (error: any): never => {
+  let errorMessage = 'An unexpected error occurred';
+  
   if (axios.isAxiosError(error) && error.response) {
     const apiError: ApiError = error.response.data;
-    throw new Error(apiError.error || 'An error occurred');
+    errorMessage = apiError.error || (apiError.details ? JSON.stringify(apiError.details) : '') || `Error: ${error.response.status}`;
+    
+    // Log 403 errors with more detail
+    if (error.response.status === 403) {
+      console.error('🚫 403 Forbidden Error:', {
+        url: error.config?.url,
+        method: error.config?.method,
+        headers: error.config?.headers,
+        hasToken: !!localStorage.getItem('access_token'),
+        response: error.response.data
+      });
+    }
   } else if (error.request) {
-    throw new Error('Network error. Please check your connection.');
+    errorMessage = 'Network error. Please check your connection.';
   } else {
-    throw new Error(error.message || 'An unexpected error occurred');
+    errorMessage = error.message || 'An unexpected error occurred';
   }
+  
+  throw new Error(errorMessage);
 };
 
 // ============================================================================
@@ -168,15 +194,25 @@ export const authApi = {
   register: async (data: RegisterRequest): Promise<AuthResponse> => {
     try {
       const response = await api.post<AuthResponse>('/auth/register', data);
+      console.log('✅ Registration response:', response.data);
+      
       const { access_token, refresh_token, user } = response.data;
+      
+      if (!access_token) {
+        console.error('❌ No access_token in response:', response.data);
+        throw new Error('Invalid server response: missing access_token');
+      }
       
       // Store tokens and user info
       localStorage.setItem('access_token', access_token);
       localStorage.setItem('refresh_token', refresh_token);
       localStorage.setItem('user', JSON.stringify(user));
       
+      console.log('💾 Stored token:', access_token.substring(0, 20) + '...');
+      
       return response.data;
     } catch (error) {
+      console.error('❌ Registration error:', error);
       return handleApiError(error);
     }
   },
@@ -187,15 +223,25 @@ export const authApi = {
   login: async (data: LoginRequest): Promise<AuthResponse> => {
     try {
       const response = await api.post<AuthResponse>('/auth/login', data);
+      console.log('✅ Login response:', response.data);
+      
       const { access_token, refresh_token, user } = response.data;
+      
+      if (!access_token) {
+        console.error('❌ No access_token in response:', response.data);
+        throw new Error('Invalid server response: missing access_token');
+      }
       
       // Store tokens and user info
       localStorage.setItem('access_token', access_token);
       localStorage.setItem('refresh_token', refresh_token);
       localStorage.setItem('user', JSON.stringify(user));
       
+      console.log('💾 Stored token:', access_token.substring(0, 20) + '...');
+      
       return response.data;
     } catch (error) {
+      console.error('❌ Login error:', error);
       return handleApiError(error);
     }
   },

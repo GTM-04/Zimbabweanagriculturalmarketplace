@@ -1,6 +1,7 @@
 import { ArrowLeft, Camera, Eye, EyeOff, Loader2 } from "lucide-react";
 import { useState } from "react";
 import { useNavigate } from "react-router";
+import { toast } from "sonner";
 import { categories, zimbabweDistricts } from "../../lib/data";
 import { useAuth } from "../../lib/useAuth";
 import { Alert } from "../ui/alert";
@@ -60,10 +61,19 @@ export function FarmerRegistration() {
         ward: formData.ward || "Ward 1",
       });
 
+      // Show success message
+      toast.success("Registration successful!", {
+        description: "Welcome to Kufara marketplace"
+      });
+      
       // Navigate to farmer dashboard on success
-      navigate("/farmer/dashboard");
+      setTimeout(() => navigate("/farmer/dashboard"), 500);
     } catch (err: any) {
-      setError(err.message || "Registration failed. Please try again.");
+      const errorMsg = err.message || "Registration failed. Please try again.";
+      setError(errorMsg);
+      toast.error("Registration Failed", {
+        description: errorMsg
+      });
     }
   };
 

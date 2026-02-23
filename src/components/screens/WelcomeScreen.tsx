@@ -50,7 +50,7 @@ export function WelcomeScreen() {
     <div className={`min-h-screen flex flex-col bg-gradient-to-br ${slides[currentSlide].bgGradient} transition-all duration-700`}>
       {/* Header with Skip Button */}
       <div className="absolute top-0 left-0 right-0 flex justify-between items-center px-6 py-6 z-20">
-        <div className="text-2xl font-bold text-[#2D5016]">Kufara</div>
+         
         <Button
           variant="ghost"
           onClick={handleSkip}

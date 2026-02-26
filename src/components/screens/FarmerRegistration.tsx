@@ -69,7 +69,7 @@ export function FarmerRegistration() {
       // Navigate to farmer dashboard on success
       setTimeout(() => navigate("/farmer/dashboard"), 500);
     } catch (err: any) {
-      const errorMsg = err.message || "Registration failed. Please try again.";
+      const errorMsg = err.response?.data?.detail || err.message || "Registration failed. Please try again.";
       setError(errorMsg);
       toast.error("Registration Failed", {
         description: errorMsg

@@ -1,9 +1,10 @@
-import { ArrowLeft, Calendar, Camera, Loader2 } from "lucide-react";
+import { ArrowLeft, Calendar, Camera, Loader2, TrendingUp } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router";
 import { toast } from "sonner";
-import { listingsApi } from "../../lib/api";
+import { listingsApi, pricingApi } from "../../lib/api";
 import { categories, zimbabweDistricts } from "../../lib/data";
+import type { MarketPrice } from "../../lib/types";
 import { useAuth } from "../../lib/useAuth";
 import { Alert } from "../ui/alert";
 import { Button } from "../ui/button";
@@ -28,6 +29,8 @@ export function ListProduce() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [uploadedImages, setUploadedImages] = useState<File[]>([]);
+  const [marketPrice, setMarketPrice] = useState<MarketPrice | null>(null);
+  const [marketPriceLoading, setMarketPriceLoading] = useState(false);
   const [formData, setFormData] = useState({
     category: "",
     produce: "",
@@ -43,6 +46,41 @@ export function ListProduce() {
     description: "",
     isOrganic: false,
   });
+
+  // Fetch live market price when produce or district changes
+  useEffect(() => {
+    if (!formData.produce) {
+      setMarketPrice(null);
+      return;
+    }
+    const fetchMarketPrice = async () => {
+      setMarketPriceLoading(true);
+      try {
+        const prices = await pricingApi.getMarketPrices({
+          produce_type: formData.produce,
+          district: formData.district,
+        });
+        // Use exact match first, then fall back to any result for that produce
+        const match =
+          prices.find(
+            (p) =>
+              p.produce_type.toLowerCase() === formData.produce.toLowerCase() &&
+              p.district.toLowerCase() === formData.district.toLowerCase()
+          ) ||
+          prices.find(
+            (p) => p.produce_type.toLowerCase() === formData.produce.toLowerCase()
+          ) ||
+          prices[0] ||
+          null;
+        setMarketPrice(match);
+      } catch {
+        setMarketPrice(null);
+      } finally {
+        setMarketPriceLoading(false);
+      }
+    };
+    fetchMarketPrice();
+  }, [formData.produce, formData.district]);
 
   // Check authentication on mount
   useEffect(() => {
@@ -228,7 +266,44 @@ export function ListProduce() {
               required
               className="mt-2"
             />
-            <p className="text-xs text-[#757575] mt-1">Market price range: ZWL 150-200/kg</p>
+
+            {/* Live market price hint */}
+            {marketPriceLoading && (
+              <p className="text-xs text-[#757575] mt-1 flex items-center gap-1">
+                <Loader2 className="w-3 h-3 animate-spin" />
+                Fetching market price...
+              </p>
+            )}
+            {!marketPriceLoading && marketPrice && (
+              <div className="mt-2 p-3 bg-[#2D5016]/5 border border-[#2D5016]/20 rounded-lg">
+                <div className="flex items-center justify-between gap-2">
+                  <div className="flex items-center gap-1.5">
+                    <TrendingUp className="w-4 h-4 text-[#2D5016] flex-shrink-0" />
+                    <div>
+                      <p className="text-xs font-semibold text-[#2D5016]">
+                        Market range: {marketPrice.currency ?? "ZWL"} {marketPrice.price_min}–{marketPrice.price_max}/{marketPrice.unit}
+                      </p>
+                      <p className="text-xs text-[#757575]">
+                        Avg: {marketPrice.currency ?? "ZWL"} {marketPrice.price_avg}/{marketPrice.unit}
+                        {marketPrice.district ? ` · ${marketPrice.district}` : ""}
+                      </p>
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setFormData({ ...formData, price: String(marketPrice.price_avg) })
+                    }
+                    className="text-xs font-medium text-white bg-[#2D5016] hover:bg-[#234010] px-2.5 py-1 rounded-full whitespace-nowrap transition-colors"
+                  >
+                    Use avg
+                  </button>
+                </div>
+              </div>
+            )}
+            {!marketPriceLoading && !marketPrice && formData.produce && (
+              <p className="text-xs text-[#757575] mt-1">No market price data available for this produce.</p>
+            )}
           </div>
 
           <div className="flex items-center gap-2 mb-3">

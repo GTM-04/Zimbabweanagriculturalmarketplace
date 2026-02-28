@@ -181,6 +181,7 @@ export interface MarketPrice {
   price_avg: number;
   price_max: number;
   unit: string;
+  currency?: string;
   recorded_date: string;
 }
 

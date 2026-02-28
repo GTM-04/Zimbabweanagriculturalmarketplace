@@ -114,6 +114,7 @@ export interface ListingsQueryParams {
   district?: string;
   produce_type?: number;
   status?: ListingStatus;
+  farmer_id?: string;
   page?: number;
   page_size?: number;
 }

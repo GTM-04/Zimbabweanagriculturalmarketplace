@@ -3,6 +3,7 @@
 ## ✅ Pre-Launch Checklist
 
 ### Backend Setup
+
 - [ ] Backend API is running on `http://localhost:8001`
 - [ ] Database migrations are applied
 - [ ] Test data seeded (optional)
@@ -11,6 +12,7 @@
 - [ ] All API endpoints tested with Postman
 
 ### Frontend Setup
+
 - [ ] Dependencies installed (`npm install`)
 - [ ] `.env` file created with correct URLs
 - [ ] TypeScript compiles without errors
@@ -24,6 +26,7 @@
 ### 1. Authentication Flow ✅
 
 #### Farmer Registration
+
 - [ ] Navigate to `/user-type`
 - [ ] Select "I'm a Farmer"
 - [ ] Fill all required fields:
@@ -40,6 +43,7 @@
 - [ ] **Expected:** Token saved
 
 #### Buyer Registration
+
 - [ ] Navigate to `/user-type`
 - [ ] Select "I'm a Buyer"
 - [ ] Fill all required fields
@@ -47,6 +51,7 @@
 - [ ] **Expected:** Redirects to `/buyer/dashboard`
 
 #### Login
+
 - [ ] Navigate to `/login`
 - [ ] Enter valid credentials:
   - Phone: `+263771234567`
@@ -56,6 +61,7 @@
 - [ ] **Expected:** User session persists on refresh
 
 #### Logout
+
 - [ ] Click profile/settings
 - [ ] Click "Logout"
 - [ ] **Expected:** Redirects to `/login`
@@ -67,6 +73,7 @@
 ### 2. Listing Management ✅
 
 #### Create Listing (Farmer)
+
 - [ ] Login as farmer
 - [ ] Click "List New Produce" on dashboard
 - [ ] Fill form:
@@ -88,6 +95,7 @@
 - [ ] **Expected:** Images uploaded to backend
 
 #### View Listings (Buyer)
+
 - [ ] Login as buyer
 - [ ] View dashboard - see featured listings
 - [ ] **Expected:** Listings load from API
@@ -96,6 +104,7 @@
 - [ ] **Expected:** Location badges visible
 
 #### Search Listings
+
 - [ ] Click search bar
 - [ ] Type produce name (e.g., "Tomatoes")
 - [ ] **Expected:** Results filter in real-time
@@ -104,6 +113,7 @@
 - [ ] **Expected:** Results filter by category
 
 #### View Listing Details
+
 - [ ] Click on any listing card
 - [ ] **Expected:** Full details page loads
 - [ ] **Expected:** All images displayed
@@ -112,6 +122,7 @@
 - [ ] **Expected:** "Message Farmer" button works
 
 #### Delete Listing (Farmer)
+
 - [ ] Go to "My Listings"
 - [ ] Click delete on a listing
 - [ ] Confirm deletion
@@ -124,6 +135,7 @@
 ### 3. Real-Time Chat ✅
 
 #### Start Conversation
+
 - [ ] As buyer, view a listing
 - [ ] Click "Message Farmer"
 - [ ] **Expected:** Redirects to chat screen
@@ -132,6 +144,7 @@
 - [ ] **Expected:** WebSocket connects (check console)
 
 #### Send Message
+
 - [ ] Type a message
 - [ ] Click send or press Enter
 - [ ] **Expected:** Message appears immediately
@@ -140,6 +153,7 @@
 - [ ] **Expected:** Message persists on refresh
 
 #### Receive Message
+
 - [ ] Open chat in two browser windows (different users)
 - [ ] Send message from one window
 - [ ] **Expected:** Message appears in other window instantly
@@ -147,18 +161,21 @@
 - [ ] **Expected:** Sound notification (if implemented)
 
 #### Typing Indicator
+
 - [ ] Type in message box
 - [ ] **Expected:** Other user sees "User is typing..."
 - [ ] Stop typing
 - [ ] **Expected:** Indicator disappears after 3 seconds
 
 #### Read Receipts
+
 - [ ] Send message
 - [ ] **Expected:** Shows "Sent" status
 - [ ] Other user opens chat
 - [ ] **Expected:** Shows "Read" status
 
 #### Offline Handling
+
 - [ ] Disconnect internet
 - [ ] Try to send message
 - [ ] **Expected:** "Offline" banner shows
@@ -172,6 +189,7 @@
 ### 4. Market Prices ✅
 
 #### View Prices
+
 - [ ] Navigate to "Market Prices"
 - [ ] **Expected:** Prices load from API
 - [ ] **Expected:** Loading spinner while fetching
@@ -179,11 +197,13 @@
 - [ ] **Expected:** Price ranges displayed
 
 #### Search Prices
+
 - [ ] Use search box
 - [ ] Type produce name
 - [ ] **Expected:** Results filter
 
 #### Refresh Prices
+
 - [ ] Click refresh button
 - [ ] **Expected:** Button shows spinning icon
 - [ ] **Expected:** Prices reload from API
@@ -194,11 +214,13 @@
 ### 5. User Profile ✅
 
 #### View Profile
+
 - [ ] Click profile icon/link
 - [ ] **Expected:** User details display
 - [ ] **Expected:** Data matches registration
 
 #### Edit Profile
+
 - [ ] Click "Edit Profile"
 - [ ] Change some fields
 - [ ] Click "Save"
@@ -211,6 +233,7 @@
 ## 🔧 Technical Tests
 
 ### API Integration
+
 - [ ] Open browser DevTools (F12)
 - [ ] Go to Network tab
 - [ ] Perform any action
@@ -222,6 +245,7 @@
 - [ ] **Expected:** Token format: `Bearer <token>`
 
 ### Token Management
+
 - [ ] Login successfully
 - [ ] Check localStorage
 - [ ] **Expected:** `access_token` present
@@ -235,6 +259,7 @@
 - [ ] **Expected:** Redirects to login
 
 ### WebSocket Connection
+
 - [ ] Open chat
 - [ ] Check browser console
 - [ ] **Expected:** "WebSocket connected" log
@@ -246,6 +271,7 @@
 - [ ] **Expected:** Reconnects within 5 seconds
 
 ### Error Handling
+
 - [ ] Try invalid login
 - [ ] **Expected:** Error message shows
 - [ ] **Expected:** No console errors
@@ -255,12 +281,14 @@
 - [ ] **Expected:** Retry option available
 
 ### Loading States
+
 - [ ] Watch all buttons during actions
 - [ ] **Expected:** Loading spinners during API calls
 - [ ] **Expected:** Buttons disabled while loading
 - [ ] **Expected:** Re-enabled after completion
 
 ### Form Validation
+
 - [ ] Try submitting empty forms
 - [ ] **Expected:** Submit button disabled
 - [ ] Enter invalid phone number
@@ -273,6 +301,7 @@
 ## 📱 Mobile Testing
 
 ### Responsive Design
+
 - [ ] Open browser DevTools
 - [ ] Toggle device toolbar (Ctrl+Shift+M)
 - [ ] Test on different screen sizes:
@@ -285,6 +314,7 @@
 - [ ] **Expected:** Text readable
 
 ### Touch Interactions
+
 - [ ] Use touch device or simulate
 - [ ] Test buttons
 - [ ] **Expected:** Appropriate touch target size
@@ -296,6 +326,7 @@
 ## 🌐 Browser Compatibility
 
 Test in multiple browsers:
+
 - [ ] Chrome (latest)
 - [ ] Firefox (latest)
 - [ ] Safari (latest)
@@ -307,17 +338,20 @@ Test in multiple browsers:
 ## 📊 Performance
 
 ### Load Times
+
 - [ ] Measure page load time
 - [ ] **Target:** < 3 seconds on 3G
 - [ ] Check image sizes
 - [ ] **Target:** < 500KB per image
 
 ### API Response Times
+
 - [ ] Check Network tab
 - [ ] **Target:** < 500ms for most requests
 - [ ] **Target:** < 2s for image uploads
 
 ### WebSocket Latency
+
 - [ ] Send message
 - [ ] **Target:** < 100ms delivery time
 
@@ -326,6 +360,7 @@ Test in multiple browsers:
 ## 🔒 Security
 
 ### Token Security
+
 - [ ] Tokens stored in localStorage (✓)
 - [ ] Tokens sent only to API domain
 - [ ] HTTPS in production
@@ -333,12 +368,14 @@ Test in multiple browsers:
 - [ ] No tokens logged to console
 
 ### Input Validation
+
 - [ ] Phone number format validated
 - [ ] Password strength enforced
 - [ ] XSS protection (React escapes by default)
 - [ ] SQL injection prevented (backend parameterized queries)
 
 ### CORS
+
 - [ ] Backend allows only trusted origins
 - [ ] Credentials included in requests
 - [ ] Preflight requests handled
@@ -348,6 +385,7 @@ Test in multiple browsers:
 ## 🐛 Known Issues to Check
 
 ### Common Bugs
+
 - [ ] Images not displaying - check URL format
 - [ ] WebSocket not connecting - verify URL and token
 - [ ] 404 on routes - check React Router config
@@ -360,6 +398,7 @@ Test in multiple browsers:
 ## 🚀 Production Readiness
 
 ### Before Deploying
+
 - [ ] All tests passing
 - [ ] No console errors
 - [ ] Environment variables configured
@@ -370,6 +409,7 @@ Test in multiple browsers:
 - [ ] Analytics setup (optional)
 
 ### Deployment
+
 - [ ] Backend deployed and accessible
 - [ ] Frontend deployed
 - [ ] Environment variables set
@@ -383,6 +423,7 @@ Test in multiple browsers:
 ## ✅ Final Verification
 
 ### User Journey: Farmer
+
 1. [ ] Register as farmer
 2. [ ] Login successfully
 3. [ ] Create a listing with images
@@ -394,6 +435,7 @@ Test in multiple browsers:
 9. [ ] Logout
 
 ### User Journey: Buyer
+
 1. [ ] Register as buyer
 2. [ ] Login successfully
 3. [ ] Browse listings
@@ -409,6 +451,7 @@ Test in multiple browsers:
 ## 📈 Success Criteria
 
 ### Must Have ✅
+
 - [x] Authentication working
 - [x] Listings CRUD operations
 - [x] Real-time chat functional
@@ -418,6 +461,7 @@ Test in multiple browsers:
 - [x] Loading states
 
 ### Nice to Have 🎯
+
 - [ ] Push notifications
 - [ ] Image gallery
 - [ ] Advanced filters
@@ -429,6 +473,7 @@ Test in multiple browsers:
 ## 📞 Support Checklist
 
 If issues occur:
+
 1. [ ] Check browser console for errors
 2. [ ] Verify backend is running
 3. [ ] Check `.env` configuration

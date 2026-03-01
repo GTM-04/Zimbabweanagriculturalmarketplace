@@ -104,9 +104,8 @@ export function MyListings() {
   const FALLBACK_IMG =
     "https://images.unsplash.com/photo-1649251037465-72c9d378acb6?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&w=1080";
 
-  const getImageUrl = (images: string[]) => {
-    return resolveImageUrl(images?.[0], FALLBACK_IMG);
-  };
+  const getImageUrl = (images: Listing["images"]) =>
+    resolveImageUrl(images?.[0], FALLBACK_IMG);
 
   return (
     <div className="min-h-screen bg-[#F5F5F5] pb-20">
@@ -246,6 +245,13 @@ export function MyListings() {
                   src={getImageUrl(listing.images)}
                   alt={listing.title || listing.produce_type?.name}
                   className="w-full h-full object-cover"
+                  onError={(e) => {
+                    const el = e.currentTarget as HTMLImageElement;
+                    if (!el.dataset.fallback) {
+                      el.dataset.fallback = 'true';
+                      el.src = FALLBACK_IMG;
+                    }
+                  }}
                 />
               </div>
 

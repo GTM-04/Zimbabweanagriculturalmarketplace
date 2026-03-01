@@ -91,7 +91,8 @@ export interface Listing {
   is_organic: boolean;
   harvest_date?: string;
   description?: string;
-  images: string[];
+  /** May be plain strings OR image objects depending on the API version */
+  images: (string | { image?: string; url?: string; file?: string; image_url?: string })[]
   farmer_id?: string;
   farmer_name?: string;
   created_at?: string;

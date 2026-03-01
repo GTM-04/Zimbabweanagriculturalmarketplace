@@ -36,14 +36,57 @@ const SERVER_ORIGIN = (() => {
 })();
 
 /**
- * Resolve an image path returned by the API to a fully-qualified URL.
- * Relative paths like /media/listings/abc.jpg are prefixed with the server origin.
+ * Extract a raw path string from whatever shape the Django API returns for an
+ * image entry. Handles:
+ *   - plain string:                 "/media/listings/abc.jpg"
+ *   - {image: "/media/..."}         (DRF ImageField default)
+ *   - {url: "/media/..."}           (some serialisers use `url`)
+ *   - {file: "/media/..."}          (another common variant)
+ *   - {image_url: "..."}            (prefetched absolute URL variant)
+ *   - any object whose first string value looks like a file path / URL
  */
-export function resolveImageUrl(path: string | undefined | null, fallback: string): string {
-  if (!path) return fallback;
-  if (path.startsWith('http://') || path.startsWith('https://')) return path;
+function extractRawPath(entry: unknown): string {
+  if (!entry) return '';
+  if (typeof entry === 'string') return entry;
+  if (typeof entry === 'object' && entry !== null) {
+    const obj = entry as Record<string, unknown>;
+    // Try well-known keys first (order matters — most specific first)
+    const knownKeys = [
+      'image_url', 'url', 'image', 'file',
+      'photo', 'src', 'path', 'thumbnail',
+      'image_file', 'photo_url', 'file_url',
+    ];
+    for (const key of knownKeys) {
+      const val = obj[key];
+      if (typeof val === 'string' && val) return val;
+    }
+    // Last resort: return the first string value that looks like a path/URL
+    for (const val of Object.values(obj)) {
+      if (
+        typeof val === 'string' &&
+        val &&
+        (val.startsWith('/') || val.startsWith('http'))
+      ) {
+        return val;
+      }
+    }
+  }
+  return '';
+}
+
+/**
+ * Resolve an image entry returned by the API to a fully-qualified URL.
+ * Accepts plain strings OR image-object shapes and handles relative paths.
+ */
+export function resolveImageUrl(
+  entry: unknown,
+  fallback: string
+): string {
+  const raw = extractRawPath(entry);
+  if (!raw) return fallback;
+  if (raw.startsWith('http://') || raw.startsWith('https://')) return raw;
   // Relative path — prepend the backend server origin
-  return `${SERVER_ORIGIN}${path.startsWith('/') ? '' : '/'}${path}`;
+  return `${SERVER_ORIGIN}${raw.startsWith('/') ? '' : '/'}${raw}`;
 }
 
 // ============================================================================

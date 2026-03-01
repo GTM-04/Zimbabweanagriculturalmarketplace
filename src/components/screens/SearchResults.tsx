@@ -146,6 +146,13 @@ export function SearchResults() {
                       src={resolveImageUrl(listing.images?.[0], "https://images.unsplash.com/photo-1761370980657-22586ea44093?w=400")}
                       alt={listing.title}
                       className="w-full h-full object-cover"
+                      onError={(e) => {
+                        const el = e.currentTarget as HTMLImageElement;
+                        if (!el.dataset.fallback) {
+                          el.dataset.fallback = 'true';
+                          el.src = 'https://images.unsplash.com/photo-1761370980657-22586ea44093?w=400';
+                        }
+                      }}
                     />
                     {listing.is_organic && (
                       <div className="absolute top-2 left-2 px-2 py-1 bg-[#4CAF50] text-white text-xs font-medium rounded">
@@ -199,6 +206,13 @@ export function SearchResults() {
                         src={resolveImageUrl(listing.images?.[0], "https://images.unsplash.com/photo-1761370980657-22586ea44093?w=400")}
                         alt={listing.title}
                         className="w-full h-full object-cover"
+                        onError={(e) => {
+                          const el = e.currentTarget as HTMLImageElement;
+                          if (!el.dataset.fallback) {
+                            el.dataset.fallback = 'true';
+                            el.src = 'https://images.unsplash.com/photo-1761370980657-22586ea44093?w=400';
+                          }
+                        }}
                       />
                     </div>
 

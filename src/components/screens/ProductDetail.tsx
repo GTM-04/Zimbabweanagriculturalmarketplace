@@ -70,10 +70,8 @@ export function ProductDetail() {
   const FALLBACK =
     "https://images.unsplash.com/photo-1761370980657-22586ea44093?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&w=1080";
 
-  const getImageUrl = (images: string[], index = 0) => {
-    const raw = images?.[index];
-    return resolveImageUrl(raw, FALLBACK);
-  };
+  const getImageUrl = (images: Listing["images"], index = 0) =>
+    resolveImageUrl(images?.[index], FALLBACK);
 
   const priceVsMarket =
     marketPrice && listing
@@ -132,6 +130,13 @@ export function ProductDetail() {
             src={getImageUrl(images, currentImage)}
             alt={listing.title || listing.produce_type?.name}
             className="w-full h-full object-cover"
+            onError={(e) => {
+              const el = e.currentTarget as HTMLImageElement;
+              if (!el.dataset.fallback) {
+                el.dataset.fallback = 'true';
+                el.src = FALLBACK;
+              }
+            }}
           />
         </div>
         {images.length > 1 && (

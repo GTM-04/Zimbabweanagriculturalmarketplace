@@ -1,7 +1,7 @@
 import { ArrowLeft, Grid, Heart, List as ListIcon, Loader2, MapPin, Search, SlidersHorizontal } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router";
-import { listingsApi } from "../../lib/api";
+import { listingsApi, resolveImageUrl } from "../../lib/api";
 import type { Listing } from "../../lib/types";
 import { BottomNav } from "../BottomNav";
 
@@ -143,7 +143,7 @@ export function SearchResults() {
                 >
                   <div className="relative aspect-[4/3] bg-[#F5F5F5]">
                     <img
-                      src={listing.images[0] || "https://images.unsplash.com/photo-1761370980657-22586ea44093?w=400"}
+                      src={resolveImageUrl(listing.images?.[0], "https://images.unsplash.com/photo-1761370980657-22586ea44093?w=400")}
                       alt={listing.title}
                       className="w-full h-full object-cover"
                     />
@@ -196,7 +196,7 @@ export function SearchResults() {
                   <div className="flex gap-4 p-4">
                     <div className="w-24 h-24 rounded-lg overflow-hidden bg-[#F5F5F5] flex-shrink-0">
                       <img
-                        src={listing.images[0] || "https://images.unsplash.com/photo-1761370980657-22586ea44093?w=400"}
+                        src={resolveImageUrl(listing.images?.[0], "https://images.unsplash.com/photo-1761370980657-22586ea44093?w=400")}
                         alt={listing.title}
                         className="w-full h-full object-cover"
                       />

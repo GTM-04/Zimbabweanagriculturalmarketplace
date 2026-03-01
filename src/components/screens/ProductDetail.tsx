@@ -12,7 +12,7 @@ import {
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router";
-import { listingsApi, pricingApi } from "../../lib/api";
+import { listingsApi, pricingApi, resolveImageUrl } from "../../lib/api";
 import type { Listing, MarketPrice } from "../../lib/types";
 import { Button } from "../ui/button";
 
@@ -67,9 +67,12 @@ export function ProductDetail() {
     fetchListing();
   }, [id]);
 
+  const FALLBACK =
+    "https://images.unsplash.com/photo-1761370980657-22586ea44093?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&w=1080";
+
   const getImageUrl = (images: string[], index = 0) => {
-    if (images && images.length > index) return images[index];
-    return "https://images.unsplash.com/photo-1761370980657-22586ea44093?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxBZnJpY2FuJTIwbWFya2V0JTIwZnJlc2glMjBwcm9kdWNlfGVufDF8fHx8MTc3MDc2OTc5MXww&ixlib=rb-4.1.0&q=80&w=1080";
+    const raw = images?.[index];
+    return resolveImageUrl(raw, FALLBACK);
   };
 
   const priceVsMarket =

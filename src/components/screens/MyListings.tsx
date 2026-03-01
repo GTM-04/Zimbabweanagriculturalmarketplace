@@ -1,7 +1,7 @@
 import { AlertCircle, ArrowLeft, Eye, Filter, Loader2, MessageCircle, MoreVertical, Plus, Search, WifiOff } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router";
-import { listingsApi } from "../../lib/api";
+import { listingsApi, resolveImageUrl } from "../../lib/api";
 import type { Listing } from "../../lib/types";
 import { BottomNav } from "../BottomNav";
 import { Button } from "../ui/button";
@@ -101,9 +101,11 @@ export function MyListings() {
 
   const countByStatus = (status: string) => listings.filter(l => l.status === status).length;
 
+  const FALLBACK_IMG =
+    "https://images.unsplash.com/photo-1649251037465-72c9d378acb6?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&w=1080";
+
   const getImageUrl = (images: string[]) => {
-    if (images && images.length > 0) return images[0];
-    return "https://images.unsplash.com/photo-1649251037465-72c9d378acb6?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxtYWl6ZSUyMGNvcm4lMjBmaWVsZCUyMGhhcnZlc3R8ZW58MXx8fHwxNzcwNzY5Nzg0fDA&ixlib=rb-4.1.0&q=80&w=1080";
+    return resolveImageUrl(images?.[0], FALLBACK_IMG);
   };
 
   return (

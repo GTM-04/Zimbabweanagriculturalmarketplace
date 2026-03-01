@@ -30,6 +30,22 @@ import type {
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000/api/v1';
 export const WS_BASE_URL = import.meta.env.VITE_WS_URL || 'ws://127.0.0.1:8000/ws';
 
+// Derive the server origin (e.g. http://127.0.0.1:8000) from the API base URL
+const SERVER_ORIGIN = (() => {
+  try { return new URL(API_BASE_URL).origin; } catch { return 'http://127.0.0.1:8000'; }
+})();
+
+/**
+ * Resolve an image path returned by the API to a fully-qualified URL.
+ * Relative paths like /media/listings/abc.jpg are prefixed with the server origin.
+ */
+export function resolveImageUrl(path: string | undefined | null, fallback: string): string {
+  if (!path) return fallback;
+  if (path.startsWith('http://') || path.startsWith('https://')) return path;
+  // Relative path — prepend the backend server origin
+  return `${SERVER_ORIGIN}${path.startsWith('/') ? '' : '/'}${path}`;
+}
+
 // ============================================================================
 // Axios Instance Configuration
 // ============================================================================

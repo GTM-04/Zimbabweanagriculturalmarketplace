@@ -1,7 +1,7 @@
 import { Bell, Heart, Loader2, MapPin, Search, TrendingUp, WifiOff } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router";
-import { listingsApi } from "../../lib/api";
+import { listingsApi, resolveImageUrl } from "../../lib/api";
 import { categories, getFarmerById, produceListings } from "../../lib/data";
 import type { Listing } from "../../lib/types";
 import { useAuth } from "../../lib/useAuth";
@@ -50,8 +50,7 @@ function fromApiListing(l: Listing): NormalizedListing {
     price: l.price_per_unit,
     currency: l.currency ?? "ZWL",
     district: l.district,
-    imageUrl:
-      l.images?.[0] && l.images[0].startsWith("http") ? l.images[0] : FALLBACK_IMAGE,
+    imageUrl: resolveImageUrl(l.images?.[0], FALLBACK_IMAGE),
     isOrganic: !!l.is_organic,
     farmerName: l.farmer_name,
     category: l.produce_type?.name?.toLowerCase() ?? "other",

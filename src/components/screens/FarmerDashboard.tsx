@@ -1,9 +1,9 @@
-import { AlertCircle, Bell, DollarSign, Eye, List, MessageCircle, Package, Plus, TrendingUp, WifiOff } from "lucide-react";
+import { AlertCircle, Bell, DollarSign, Eye, List, Loader2, MessageCircle, Package, Plus, TrendingUp, WifiOff } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router";
-import { listingsApi } from "../../lib/api";
+import { listingsApi, notificationsApi } from "../../lib/api";
 import { produceListings } from "../../lib/data";
-import type { Listing } from "../../lib/types";
+import type { Listing, Notification } from "../../lib/types";
 import { useAuth } from "../../lib/useAuth";
 import { useOnlineStatus } from "../../lib/useOnlineStatus";
 import { BottomNav } from "../BottomNav";
@@ -16,8 +16,39 @@ export function FarmerDashboard() {
 
   const [myListings, setMyListings] = useState<Listing[]>([]);
   const [loadingStats, setLoadingStats] = useState(true);
+  const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [loadingActivity, setLoadingActivity] = useState(true);
 
   const farmerName = user?.full_name?.split(" ")[0] ?? "Farmer";
+
+  // Relative time helper
+  const timeAgo = (iso: string) => {
+    const diff = Date.now() - new Date(iso).getTime();
+    const mins = Math.floor(diff / 60000);
+    if (mins < 1) return "Just now";
+    if (mins < 60) return `${mins} minute${mins !== 1 ? "s" : ""} ago`;
+    const hrs = Math.floor(mins / 60);
+    if (hrs < 24) return `${hrs} hour${hrs !== 1 ? "s" : ""} ago`;
+    const days = Math.floor(hrs / 24);
+    return `${days} day${days !== 1 ? "s" : ""} ago`;
+  };
+
+  // Icon + colour config per notification type
+  const activityMeta = (type: Notification["notification_type"]) => {
+    switch (type) {
+      case "new_message":
+      case "inquiry":
+        return { icon: <MessageCircle className="w-5 h-5 text-[#F5A623]" />, bg: "bg-[#F5A623]/10" };
+      case "price_alert":
+        return { icon: <TrendingUp className="w-5 h-5 text-[#4CAF50]" />, bg: "bg-[#4CAF50]/10" };
+      case "new_listing":
+        return { icon: <Package className="w-5 h-5 text-[#2D5016]" />, bg: "bg-[#2D5016]/10" };
+      case "order_status":
+        return { icon: <DollarSign className="w-5 h-5 text-[#4A90E2]" />, bg: "bg-[#4A90E2]/10" };
+      default:
+        return { icon: <Eye className="w-5 h-5 text-[#4A90E2]" />, bg: "bg-[#4A90E2]/10" };
+    }
+  };
 
   useEffect(() => {
     const fetchMyListings = async () => {
@@ -35,7 +66,22 @@ export function FarmerDashboard() {
         setLoadingStats(false);
       }
     };
+
+    const fetchActivity = async () => {
+      setLoadingActivity(true);
+      try {
+        const data = await notificationsApi.list();
+        setNotifications(data.slice(0, 5)); // show latest 5
+      } catch {
+        // Leave empty — no static fallback for notifications
+        setNotifications([]);
+      } finally {
+        setLoadingActivity(false);
+      }
+    };
+
     fetchMyListings();
+    fetchActivity();
   }, []);
 
   // Compute stats from API listings; fall back gracefully
@@ -192,37 +238,45 @@ export function FarmerDashboard() {
       {/* Recent Activity */}
       <div className="px-4 mb-6">
         <h2 className="text-lg font-semibold text-[#2C2C2C] mb-3">Recent Activity</h2>
-        <div className="space-y-3">
-          <div className="bg-white rounded-xl p-4 shadow-sm flex items-start gap-3">
-            <div className="w-10 h-10 rounded-full bg-[#4A90E2]/10 flex items-center justify-center flex-shrink-0">
-              <Eye className="w-5 h-5 text-[#4A90E2]" />
-            </div>
-            <div className="flex-1">
-              <p className="text-sm text-[#2C2C2C]">Your <span className="font-medium">White Maize</span> listing got 12 new views</p>
-              <p className="text-xs text-[#757575] mt-1">2 hours ago</p>
-            </div>
+        {loadingActivity ? (
+          <div className="space-y-3">
+            {[1, 2, 3].map((i) => (
+              <div key={i} className="bg-white rounded-xl p-4 shadow-sm flex items-center gap-3">
+                <div className="w-10 h-10 rounded-full bg-[#E0E0E0] animate-pulse flex-shrink-0" />
+                <div className="flex-1 space-y-2">
+                  <div className="h-3 bg-[#E0E0E0] rounded animate-pulse w-3/4" />
+                  <div className="h-2 bg-[#E0E0E0] rounded animate-pulse w-1/4" />
+                </div>
+              </div>
+            ))}
           </div>
-
-          <div className="bg-white rounded-xl p-4 shadow-sm flex items-start gap-3">
-            <div className="w-10 h-10 rounded-full bg-[#F5A623]/10 flex items-center justify-center flex-shrink-0">
-              <MessageCircle className="w-5 h-5 text-[#F5A623]" />
-            </div>
-            <div className="flex-1">
-              <p className="text-sm text-[#2C2C2C]">New message from <span className="font-medium">Chipo's Restaurant</span></p>
-              <p className="text-xs text-[#757575] mt-1">5 hours ago</p>
-            </div>
+        ) : notifications.length === 0 ? (
+          <div className="bg-white rounded-xl p-6 shadow-sm text-center">
+            <Bell className="w-8 h-8 text-[#E0E0E0] mx-auto mb-2" />
+            <p className="text-sm text-[#757575]">No recent activity</p>
           </div>
-
-          <div className="bg-white rounded-xl p-4 shadow-sm flex items-start gap-3">
-            <div className="w-10 h-10 rounded-full bg-[#4CAF50]/10 flex items-center justify-center flex-shrink-0">
-              <TrendingUp className="w-5 h-5 text-[#4CAF50]" />
-            </div>
-            <div className="flex-1">
-              <p className="text-sm text-[#2C2C2C]">Price update: <span className="font-medium">Tomatoes increased by 15%</span></p>
-              <p className="text-xs text-[#757575] mt-1">1 day ago</p>
-            </div>
+        ) : (
+          <div className="space-y-3">
+            {notifications.map((n) => {
+              const { icon, bg } = activityMeta(n.notification_type);
+              return (
+                <div key={n.id} className={`bg-white rounded-xl p-4 shadow-sm flex items-start gap-3 ${!n.is_read ? "border-l-4 border-[#2D5016]" : ""}`}>
+                  <div className={`w-10 h-10 rounded-full ${bg} flex items-center justify-center flex-shrink-0`}>
+                    {icon}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium text-[#2C2C2C]">{n.title}</p>
+                    <p className="text-sm text-[#757575] mt-0.5 truncate">{n.message}</p>
+                    <p className="text-xs text-[#9E9E9E] mt-1">{timeAgo(n.created_at)}</p>
+                  </div>
+                  {!n.is_read && (
+                    <span className="w-2 h-2 rounded-full bg-[#2D5016] mt-1.5 flex-shrink-0" />
+                  )}
+                </div>
+              );
+            })}
           </div>
-        </div>
+        )}
       </div>
 
       {/* Market Insights */}

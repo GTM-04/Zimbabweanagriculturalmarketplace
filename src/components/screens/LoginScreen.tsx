@@ -3,6 +3,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router";
 import { toast } from "sonner";
 import { useAuth } from "../../lib/useAuth";
+import { useOnlineStatus } from "../../lib/useOnlineStatus";
 import { Alert } from "../ui/alert";
 import { Button } from "../ui/button";
 import { Checkbox } from "../ui/checkbox";
@@ -12,6 +13,7 @@ import { Label } from "../ui/label";
 export function LoginScreen() {
   const navigate = useNavigate();
   const { login, loading, error } = useAuth();
+  const isOnline = useOnlineStatus();
   const [showPassword, setShowPassword] = useState(false);
   const [localError, setLocalError] = useState("");
   const [formData, setFormData] = useState({
@@ -19,7 +21,6 @@ export function LoginScreen() {
     password: "",
     remember: false,
   });
-  const isOnline = navigator.onLine;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -39,9 +40,17 @@ export function LoginScreen() {
       });
 
       // Show success message
-      toast.success("Login successful!", {
-        description: `Welcome back, ${user.full_name}`
-      });
+      if (!isOnline) {
+        toast.success(`Welcome, ${user.full_name}!`, {
+          description: "Signed in offline. Some features are limited while offline.",
+        });
+      } else {
+        toast.success(`Welcome to Village to Marketplace, ${user.full_name}!`, {
+          description: user.user_type === "farmer"
+            ? "Ready to list your produce and connect with buyers."
+            : "Browse fresh produce from local farmers.",
+        });
+      }
 
       // Navigate based on user type
       setTimeout(() => {
@@ -64,9 +73,14 @@ export function LoginScreen() {
     <div className="min-h-screen bg-white flex flex-col">
       {/* Offline Indicator */}
       {!isOnline && (
-        <div className="bg-[#FFA726] text-[#2C2C2C] px-4 py-2 flex items-center justify-center gap-2 text-sm font-medium">
-          <WifiOff className="w-4 h-4" />
-          <span>You're offline. Limited functionality.</span>
+        <div className="bg-[#FFA726] text-[#2C2C2C] px-4 py-3 flex items-start gap-3 text-sm font-medium">
+          <WifiOff className="w-5 h-5 flex-shrink-0 mt-0.5" />
+          <div>
+            <p className="font-semibold">You are offline</p>
+            <p className="text-xs font-normal mt-0.5">
+              If you've signed in before on this device, you can still log in using your cached account.
+            </p>
+          </div>
         </div>
       )}
 
@@ -168,6 +182,11 @@ export function LoginScreen() {
               <>
                 <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                 Signing In...
+              </>
+            ) : !isOnline ? (
+              <>
+                <WifiOff className="w-4 h-4 mr-2" />
+                Sign In Offline
               </>
             ) : (
               "Sign In"

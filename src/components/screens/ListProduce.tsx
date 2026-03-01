@@ -1,11 +1,18 @@
-import { ArrowLeft, Calendar, Camera, Loader2, TrendingUp } from "lucide-react";
+import { ArrowLeft, Calendar, Camera, CloudUpload, Loader2, TrendingUp, WifiOff } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router";
 import { toast } from "sonner";
 import { listingsApi, pricingApi } from "../../lib/api";
 import { categories, zimbabweDistricts } from "../../lib/data";
+import {
+    getPendingListings,
+    markListingSynced,
+    removeSyncedListings,
+    savePendingListing
+} from "../../lib/offlineStorage";
 import type { MarketPrice } from "../../lib/types";
 import { useAuth } from "../../lib/useAuth";
+import { useOnlineStatus } from "../../lib/useOnlineStatus";
 import { Alert } from "../ui/alert";
 import { Button } from "../ui/button";
 import { Input } from "../ui/input";
@@ -23,14 +30,76 @@ const specificProduce: Record<string, string[]> = {
   dairy: ["Milk", "Cheese", "Yogurt", "Butter"],
 };
 
+// ── Local fallback price database (ZWL, Zimbabwe 2026 estimates) ─────────────
+// Used when the API returns no data for a given produce type.
+interface LocalPrice { min: number; avg: number; max: number; unit: string; }
+const localPriceDB: Record<string, LocalPrice> = {
+  // vegetables
+  "tomatoes":    { min: 150, avg: 200, max: 260,    unit: "kg"   },
+  "onions":      { min: 180, avg: 225, max: 290,    unit: "kg"   },
+  "butternut":   { min: 110, avg: 150, max: 195,    unit: "kg"   },
+  "cabbage":     { min:  90, avg: 130, max: 170,    unit: "kg"   },
+  "spinach":     { min:  70, avg: 110, max: 150,    unit: "kg"   },
+  "peppers":     { min: 200, avg: 270, max: 360,    unit: "kg"   },
+  "carrots":     { min: 110, avg: 160, max: 210,    unit: "kg"   },
+  "cucumbers":   { min:  90, avg: 140, max: 190,    unit: "kg"   },
+  // fruits
+  "bananas":     { min: 190, avg: 265, max: 350,    unit: "kg"   },
+  "avocados":    { min: 240, avg: 320, max: 420,    unit: "kg"   },
+  "oranges":     { min: 130, avg: 195, max: 260,    unit: "kg"   },
+  "mangoes":     { min: 160, avg: 235, max: 310,    unit: "kg"   },
+  "apples":      { min: 230, avg: 320, max: 420,    unit: "kg"   },
+  // grains (per kg; farmer can choose to enter in tonnes/bags)
+  "white maize": { min: 0.38, avg: 0.46, max: 0.55, unit: "kg"  },
+  "yellow maize":{ min: 0.35, avg: 0.43, max: 0.52, unit: "kg"  },
+  "wheat":       { min: 0.48, avg: 0.60, max: 0.72, unit: "kg"  },
+  "sorghum":     { min: 0.30, avg: 0.42, max: 0.54, unit: "kg"  },
+  "millet":      { min: 0.28, avg: 0.38, max: 0.50, unit: "kg"  },
+  // livestock (per head)
+  "cattle":      { min: 80000,avg:115000,max:155000, unit: "head"},
+  "goats":       { min: 14000,avg: 22000,max: 32000, unit: "head"},
+  "sheep":       { min: 17000,avg: 26000,max: 36000, unit: "head"},
+  "pigs":        { min: 18000,avg: 29000,max: 42000, unit: "head"},
+  // poultry
+  "chickens":    { min: 750,  avg: 1150, max: 1600,  unit: "bird"},
+  "eggs":        { min: 380,  avg: 540,  max: 720,   unit: "tray"},
+  "ducks":       { min: 550,  avg: 880,  max: 1250,  unit: "bird"},
+  "turkeys":     { min: 2800, avg: 4500, max: 6500,  unit: "bird"},
+  // dairy
+  "milk":        { min: 140,  avg: 200,  max: 270,   unit: "litre"},
+  "cheese":      { min: 550,  avg: 900,  max: 1300,  unit: "kg"  },
+  "yogurt":      { min: 280,  avg: 425,  max: 580,   unit: "kg"  },
+  "butter":      { min: 480,  avg: 700,  max: 950,   unit: "kg"  },
+};
+
+function getLocalPrice(produceName: string, district: string): import("../../lib/types").MarketPrice | null {
+  const key = produceName.toLowerCase().trim();
+  const entry = localPriceDB[key];
+  if (!entry) return null;
+  return {
+    produce_type: produceName,
+    district,
+    price_min: entry.min,
+    price_avg: entry.avg,
+    price_max: entry.max,
+    unit: entry.unit,
+    currency: "ZWL",
+    recorded_date: new Date().toISOString().split("T")[0],
+  };
+}
+
 export function ListProduce() {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const isOnline = useOnlineStatus();
   const [loading, setLoading] = useState(false);
+  const [syncing, setSyncing] = useState(false);
+  const [pendingCount, setPendingCount] = useState(0);
   const [error, setError] = useState("");
   const [uploadedImages, setUploadedImages] = useState<File[]>([]);
   const [marketPrice, setMarketPrice] = useState<MarketPrice | null>(null);
   const [marketPriceLoading, setMarketPriceLoading] = useState(false);
+  const [marketPriceIsLive, setMarketPriceIsLive] = useState(false);
   const [formData, setFormData] = useState({
     category: "",
     produce: "",
@@ -47,12 +116,31 @@ export function ListProduce() {
     isOrganic: false,
   });
 
-  // Fetch live market price when produce or district changes
+  // Refresh pending count whenever online status or component mounts
+  useEffect(() => {
+    setPendingCount(getPendingListings().filter((l) => !l.synced).length);
+  }, [isOnline]);
+
+  // Fetch live market price; fall back to local DB when API has no data or is offline
   useEffect(() => {
     if (!formData.produce) {
       setMarketPrice(null);
       return;
     }
+
+    // Immediately show local suggestion so the field is never blank
+    const localFallback = getLocalPrice(formData.produce, formData.district);
+    if (localFallback) {
+      setMarketPrice(localFallback);
+      setMarketPriceIsLive(false);
+    }
+
+    // Only bother hitting the API when online
+    if (!isOnline) {
+      setMarketPriceLoading(false);
+      return;
+    }
+
     const fetchMarketPrice = async () => {
       setMarketPriceLoading(true);
       try {
@@ -60,8 +148,8 @@ export function ListProduce() {
           produce_type: formData.produce,
           district: formData.district,
         });
-        // Use exact match first, then fall back to any result for that produce
-        const match =
+        // Prefer exact district+produce match, then any produce match, then local fallback
+        const apiMatch =
           prices.find(
             (p) =>
               p.produce_type.toLowerCase() === formData.produce.toLowerCase() &&
@@ -70,17 +158,24 @@ export function ListProduce() {
           prices.find(
             (p) => p.produce_type.toLowerCase() === formData.produce.toLowerCase()
           ) ||
-          prices[0] ||
-          null;
-        setMarketPrice(match);
+          (prices.length > 0 ? prices[0] : null);
+
+        if (apiMatch) {
+          setMarketPrice(apiMatch);
+          setMarketPriceIsLive(true);
+        } else {
+          setMarketPrice(localFallback);
+          setMarketPriceIsLive(false);
+        }
       } catch {
-        setMarketPrice(null);
+        // API failed – keep showing local fallback (already set above)
+        setMarketPriceIsLive(false);
       } finally {
         setMarketPriceLoading(false);
       }
     };
     fetchMarketPrice();
-  }, [formData.produce, formData.district]);
+  }, [formData.produce, formData.district, isOnline]);
 
   // Check authentication on mount
   useEffect(() => {
@@ -109,43 +204,125 @@ export function ListProduce() {
     setError("");
     setLoading(true);
 
-    try {
-      // Create listing
-      const listing = await listingsApi.create({
-        produce_type_id: parseInt(formData.produce) || 1, // Map produce name to ID
-        quantity_available: parseFloat(formData.quantity),
-        unit: formData.unit,
-        price_per_unit: parseFloat(formData.price),
-        description: formData.description || `${formData.produce} ${formData.variety ? `- ${formData.variety}` : ''}`.trim(),
-        is_organic: formData.isOrganic,
-        harvest_date: formData.availableFrom,
-      });
+    const listingPayload = {
+      produce_type_id: parseInt(formData.produce) || 1,
+      quantity_available: parseFloat(formData.quantity),
+      unit: formData.unit,
+      price_per_unit: parseFloat(formData.price),
+      description:
+        formData.description ||
+        `${formData.produce} ${formData.variety ? `- ${formData.variety}` : ""}`.trim(),
+      is_organic: formData.isOrganic,
+      harvest_date: formData.availableFrom,
+      // display metadata
+      produceName: formData.produce,
+      categoryName: formData.category,
+      districtName: formData.district,
+      deliveryAvailable: formData.delivery,
+      negotiable: formData.negotiable,
+    };
 
-      // Upload images if any
+    // ── OFFLINE: save locally ────────────────────────────────────────────────
+    if (!isOnline) {
+      savePendingListing(listingPayload);
+      setPendingCount((c) => c + 1);
+      toast.success("Listing saved locally!", {
+        description:
+          "Your listing has been saved on this device and will be synced when you go online.",
+        duration: 5000,
+      });
+      setLoading(false);
+      setTimeout(() => navigate(-1), 600);
+      return;
+    }
+
+    // ── ONLINE: submit to server ─────────────────────────────────────────────
+    try {
+      const listing = await listingsApi.create(listingPayload);
+
       if (uploadedImages.length > 0 && listing.id) {
         await listingsApi.uploadImages(listing.id, uploadedImages);
       }
 
-      // Show success message
       toast.success("Listing Created!", {
-        description: "Your produce has been listed successfully"
+        description: "Your produce has been listed successfully",
       });
 
-      // Navigate to my listings
       setTimeout(() => navigate("/farmer/my-listings"), 500);
     } catch (err: any) {
       const errorMsg = err.message || "Failed to create listing. Please try again.";
       setError(errorMsg);
-      toast.error("Failed to Create Listing", {
-        description: errorMsg
-      });
+      toast.error("Failed to Create Listing", { description: errorMsg });
     } finally {
       setLoading(false);
     }
   };
 
+  // Sync pending offline listings when back online
+  const handleSync = async () => {
+    if (!isOnline || syncing) return;
+    setSyncing(true);
+    const pending = getPendingListings().filter((l) => !l.synced);
+    let successCount = 0;
+    let failCount = 0;
+
+    for (const item of pending) {
+      try {
+        await listingsApi.create(item.data);
+        markListingSynced(item.localId);
+        successCount++;
+      } catch {
+        failCount++;
+      }
+    }
+
+    removeSyncedListings();
+    setPendingCount(getPendingListings().filter((l) => !l.synced).length);
+
+    if (successCount > 0) {
+      toast.success(
+        `Synced ${successCount} listing${successCount > 1 ? "s" : ""}!`,
+        { description: failCount > 0 ? `${failCount} failed – will retry later.` : undefined }
+      );
+    } else if (failCount > 0) {
+      toast.error("Sync failed", { description: "Could not sync listings. Please try again." });
+    }
+    setSyncing(false);
+  };
+
   return (
     <div className="min-h-screen bg-[#F5F5F5]">
+      {/* Offline Banner */}
+      {!isOnline && (
+        <div className="bg-[#FFA726] text-[#2C2C2C] px-4 py-2 flex items-center gap-2 text-sm font-medium">
+          <WifiOff className="w-4 h-4 flex-shrink-0" />
+          <span>
+            You're offline. Listings will be saved locally and synced when online.
+          </span>
+        </div>
+      )}
+
+      {/* Pending Sync Banner */}
+      {isOnline && pendingCount > 0 && (
+        <div className="bg-[#2D5016] text-white px-4 py-2 flex items-center justify-between gap-2 text-sm">
+          <span>
+            {pendingCount} offline listing{pendingCount > 1 ? "s" : ""} waiting to sync
+          </span>
+          <button
+            onClick={handleSync}
+            disabled={syncing}
+            className="flex items-center gap-1.5 bg-white text-[#2D5016] font-semibold px-3 py-1 rounded-full hover:bg-[#F5F5F5] transition-colors disabled:opacity-60"
+          >
+            {syncing ? (
+              <Loader2 className="w-3.5 h-3.5 animate-spin" />
+            ) : (
+              <CloudUpload className="w-3.5 h-3.5" />
+            )}
+            {syncing ? "Syncing..." : "Sync Now"}
+          </button>
+        </div>
+      )}
+
       {/* Header */}
       <div className="sticky top-0 bg-white border-b border-[#E0E0E0] px-4 py-4 flex items-center gap-3 z-10 shadow-sm">
         <button
@@ -267,11 +444,11 @@ export function ListProduce() {
               className="mt-2"
             />
 
-            {/* Live market price hint */}
+            {/* Market price hint */}
             {marketPriceLoading && (
               <p className="text-xs text-[#757575] mt-1 flex items-center gap-1">
                 <Loader2 className="w-3 h-3 animate-spin" />
-                Fetching market price...
+                Fetching live market price...
               </p>
             )}
             {!marketPriceLoading && marketPrice && (
@@ -280,11 +457,20 @@ export function ListProduce() {
                   <div className="flex items-center gap-1.5">
                     <TrendingUp className="w-4 h-4 text-[#2D5016] flex-shrink-0" />
                     <div>
-                      <p className="text-xs font-semibold text-[#2D5016]">
-                        Market range: {marketPrice.currency ?? "ZWL"} {marketPrice.price_min}–{marketPrice.price_max}/{marketPrice.unit}
-                      </p>
+                      <div className="flex items-center gap-1.5 mb-0.5">
+                        <p className="text-xs font-semibold text-[#2D5016]">
+                          {marketPrice.currency ?? "ZWL"} {marketPrice.price_min.toLocaleString()}–{marketPrice.price_max.toLocaleString()}/{marketPrice.unit}
+                        </p>
+                        <span className={`text-[10px] font-medium px-1.5 py-0.5 rounded-full ${
+                          marketPriceIsLive
+                            ? "bg-[#4CAF50] text-white"
+                            : "bg-[#FFA726] text-[#2C2C2C]"
+                        }`}>
+                          {marketPriceIsLive ? "Live" : "Estimated"}
+                        </span>
+                      </div>
                       <p className="text-xs text-[#757575]">
-                        Avg: {marketPrice.currency ?? "ZWL"} {marketPrice.price_avg}/{marketPrice.unit}
+                        Avg: {marketPrice.currency ?? "ZWL"} {marketPrice.price_avg.toLocaleString()}/{marketPrice.unit}
                         {marketPrice.district ? ` · ${marketPrice.district}` : ""}
                       </p>
                     </div>
@@ -458,7 +644,12 @@ export function ListProduce() {
             {loading ? (
               <>
                 <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                Publishing...
+                {isOnline ? "Publishing..." : "Saving..."}
+              </>
+            ) : !isOnline ? (
+              <>
+                <WifiOff className="w-4 h-4 mr-2" />
+                Save Offline
               </>
             ) : (
               "Publish Listing"

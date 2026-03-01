@@ -1,8 +1,9 @@
-import { ArrowLeft, Loader2, MoreVertical, Paperclip, Send, WifiOff } from "lucide-react";
+import { ArrowLeft, Clock, Loader2, MoreVertical, Paperclip, Send, WifiOff } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router";
 import { messagingApi } from "../../lib/api";
 import type { Message } from "../../lib/types";
+import { useOnlineStatus } from "../../lib/useOnlineStatus";
 import { useWebSocket } from "../../lib/useWebSocket";
 
 export function ChatScreen() {
@@ -15,7 +16,9 @@ export function ChatScreen() {
   const [otherUserTyping, setOtherUserTyping] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-  const isOnline = navigator.onLine;
+  const isOnline = useOnlineStatus();
+  // Offline-queued messages waiting to sync
+  const [offlineQueue, setOfflineQueue] = useState<string[]>([]);
 
   // Scroll to bottom when messages change
   const scrollToBottom = () => {
@@ -83,35 +86,57 @@ export function ChatScreen() {
   };
 
   const handleSend = () => {
-    if (message.trim() && conversationId) {
-      // Send via WebSocket
-      const clientId = wsSendMessage(message.trim());
-      
-      // Optimistically add message to UI
-      if (clientId) {
-        const optimisticMessage: Message = {
-          id: clientId,
-          sender_id: "me",
-          text: message.trim(),
-          created_at: new Date().toISOString(),
-          is_read: false,
-          client_id: clientId,
-        };
-        setMessages((prev) => [...prev, optimisticMessage]);
-      }
-      
+    if (!message.trim() || !conversationId) return;
+    const text = message.trim();
+
+    if (!isOnline || !connected) {
+      // Queue for later, optimistically show in UI with a clock icon
+      const offlineMsg: Message = {
+        id: `offline-${Date.now()}`,
+        sender_id: "me",
+        text,
+        created_at: new Date().toISOString(),
+        is_read: false,
+        client_id: `offline-${Date.now()}`,
+      };
+      setMessages((prev) => [...prev, offlineMsg]);
+      setOfflineQueue((q) => [...q, text]);
       setMessage("");
-      sendTyping(false);
+      return;
     }
+
+    // Send via WebSocket
+    const clientId = wsSendMessage(text);
+    if (clientId) {
+      const optimisticMessage: Message = {
+        id: clientId,
+        sender_id: "me",
+        text,
+        created_at: new Date().toISOString(),
+        is_read: false,
+        client_id: clientId,
+      };
+      setMessages((prev) => [...prev, optimisticMessage]);
+    }
+    setMessage("");
+    sendTyping(false);
   };
+
+  // When we come back online, flush the offline queue
+  useEffect(() => {
+    if (isOnline && connected && offlineQueue.length > 0) {
+      offlineQueue.forEach((text) => wsSendMessage(text));
+      setOfflineQueue([]);
+    }
+  }, [isOnline, connected]);
 
   return (
     <div className="h-screen flex flex-col bg-[#F5F5F5]">
       {/* Offline Banner */}
       {!isOnline && (
-        <div className="bg-[#FFA726] text-[#2C2C2C] px-4 py-2 flex items-center justify-center gap-2 text-sm font-medium">
-          <WifiOff className="w-4 h-4" />
-          <span>Messages will send when online</span>
+        <div className="bg-[#FFA726] text-[#2C2C2C] px-4 py-2 flex items-center gap-2 text-sm font-medium">
+          <WifiOff className="w-4 h-4 flex-shrink-0" />
+          <span>You're offline — messages will sync when you reconnect.</span>
         </div>
       )}
 
@@ -139,9 +164,11 @@ export function ChatScreen() {
           </div>
           <div>
             <h2 className="font-semibold text-[#2C2C2C]">Chipo's Restaurant</h2>
-            <p className="text-xs text-[#757575] flex items-center gap-1">
-              <span className="w-2 h-2 rounded-full bg-[#4CAF50]"></span>
-              Online
+            <p className="text-xs flex items-center gap-1">
+              <span className={`w-2 h-2 rounded-full ${isOnline ? "bg-[#4CAF50]" : "bg-[#757575]"}`}></span>
+              <span className={isOnline ? "text-[#4CAF50]" : "text-[#757575]"}>
+                {isOnline ? "Online" : "Offline"}
+              </span>
             </p>
           </div>
         </div>
@@ -208,10 +235,15 @@ export function ChatScreen() {
                     >
                       <p className="text-sm leading-relaxed">{msg.text}</p>
                     </div>
-                    <span className="text-xs text-[#757575] px-2">
-                      {timestamp}
-                      {isMe && msg.is_read && " • Read"}
-                    </span>
+                    <div className="flex items-center gap-1 px-2">
+                      <span className="text-xs text-[#757575]">{timestamp}</span>
+                      {isMe && msg.is_read && <span className="text-xs text-[#757575]"> • Read</span>}
+                      {isMe && msg.id?.startsWith("offline-") && (
+                        <span className="flex items-center gap-0.5 text-[10px] text-[#FFA726]">
+                          <Clock className="w-3 h-3" /> Will sync when online
+                        </span>
+                      )}
+                    </div>
                   </div>
                 </div>
               );
@@ -264,10 +296,9 @@ export function ChatScreen() {
                 setMessage(e.target.value);
                 handleTyping();
               }}
-              placeholder={isOnline && connected ? "Type a message..." : "Connecting..."}
+              placeholder={!isOnline ? "You're offline — message will queue" : connected ? "Type a message..." : "Connecting..."}
               rows={1}
-              disabled={!connected}
-              className="w-full bg-transparent focus:outline-none resize-none text-sm text-[#2C2C2C] placeholder:text-[#757575] disabled:opacity-50"
+              className="w-full bg-transparent focus:outline-none resize-none text-sm text-[#2C2C2C] placeholder:text-[#757575]"
               onKeyDown={(e) => {
                 if (e.key === "Enter" && !e.shiftKey) {
                   e.preventDefault();
@@ -279,14 +310,16 @@ export function ChatScreen() {
 
           <button
             onClick={handleSend}
-            disabled={!message.trim() || !connected}
+            disabled={!message.trim()}
             className={`p-3 rounded-full mb-1 transition-all ${
-              message.trim() && connected
-                ? "bg-[#2D5016] hover:bg-[#234010] text-white"
+              message.trim()
+                ? isOnline && connected
+                  ? "bg-[#2D5016] hover:bg-[#234010] text-white"
+                  : "bg-[#FFA726] hover:bg-[#FB8C00] text-white"
                 : "bg-[#E0E0E0] text-[#757575] cursor-not-allowed"
             }`}
           >
-            <Send className="w-5 h-5" />
+            {isOnline && connected ? <Send className="w-5 h-5" /> : <Clock className="w-5 h-5" />}
           </button>
         </div>
       </div>

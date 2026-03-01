@@ -1,20 +1,59 @@
-import { Bell, Plus, List, MessageCircle, TrendingUp, Eye, Package, DollarSign, WifiOff, AlertCircle } from "lucide-react";
+import { AlertCircle, Bell, DollarSign, Eye, List, MessageCircle, Package, Plus, TrendingUp, WifiOff } from "lucide-react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router";
-import { Button } from "../ui/button";
-import { BottomNav } from "../BottomNav";
+import { listingsApi } from "../../lib/api";
 import { produceListings } from "../../lib/data";
+import type { Listing } from "../../lib/types";
+import { useAuth } from "../../lib/useAuth";
+import { useOnlineStatus } from "../../lib/useOnlineStatus";
+import { BottomNav } from "../BottomNav";
+import { Button } from "../ui/button";
 
 export function FarmerDashboard() {
   const navigate = useNavigate();
-  const isOnline = navigator.onLine;
-  
-  // Simulated farmer data
-  const farmerName = "Tendai";
-  const farmerId = "1";
-  const myListings = produceListings.filter(l => l.farmerId === farmerId && l.status === "active");
-  const totalViews = myListings.reduce((sum, l) => sum + l.views, 0);
-  const totalInquiries = myListings.reduce((sum, l) => sum + l.inquiries, 0);
-  const totalEarnings = 45600; // Mock data
+  const { user } = useAuth();
+  const isOnline = useOnlineStatus();
+
+  const [myListings, setMyListings] = useState<Listing[]>([]);
+  const [loadingStats, setLoadingStats] = useState(true);
+
+  const farmerName = user?.full_name?.split(" ")[0] ?? "Farmer";
+
+  useEffect(() => {
+    const fetchMyListings = async () => {
+      setLoadingStats(true);
+      try {
+        const data = await listingsApi.list({ status: "active" });
+        setMyListings(data);
+      } catch {
+        // Fallback: filter static data by farmerId if we have it
+        const staticFallback = produceListings.filter(
+          (l) => l.status === "active"
+        ) as unknown as Listing[];
+        setMyListings(staticFallback);
+      } finally {
+        setLoadingStats(false);
+      }
+    };
+    fetchMyListings();
+  }, []);
+
+  // Compute stats from API listings; fall back gracefully
+  const totalViews = myListings.reduce(
+    (sum, l) => sum + ((l as any).views ?? 0),
+    0
+  );
+  const totalInquiries = myListings.reduce(
+    (sum, l) => sum + ((l as any).inquiries ?? 0),
+    0
+  );
+  const totalEarnings = myListings.reduce(
+    (sum, l) =>
+      sum +
+      (l.price_per_unit ?? (l as any).pricePerUnit ?? 0) *
+        (l.quantity_available ?? (l as any).quantity ?? 0),
+    0
+  );
 
   const getGreeting = () => {
     const hour = new Date().getHours();
@@ -27,7 +66,7 @@ export function FarmerDashboard() {
     <div className="min-h-screen bg-[#F5F5F5] pb-20">
       {/* Offline Banner */}
       {!isOnline && (
-        <div className="bg-[#FFA726] text-[#2C2C2C] px-4 py-2 flex items-center justify-center gap-2 text-sm font-medium">
+        <div className="bg-[#FFA726] text-[#2C2C2C] px-4 py-2 flex items-center gap-2 text-sm font-medium">
           <WifiOff className="w-4 h-4" />
           <span>You're offline. Some features are limited.</span>
         </div>
@@ -52,8 +91,8 @@ export function FarmerDashboard() {
         </div>
 
         <div className="flex items-center gap-2 text-sm text-[#757575]">
-          <span className="w-2 h-2 rounded-full bg-[#4CAF50]"></span>
-          <span>Harare, Zimbabwe</span>
+          <span className={`w-2 h-2 rounded-full ${isOnline ? "bg-[#4CAF50]" : "bg-[#757575]"}`}></span>
+          <span>{user?.district ?? "Zimbabwe"}</span>
         </div>
       </div>
 
@@ -65,7 +104,9 @@ export function FarmerDashboard() {
               <Package className="w-5 h-5 text-[#2D5016]" />
               <span className="text-sm text-[#757575]">Active Listings</span>
             </div>
-            <p className="text-2xl font-bold text-[#2C2C2C]">{myListings.length}</p>
+            <p className="text-2xl font-bold text-[#2C2C2C]">
+              {loadingStats ? <Loader2 className="w-6 h-6 animate-spin text-[#2D5016]" /> : myListings.length}
+            </p>
           </div>
 
           <div className="bg-white rounded-xl p-4 shadow-sm min-w-[140px]">
@@ -73,7 +114,9 @@ export function FarmerDashboard() {
               <Eye className="w-5 h-5 text-[#4A90E2]" />
               <span className="text-sm text-[#757575]">Total Views</span>
             </div>
-            <p className="text-2xl font-bold text-[#2C2C2C]">{totalViews}</p>
+            <p className="text-2xl font-bold text-[#2C2C2C]">
+              {loadingStats ? <Loader2 className="w-6 h-6 animate-spin text-[#4A90E2]" /> : totalViews.toLocaleString()}
+            </p>
           </div>
 
           <div className="bg-white rounded-xl p-4 shadow-sm min-w-[140px]">
@@ -81,15 +124,21 @@ export function FarmerDashboard() {
               <MessageCircle className="w-5 h-5 text-[#F5A623]" />
               <span className="text-sm text-[#757575]">Inquiries</span>
             </div>
-            <p className="text-2xl font-bold text-[#2C2C2C]">{totalInquiries}</p>
+            <p className="text-2xl font-bold text-[#2C2C2C]">
+              {loadingStats ? <Loader2 className="w-6 h-6 animate-spin text-[#F5A623]" /> : totalInquiries.toLocaleString()}
+            </p>
           </div>
 
           <div className="bg-white rounded-xl p-4 shadow-sm min-w-[140px]">
             <div className="flex items-center gap-2 mb-2">
               <DollarSign className="w-5 h-5 text-[#4CAF50]" />
-              <span className="text-sm text-[#757575]">Earnings</span>
+              <span className="text-sm text-[#757575]">Est. Value</span>
             </div>
-            <p className="text-2xl font-bold text-[#2C2C2C]">ZWL {totalEarnings.toLocaleString()}</p>
+            <p className="text-2xl font-bold text-[#2C2C2C]">
+              {loadingStats
+                ? <Loader2 className="w-6 h-6 animate-spin text-[#4CAF50]" />
+                : `ZWL ${totalEarnings > 0 ? totalEarnings.toLocaleString() : "—"}`}
+            </p>
           </div>
         </div>
       </div>

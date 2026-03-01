@@ -35,7 +35,6 @@ export const useWebSocket = ({
       ws.current = messagingApi.connectWebSocket(conversationId);
 
       ws.current.onopen = () => {
-        console.log('WebSocket connected');
         setConnected(true);
         setReconnectAttempts(0);
       };
@@ -70,42 +69,37 @@ export const useWebSocket = ({
               break;
 
             default:
-              console.warn('Unknown WebSocket message type:', data.type);
+              break;
           }
-        } catch (error) {
-          console.error('Failed to parse WebSocket message:', error);
+        } catch {
+          // ignore malformed messages
         }
       };
 
-      ws.current.onerror = (error) => {
-        console.error('WebSocket error:', error);
+      ws.current.onerror = (_error) => {
         if (onError) {
           onError('WebSocket connection error');
         }
       };
 
       ws.current.onclose = () => {
-        console.log('WebSocket disconnected');
         setConnected(false);
 
         // Attempt to reconnect
         if (reconnectAttempts < maxReconnectAttempts) {
           const delay = Math.min(1000 * Math.pow(2, reconnectAttempts), 10000);
-          console.log(`Reconnecting in ${delay}ms...`);
           
           reconnectTimeout.current = setTimeout(() => {
             setReconnectAttempts((prev) => prev + 1);
             connect();
           }, delay);
         } else {
-          console.error('Max reconnection attempts reached');
           if (onError) {
             onError('Failed to connect to chat server');
           }
         }
       };
-    } catch (error) {
-      console.error('Failed to create WebSocket connection:', error);
+    } catch {
       if (onError) {
         onError('Failed to establish connection');
       }

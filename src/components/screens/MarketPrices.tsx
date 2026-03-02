@@ -257,8 +257,14 @@ export function MarketPrices() {
     try {
       isRefresh ? setRefreshing(true) : setLoading(true);
       const data = await pricingApi.getMarketPrices();
-      setPrices(data as PriceWithMeta[]);
-      setUsingFallback(false);
+      // Backend returned empty array — no prices seeded yet, use local fallback
+      if (!data || data.length === 0) {
+        setPrices(freshLocal);
+        setUsingFallback(true);
+      } else {
+        setPrices(data as PriceWithMeta[]);
+        setUsingFallback(false);
+      }
       setLastUpdated(new Date());
     } catch {
       setPrices(freshLocal);

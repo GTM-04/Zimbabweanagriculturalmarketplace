@@ -130,7 +130,18 @@ export interface Conversation {
   other_user: {
     id: string;
     name: string;
+    profile_picture?: string | null;
   };
+  listing?: {
+    id: string;
+    title?: string;
+    produce_type?: string;
+    price_per_unit?: number;
+    quantity_available?: number;
+    unit?: string;
+    images?: unknown[];
+  } | null;
+  listing_id?: string | null;
   last_message?: string;
   last_message_at?: string;
   unread_count: number;

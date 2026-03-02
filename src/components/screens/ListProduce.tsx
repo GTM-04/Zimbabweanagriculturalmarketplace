@@ -103,7 +103,6 @@ export function ListProduce() {
   const [marketPriceIsLive, setMarketPriceIsLive] = useState(false);
   // Map of produce name (lowercase) → backend numeric id, populated on mount
   const produceTypeMapRef = useRef<Record<string, number>>({});
-  const [produceTypeMapReady, setProduceTypeMapReady] = useState(false);
   const [formData, setFormData] = useState({
     category: "",
     produce: "",
@@ -136,7 +135,6 @@ export function ListProduce() {
         map[t.name.toLowerCase().trim()] = t.id;
       });
       produceTypeMapRef.current = map;
-      setProduceTypeMapReady(true);
     });
   }, [isOnline]);
 

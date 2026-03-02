@@ -491,10 +491,25 @@ export const produceTypesApi = {
 
 export const messagingApi = {
   /**
+   * Get a single conversation by ID (includes other_user and optional listing).
+   */
+  getConversation: async (conversationId: string): Promise<import('./types').Conversation> => {
+    try {
+      const response = await api.get<import('./types').Conversation>(
+        `/messaging/conversations/${conversationId}/`
+      );
+      return response.data;
+    } catch {
+      // If 404 or error, fall through to the list-based lookup in the component
+      throw new Error('Conversation not found');
+    }
+  },
+
+  /**
    * Start or retrieve an existing conversation with another user.
    * POST /messaging/conversations/ — returns the conversation (existing or newly created).
    */
-  startConversation: async (otherUserId: string, listingId?: string): Promise<Conversation> => {
+  startConversation: async (otherUserId: string, listingId?: string): Promise<import('./types').Conversation> => {
     try {
       const response = await api.post<Conversation>('/messaging/conversations/', {
         recipient_id: otherUserId,

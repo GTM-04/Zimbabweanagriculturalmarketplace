@@ -1,10 +1,13 @@
 import { ArrowLeft, Clock, Loader2, MoreVertical, Paperclip, Send, WifiOff } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router";
-import { messagingApi } from "../../lib/api";
-import type { Message } from "../../lib/types";
+import { listingsApi, messagingApi, resolveImageUrl } from "../../lib/api";
+import type { Conversation, Listing, Message } from "../../lib/types";
 import { useOnlineStatus } from "../../lib/useOnlineStatus";
 import { useWebSocket } from "../../lib/useWebSocket";
+
+const FALLBACK_IMG =
+  "https://images.unsplash.com/photo-1649251037465-72c9d378acb6?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&w=400";
 
 export function ChatScreen() {
   const { conversationId } = useParams();
@@ -17,8 +20,11 @@ export function ChatScreen() {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const isOnline = useOnlineStatus();
-  // Offline-queued messages waiting to sync
   const [offlineQueue, setOfflineQueue] = useState<string[]>([]);
+
+  // Dynamic conversation + listing state
+  const [conversation, setConversation] = useState<Conversation | null>(null);
+  const [relatedListing, setRelatedListing] = useState<Listing | null>(null);
 
   // Scroll to bottom when messages change
   const scrollToBottom = () => {
@@ -29,15 +35,34 @@ export function ChatScreen() {
     scrollToBottom();
   }, [messages]);
 
-  // Load initial messages
+  // Fetch conversation details + messages in parallel
   useEffect(() => {
-    const loadMessages = async () => {
-      if (!conversationId) return;
-      
+    if (!conversationId) return;
+
+    const loadAll = async () => {
       try {
         setLoading(true);
-        const data = await messagingApi.getMessages(conversationId);
-        setMessages(data);
+
+        // Fetch messages
+        const [msgs, conv] = await Promise.all([
+          messagingApi.getMessages(conversationId),
+          messagingApi.getConversation(conversationId).catch(() => null),
+        ]);
+        setMessages(msgs);
+
+        if (conv) {
+          setConversation(conv);
+          // Try to load the related listing if the conversation carries one
+          const listingId = conv.listing?.id ?? (conv as any).listing_id ?? null;
+          if (listingId) {
+            try {
+              const lst = await listingsApi.get(String(listingId));
+              setRelatedListing(lst);
+            } catch {
+              // listing fetch is optional — silent fail
+            }
+          }
+        }
       } catch (err: any) {
         setError(err.message || "Failed to load messages");
       } finally {
@@ -45,7 +70,7 @@ export function ChatScreen() {
       }
     };
 
-    loadMessages();
+    loadAll();
   }, [conversationId]);
 
   // WebSocket connection
@@ -58,7 +83,7 @@ export function ChatScreen() {
         sendReadReceipt(newMessage.id);
       }
     },
-    onTyping: (userId, userName, isTyping) => {
+    onTyping: (_userId, _userName, isTyping) => {
       setOtherUserTyping(isTyping);
       if (isTyping) {
         // Auto-hide typing indicator after 3 seconds
@@ -159,11 +184,21 @@ export function ChatScreen() {
 
         {/* User Info */}
         <div className="flex items-center gap-3 flex-1">
-          <div className="w-10 h-10 rounded-full bg-[#2D5016] flex items-center justify-center text-white font-semibold">
-            C
+          <div className="w-10 h-10 rounded-full bg-[#2D5016] flex items-center justify-center text-white font-semibold overflow-hidden">
+            {conversation?.other_user?.profile_picture ? (
+              <img
+                src={conversation.other_user.profile_picture}
+                alt={conversation.other_user.name}
+                className="w-full h-full object-cover"
+              />
+            ) : (
+              <span>{(conversation?.other_user?.name ?? "?")[0].toUpperCase()}</span>
+            )}
           </div>
           <div>
-            <h2 className="font-semibold text-[#2C2C2C]">Chipo's Restaurant</h2>
+            <h2 className="font-semibold text-[#2C2C2C]">
+              {conversation?.other_user?.name ?? "Loading..."}
+            </h2>
             <p className="text-xs flex items-center gap-1">
               <span className={`w-2 h-2 rounded-full ${isOnline ? "bg-[#4CAF50]" : "bg-[#757575]"}`}></span>
               <span className={isOnline ? "text-[#4CAF50]" : "text-[#757575]"}>
@@ -179,27 +214,54 @@ export function ChatScreen() {
       </div>
 
       {/* Related Listing Card */}
-      <div className="bg-white border-b border-[#E0E0E0] px-4 py-3">
-        <div className="flex items-center gap-3 p-3 bg-[#F5F5F5] rounded-lg">
-          <div className="w-12 h-12 rounded-lg overflow-hidden bg-[#E0E0E0]">
-            <img
-              src="https://images.unsplash.com/photo-1649251037465-72c9d378acb6?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxtYWl6ZSUyMGNvcm4lMjBmaWVsZCUyMGhhcnZlc3R8ZW58MXx8fHwxNzcwNzY5Nzg0fDA&ixlib=rb-4.1.0&q=80&w=1080"
-              alt="Product"
-              className="w-full h-full object-cover"
-            />
+      {(relatedListing || conversation?.listing) && (() => {
+        const lst = relatedListing;
+        const convLst = conversation?.listing;
+        const listingId = lst?.id ?? convLst?.id ?? null;
+        const title =
+          lst?.title ??
+          lst?.produce_type?.name ??
+          convLst?.title ??
+          convLst?.produce_type ??
+          "Listing";
+        const pricePerUnit =
+          lst?.price_per_unit ?? convLst?.price_per_unit ?? null;
+        const qty =
+          lst?.quantity_available ?? convLst?.quantity_available ?? null;
+        const unit = lst?.unit ?? convLst?.unit ?? "";
+        const totalPrice =
+          pricePerUnit != null && qty != null
+            ? (pricePerUnit * qty).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+            : null;
+        const imgSrc = lst
+          ? resolveImageUrl(lst.images?.[0], FALLBACK_IMG)
+          : FALLBACK_IMG;
+        return (
+          <div className="bg-white border-b border-[#E0E0E0] px-4 py-3">
+            <div className="flex items-center gap-3 p-3 bg-[#F5F5F5] rounded-lg">
+              <div className="w-12 h-12 rounded-lg overflow-hidden bg-[#E0E0E0] flex-shrink-0">
+                <img src={imgSrc} alt={title} className="w-full h-full object-cover" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-semibold text-[#2C2C2C] truncate">{title}</p>
+                {totalPrice && (
+                  <p className="text-sm text-[#2D5016] font-bold">
+                    USD {totalPrice} per {qty} {unit}
+                  </p>
+                )}
+              </div>
+              {listingId && (
+                <button
+                  onClick={() => navigate(`/product/${listingId}`)}
+                  className="text-xs text-[#4A90E2] font-medium hover:underline whitespace-nowrap"
+                >
+                  View Listing
+                </button>
+              )}
+            </div>
           </div>
-          <div className="flex-1 min-w-0">
-            <p className="text-sm font-semibold text-[#2C2C2C] truncate">White Maize</p>
-            <p className="text-sm text-[#2D5016] font-bold">USD 0.45/kg</p>
-          </div>
-          <button
-            onClick={() => navigate("/product/1")}
-            className="text-xs text-[#4A90E2] font-medium hover:underline whitespace-nowrap"
-          >
-            View Listing
-          </button>
-        </div>
-      </div>
+        );
+      })()}
 
       {/* Messages */}
       <div className="flex-1 overflow-y-auto px-4 py-4 space-y-4">

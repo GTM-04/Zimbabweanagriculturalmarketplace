@@ -570,10 +570,10 @@ export function MyListings() {
                       <Loader2 className="w-5 h-5 text-[#757575] animate-spin" />
                     </div>
                   ) : (
+                    <div onClick={(e) => e.stopPropagation()}>
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
                         <button
-                          onClick={(e) => e.stopPropagation()}
                           className="p-1 hover:bg-[#F5F5F5] rounded-full transition-colors"
                         >
                           <MoreVertical className="w-5 h-5 text-[#757575]" />
@@ -581,20 +581,20 @@ export function MyListings() {
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
                         <DropdownMenuItem
-                          onClick={() => navigate(`/product/${listing.id}`)}
+                          onClick={(e: React.MouseEvent) => { e.stopPropagation(); navigate(`/product/${listing.id}`); }}
                           className="gap-2"
                         >
                           <Eye className="w-4 h-4" /> View Listing
                         </DropdownMenuItem>
                         <DropdownMenuItem
-                          onClick={() => openEdit(listing)}
+                          onClick={(e: React.MouseEvent) => { e.stopPropagation(); openEdit(listing); }}
                           className="gap-2 text-[#2D5016]"
                         >
                           <Pencil className="w-4 h-4" /> Edit Listing
                         </DropdownMenuItem>
                         {listing.status !== "active" && (
                           <DropdownMenuItem
-                            onClick={() => handleStatusChange(listing, "active")}
+                            onClick={(e: React.MouseEvent) => { e.stopPropagation(); handleStatusChange(listing, "active"); }}
                             className="gap-2 text-[#4CAF50]"
                           >
                             <CheckCircle2 className="w-4 h-4" /> Mark as Active
@@ -602,7 +602,7 @@ export function MyListings() {
                         )}
                         {listing.status !== "sold" && (
                           <DropdownMenuItem
-                            onClick={() => handleStatusChange(listing, "sold")}
+                            onClick={(e: React.MouseEvent) => { e.stopPropagation(); handleStatusChange(listing, "sold"); }}
                             className="gap-2"
                           >
                             <CheckCircle2 className="w-4 h-4" /> Mark as Sold
@@ -610,7 +610,7 @@ export function MyListings() {
                         )}
                         {listing.status !== "expired" && (
                           <DropdownMenuItem
-                            onClick={() => handleStatusChange(listing, "expired")}
+                            onClick={(e: React.MouseEvent) => { e.stopPropagation(); handleStatusChange(listing, "expired"); }}
                             className="gap-2 text-[#757575]"
                           >
                             <CheckCircle2 className="w-4 h-4" /> Mark as Expired
@@ -618,13 +618,14 @@ export function MyListings() {
                         )}
                         <DropdownMenuSeparator />
                         <DropdownMenuItem
-                          onClick={() => setConfirmDeleteId(listing.id)}
+                          onClick={(e: React.MouseEvent) => { e.stopPropagation(); setConfirmDeleteId(listing.id); }}
                           className="gap-2 text-red-500 focus:text-red-500"
                         >
                           <Trash2 className="w-4 h-4" /> Delete
                         </DropdownMenuItem>
                       </DropdownMenuContent>
                     </DropdownMenu>
+                    </div>
                   )}
                 </div>
 

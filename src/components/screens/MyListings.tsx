@@ -283,9 +283,11 @@ export function MyListings() {
 
                 <div className="flex items-center gap-2 mb-3">
                   <span className="text-lg font-bold text-[#2D5016]">
-                    {listing.currency || "ZWL"} {listing.price_per_unit}
+                    {listing.currency || "ZWL"} {Number(listing.price_per_unit).toLocaleString()}
                   </span>
-                  <span className="text-sm text-[#757575]">per {listing.unit}</span>
+                  <span className="text-sm text-[#757575]">
+                    per {listing.quantity_available} {listing.unit}
+                  </span>
                 </div>
 
                 <div className="flex items-center gap-4 text-sm">

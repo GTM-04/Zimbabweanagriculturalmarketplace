@@ -297,7 +297,7 @@ export function BuyerDashboard() {
                       <span className="text-lg font-bold text-[#2D5016]">
                         {listing.currency} {listing.price.toLocaleString()}
                       </span>
-                      <span className="text-xs text-[#757575]">/{listing.unit}</span>
+                      <span className="text-xs text-[#757575]">/{listing.quantity}{listing.unit}</span>
                     </div>
 
                     {listing.farmerName && (

@@ -7,11 +7,11 @@ import type { Listing } from "../../lib/types";
 import { BottomNav } from "../BottomNav";
 import { Button } from "../ui/button";
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuSeparator,
+    DropdownMenuTrigger,
 } from "../ui/dropdown-menu";
 
 const CACHE_KEY_PREFIX = "cached_my_listings_";
@@ -326,12 +326,61 @@ export function MyListings() {
                       {listing.quantity_available} {listing.unit}
                     </p>
                   </div>
-                  <button
-                    onClick={(e) => e.stopPropagation()}
-                    className="p-1 hover:bg-[#F5F5F5] rounded-full transition-colors"
-                  >
-                    <MoreVertical className="w-5 h-5 text-[#757575]" />
-                  </button>
+                  {actionLoadingId === listing.id ? (
+                    <div className="p-1">
+                      <Loader2 className="w-5 h-5 text-[#757575] animate-spin" />
+                    </div>
+                  ) : (
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <button
+                          onClick={(e) => e.stopPropagation()}
+                          className="p-1 hover:bg-[#F5F5F5] rounded-full transition-colors"
+                        >
+                          <MoreVertical className="w-5 h-5 text-[#757575]" />
+                        </button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuItem
+                          onClick={() => navigate(`/product/${listing.id}`)}
+                          className="gap-2"
+                        >
+                          <Eye className="w-4 h-4" /> View Listing
+                        </DropdownMenuItem>
+                        {listing.status !== "active" && (
+                          <DropdownMenuItem
+                            onClick={() => handleStatusChange(listing, "active")}
+                            className="gap-2 text-[#4CAF50]"
+                          >
+                            <CheckCircle2 className="w-4 h-4" /> Mark as Active
+                          </DropdownMenuItem>
+                        )}
+                        {listing.status !== "sold" && (
+                          <DropdownMenuItem
+                            onClick={() => handleStatusChange(listing, "sold")}
+                            className="gap-2"
+                          >
+                            <CheckCircle2 className="w-4 h-4" /> Mark as Sold
+                          </DropdownMenuItem>
+                        )}
+                        {listing.status !== "expired" && (
+                          <DropdownMenuItem
+                            onClick={() => handleStatusChange(listing, "expired")}
+                            className="gap-2 text-[#757575]"
+                          >
+                            <CheckCircle2 className="w-4 h-4" /> Mark as Expired
+                          </DropdownMenuItem>
+                        )}
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem
+                          onClick={() => setConfirmDeleteId(listing.id)}
+                          className="gap-2 text-red-500 focus:text-red-500"
+                        >
+                          <Trash2 className="w-4 h-4" /> Delete
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  )}
                 </div>
 
                 <div className="flex items-center gap-2 mb-3">
@@ -398,6 +447,42 @@ export function MyListings() {
       >
         <Plus className="w-6 h-6" />
       </button>
+
+      {/* Delete confirmation overlay */}
+      {confirmDeleteId && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-6"
+          onClick={() => setConfirmDeleteId(null)}
+        >
+          <div
+            className="bg-white rounded-2xl p-6 w-full max-w-sm shadow-xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-center w-12 h-12 rounded-full bg-red-50 mx-auto mb-4">
+              <Trash2 className="w-6 h-6 text-red-500" />
+            </div>
+            <h3 className="text-lg font-semibold text-[#2C2C2C] text-center mb-2">Delete Listing?</h3>
+            <p className="text-sm text-[#757575] text-center mb-6">
+              This listing will be permanently removed and cannot be undone.
+            </p>
+            <div className="flex gap-3">
+              <Button
+                variant="outline"
+                className="flex-1"
+                onClick={() => setConfirmDeleteId(null)}
+              >
+                Cancel
+              </Button>
+              <Button
+                className="flex-1 bg-red-500 hover:bg-red-600 text-white"
+                onClick={() => handleDelete(confirmDeleteId)}
+              >
+                Delete
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
 
       <BottomNav userType="farmer" />
     </div>

@@ -13,7 +13,7 @@ import {
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router";
 import { toast } from "sonner";
-import { listingsApi, pricingApi, resolveImageUrl } from "../../lib/api";
+import { listingsApi, messagingApi, pricingApi, resolveImageUrl } from "../../lib/api";
 import type { Listing, MarketPrice } from "../../lib/types";
 import { Button } from "../ui/button";
 
@@ -28,15 +28,35 @@ export function ProductDetail() {
   const [messagingLoading, setMessagingLoading] = useState(false);
   const [contactLoading, setContactLoading] = useState(false);
 
+  /**
+   * Extract farmer ID from whichever shape the API returns:
+   *   listing.farmer_id           (top-level string)
+   *   listing.farmer.id           (nested object)
+   *   listing.user / listing.user_id  (auth-user reference)
+   */
+  const getFarmerId = (l: Listing): string | null => {
+    const raw = l as any;
+    return (
+      l.farmer_id ||
+      raw?.farmer?.id ||
+      raw?.user?.id ||
+      raw?.user_id ||
+      raw?.created_by?.id ||
+      null
+    );
+  };
+
   /** Open/create a conversation with the farmer and go to the chat screen. */
   const handleMessage = async () => {
-    if (!listing?.farmer_id) return;
+    if (!listing) return;
+    const farmerId = getFarmerId(listing);
+    if (!farmerId) {
+      toast.error("Cannot message seller", { description: "Seller information is not available for this listing." });
+      return;
+    }
     setMessagingLoading(true);
     try {
-      const conversation = await messagingApi.startConversation(
-        listing.farmer_id,
-        listing.id
-      );
+      const conversation = await messagingApi.startConversation(farmerId, listing.id);
       navigate(`/messages/${conversation.id}`);
     } catch (err: any) {
       toast.error("Could not open chat", { description: err?.message || "Please try again." });
@@ -48,18 +68,19 @@ export function ProductDetail() {
   /** Call the farmer directly if phone is available, otherwise fall back to chat. */
   const handleContact = async () => {
     if (!listing) return;
-    if (listing.farmer_phone) {
-      window.location.href = `tel:${listing.farmer_phone}`;
+    const phone = listing.farmer_phone || (listing as any)?.farmer?.phone_number || (listing as any)?.farmer?.phone;
+    if (phone) {
+      window.location.href = `tel:${phone}`;
       return;
     }
-    // No phone on record — open chat instead
-    if (!listing.farmer_id) return;
+    const farmerId = getFarmerId(listing);
+    if (!farmerId) {
+      toast.error("Cannot contact seller", { description: "Seller information is not available for this listing." });
+      return;
+    }
     setContactLoading(true);
     try {
-      const conversation = await messagingApi.startConversation(
-        listing.farmer_id,
-        listing.id
-      );
+      const conversation = await messagingApi.startConversation(farmerId, listing.id);
       navigate(`/messages/${conversation.id}`);
     } catch (err: any) {
       toast.error("Could not contact farmer", { description: err?.message || "Please try again." });
@@ -361,7 +382,7 @@ export function ProductDetail() {
           <Button
             onClick={handleMessage}
             variant="outline"
-            disabled={!listing.farmer_id || messagingLoading}
+            disabled={messagingLoading}
             className="h-12 border-2 border-[#2D5016] text-[#2D5016] hover:bg-[#2D5016]/5 flex items-center justify-center gap-2"
           >
             {messagingLoading
@@ -371,13 +392,13 @@ export function ProductDetail() {
           </Button>
           <Button
             onClick={handleContact}
-            disabled={!listing.farmer_id || contactLoading}
+            disabled={contactLoading}
             className="h-12 bg-[#2D5016] hover:bg-[#234010] text-white flex items-center justify-center gap-2"
           >
             {contactLoading
               ? <Loader2 className="w-5 h-5 animate-spin" />
               : <Phone className="w-5 h-5" />}
-            {listing.farmer_phone ? "Call" : "Contact"}
+            {(listing as any)?.farmer?.phone_number || listing.farmer_phone ? "Call" : "Contact"}
           </Button>
         </div>
       </div>

@@ -67,7 +67,7 @@ export function BuyerRegistration() {
       
       // Show success message
       toast.success("Registration successful!", {
-        description: "Welcome to Kufara marketplace"
+        description: `Welcome to Village to Marketplace, ${formData.businessName}! Ready to discover fresh produce and connect with farmers.`
       });
       
       setTimeout(() => navigate("/buyer/dashboard"), 500);

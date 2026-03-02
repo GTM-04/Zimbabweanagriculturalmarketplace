@@ -65,7 +65,8 @@ export function MyListings() {
       setLoading(true);
       setError(null);
       setUsingCache(false);
-      const data = await listingsApi.list({ farmer_id: currentUser.id });
+      // Use the dedicated farmer endpoint — JWT proves ownership server-side
+      const data = await listingsApi.myListings();
       setListings(data);
       // Persist to cache for offline use
       if (cacheKey) {
@@ -91,7 +92,13 @@ export function MyListings() {
     fetchListings();
   }, [currentUser?.id]);
 
-  const filteredListings = listings
+  // /my-listings already scopes to the current farmer server-side;
+  // this client-side guard is a safety net for stale cache from a previous session.
+  const ownListings = listings.filter(
+    l => !l.farmer_id || l.farmer_id === currentUser?.id
+  );
+
+  const filteredListings = ownListings
     .filter(l => l.status === activeTab)
     .filter(l =>
       searchQuery.trim() === "" ||
@@ -99,7 +106,7 @@ export function MyListings() {
       l.produce_type?.name?.toLowerCase().includes(searchQuery.toLowerCase())
     );
 
-  const countByStatus = (status: string) => listings.filter(l => l.status === status).length;
+  const countByStatus = (status: string) => ownListings.filter(l => l.status === status).length;
 
   const FALLBACK_IMG =
     "https://images.unsplash.com/photo-1649251037465-72c9d378acb6?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&w=1080";

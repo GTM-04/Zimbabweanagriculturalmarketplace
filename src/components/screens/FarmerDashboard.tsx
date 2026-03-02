@@ -2,7 +2,6 @@ import { AlertCircle, Bell, DollarSign, Eye, List, Loader2, MessageCircle, Packa
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router";
 import { listingsApi, notificationsApi } from "../../lib/api";
-import { produceListings } from "../../lib/data";
 import type { Listing, Notification } from "../../lib/types";
 import { useAuth } from "../../lib/useAuth";
 import { useOnlineStatus } from "../../lib/useOnlineStatus";
@@ -54,14 +53,11 @@ export function FarmerDashboard() {
     const fetchMyListings = async () => {
       setLoadingStats(true);
       try {
-        const data = await listingsApi.list({ status: "active" });
+        // myListings() calls GET /listings/my-listings — JWT-scoped to this farmer only
+        const data = await listingsApi.myListings();
         setMyListings(data);
       } catch {
-        // Fallback: filter static data by farmerId if we have it
-        const staticFallback = produceListings.filter(
-          (l) => l.status === "active"
-        ) as unknown as Listing[];
-        setMyListings(staticFallback);
+        setMyListings([]);
       } finally {
         setLoadingStats(false);
       }
@@ -84,20 +80,14 @@ export function FarmerDashboard() {
     fetchActivity();
   }, []);
 
-  // Compute stats from API listings; fall back gracefully
-  const totalViews = myListings.reduce(
-    (sum, l) => sum + ((l as any).views ?? 0),
-    0
-  );
-  const totalInquiries = myListings.reduce(
-    (sum, l) => sum + ((l as any).inquiries ?? 0),
-    0
-  );
-  const totalEarnings = myListings.reduce(
-    (sum, l) =>
-      sum +
-      (l.price_per_unit ?? (l as any).pricePerUnit ?? 0) *
-        (l.quantity_available ?? (l as any).quantity ?? 0),
+  // Compute stats from the farmer's own listings
+  const activeListings = myListings.filter(l => l.status === "active");
+  // Views and inquiries count across ALL listing statuses
+  const totalViews = myListings.reduce((sum, l) => sum + (l.views ?? 0), 0);
+  const totalInquiries = myListings.reduce((sum, l) => sum + (l.inquiries ?? 0), 0);
+  // Est. value = sum of (price × quantity) for active listings only
+  const totalEarnings = activeListings.reduce(
+    (sum, l) => sum + (l.price_per_unit ?? 0) * (l.quantity_available ?? 0),
     0
   );
 
@@ -151,7 +141,7 @@ export function FarmerDashboard() {
               <span className="text-sm text-[#757575]">Active Listings</span>
             </div>
             <p className="text-2xl font-bold text-[#2C2C2C]">
-              {loadingStats ? <Loader2 className="w-6 h-6 animate-spin text-[#2D5016]" /> : myListings.length}
+              {loadingStats ? <Loader2 className="w-6 h-6 animate-spin text-[#2D5016]" /> : activeListings.length}
             </p>
           </div>
 

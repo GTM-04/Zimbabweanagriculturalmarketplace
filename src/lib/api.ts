@@ -336,11 +336,29 @@ export const usersApi = {
 
 export const listingsApi = {
   /**
-   * Get all listings (with optional filters)
+   * Get all listings (public marketplace feed – for buyers browsing).
    */
   list: async (params?: ListingsQueryParams): Promise<Listing[]> => {
     try {
       const response = await api.get<Listing[]>('/listings/', { params });
+      return response.data;
+    } catch (error) {
+      return handleApiError(error);
+    }
+  },
+
+  /**
+   * Get the authenticated farmer's own listings.
+   * Calls GET /listings/my-listings — requires a valid farmer JWT.
+   * Optional filters: status, page, page_size.
+   */
+  myListings: async (params?: {
+    status?: string;
+    page?: number;
+    page_size?: number;
+  }): Promise<Listing[]> => {
+    try {
+      const response = await api.get<Listing[]>('/listings/my-listings', { params });
       return response.data;
     } catch (error) {
       return handleApiError(error);

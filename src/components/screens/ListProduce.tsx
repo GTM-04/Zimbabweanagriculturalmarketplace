@@ -1,8 +1,8 @@
 import { ArrowLeft, Calendar, Camera, CloudUpload, Loader2, TrendingUp, WifiOff } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router";
 import { toast } from "sonner";
-import { listingsApi, pricingApi } from "../../lib/api";
+import { listingsApi, pricingApi, produceTypesApi } from "../../lib/api";
 import { categories, zimbabweDistricts } from "../../lib/data";
 import {
     getPendingListings,
@@ -101,6 +101,9 @@ export function ListProduce() {
   const [marketPrice, setMarketPrice] = useState<MarketPrice | null>(null);
   const [marketPriceLoading, setMarketPriceLoading] = useState(false);
   const [marketPriceIsLive, setMarketPriceIsLive] = useState(false);
+  // Map of produce name (lowercase) → backend numeric id, populated on mount
+  const produceTypeMapRef = useRef<Record<string, number>>({});
+  const [produceTypeMapReady, setProduceTypeMapReady] = useState(false);
   const [formData, setFormData] = useState({
     category: "",
     produce: "",
@@ -120,6 +123,21 @@ export function ListProduce() {
   // Refresh pending count whenever online status or component mounts
   useEffect(() => {
     setPendingCount(getPendingListings().filter((l) => !l.synced).length);
+  }, [isOnline]);
+
+  // Fetch produce types from backend to build the name→id map
+  // This is what fixes the "always Cabbage" bug – parseInt("Goats") was NaN || 1
+  useEffect(() => {
+    if (!isOnline) return;
+    produceTypesApi.list().then((types) => {
+      if (types.length === 0) return;
+      const map: Record<string, number> = {};
+      types.forEach((t) => {
+        map[t.name.toLowerCase().trim()] = t.id;
+      });
+      produceTypeMapRef.current = map;
+      setProduceTypeMapReady(true);
+    });
   }, [isOnline]);
 
   // Fetch live market price; fall back to local DB when API has no data or is offline
@@ -205,8 +223,38 @@ export function ListProduce() {
     setError("");
     setLoading(true);
 
+    // ── Resolve the produce name to its backend numeric ID ───────────────────
+    // We look up by lowercase name in the map fetched from /produce-types/.
+    // This is the fix for the bug where parseInt("Goats") === NaN → 1 → Cabbage.
+    const map = produceTypeMapRef.current;
+    const resolvedId: number | null =
+      map[formData.produce.toLowerCase().trim()] ??
+      map[formData.produce.trim()] ??
+      null;
+
+    if (isOnline && !resolvedId) {
+      // Map not populated yet (network slow) — try one more fetch
+      const fresh = await produceTypesApi.list();
+      fresh.forEach((t) => { map[t.name.toLowerCase().trim()] = t.id; });
+      produceTypeMapRef.current = map;
+    }
+
+    const produceTypeId: number =
+      produceTypeMapRef.current[formData.produce.toLowerCase().trim()] ??
+      produceTypeMapRef.current[formData.produce.trim()] ??
+      0; // 0 signals an unresolved type below
+
+    if (isOnline && produceTypeId === 0) {
+      setError(
+        `Could not find produce type "${formData.produce}" in the system. ` +
+        'Please check your connection and try again, or contact support.'
+      );
+      setLoading(false);
+      return;
+    }
+
     const listingPayload = {
-      produce_type_id: parseInt(formData.produce) || 1,
+      produce_type_id: isOnline ? produceTypeId : 0, // 0 is fine for offline saves
       quantity_available: parseFloat(formData.quantity),
       unit: formData.unit,
       price_per_unit: parseFloat(formData.price),
@@ -215,7 +263,7 @@ export function ListProduce() {
         `${formData.produce} ${formData.variety ? `- ${formData.variety}` : ""}`.trim(),
       is_organic: formData.isOrganic,
       harvest_date: formData.availableFrom,
-      // display metadata
+      // display metadata (not sent to API, used for offline display & sync)
       produceName: formData.produce,
       categoryName: formData.category,
       districtName: formData.district,

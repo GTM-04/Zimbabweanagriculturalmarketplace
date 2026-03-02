@@ -465,6 +465,27 @@ export const listingsApi = {
 };
 
 // ============================================================================
+// Produce Types API
+// ============================================================================
+
+export const produceTypesApi = {
+  /**
+   * List all produce types registered in the backend.
+   * Used to resolve a produce name string to its numeric produce_type_id
+   * before creating a listing.
+   */
+  list: async (): Promise<import('./types').ProduceType[]> => {
+    try {
+      const response = await api.get<import('./types').ProduceType[]>('/produce-types/');
+      return response.data;
+    } catch {
+      // Non-fatal – callers handle an empty array gracefully
+      return [];
+    }
+  },
+};
+
+// ============================================================================
 // Messaging API
 // ============================================================================
 

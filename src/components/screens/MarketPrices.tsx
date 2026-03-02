@@ -2,10 +2,15 @@ import {
   ArrowDownRight,
   ArrowLeft,
   ArrowUpRight,
+  Flame,
+  Info,
   Loader2,
   Minus,
   RefreshCw,
   Search,
+  Tag,
+  TrendingDown,
+  TrendingUp,
   WifiOff,
 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
@@ -89,6 +94,9 @@ const PRICE_RANGES: Record<string, {
   },
 };
 
+/** Round to 2 decimal places (USD cents). */
+function r2(n: number) { return Math.round(n * 100) / 100; }
+
 /** Produce a fresh set of randomised prices within each produce's realistic range. */
 function generateLocalPrices(): PriceWithMeta[] {
   const today = new Date().toISOString().split("T")[0];
@@ -97,9 +105,9 @@ function generateLocalPrices(): PriceWithMeta[] {
     for (const p of cat.produces) {
       const spread = p.max - p.min;
       // Slightly contract the outer edges so the range looks tight but realistic
-      const min = Math.round(p.min + Math.random() * spread * 0.12);
-      const max = Math.round(p.max - Math.random() * spread * 0.12);
-      const avg = Math.round(min + Math.random() * (max - min));
+      const min = r2(p.min + Math.random() * spread * 0.12);
+      const max = r2(p.max - Math.random() * spread * 0.12);
+      const avg = r2(min + Math.random() * (max - min));
       const mid = (min + max) / 2;
       const trend: "up" | "down" | "stable" =
         avg > mid * 1.04 ? "up" : avg < mid * 0.96 ? "down" : "stable";
@@ -125,6 +133,79 @@ function generateLocalPrices(): PriceWithMeta[] {
     }
   }
   return result;
+}
+
+// ── Seasonal tips – Zimbabwe March ──────────────────────────────────────────
+const SEASONAL_TIPS = [
+  { icon: "🌧️", text: "Post-rainy season: expect maize and legume prices to ease as the harvest arrives in communal areas." },
+  { icon: "🥬", text: "Leafy greens are in peak supply — buy or sell now before dry-season heat reduces output." },
+  { icon: "🐄", text: "Cattle prices firm up in March as water sources recede in semi-arid Matabeleland regions." },
+  { icon: "🍊", text: "Citrus season begins: watch for orange and lemon price drops through April as Manicaland harvests peak." },
+  { icon: "🌽", text: "White maize: GMB purchase prices historically support farm-gate price floors from March through June." },
+];
+
+// ── Per-produce trend insight text ───────────────────────────────────────────
+function getTrendInsight(item: PriceWithMeta): string {
+  const trend = deriveTrend(item);
+  const name = item.produce_type.toLowerCase();
+  const cat = (item.category || "").toLowerCase();
+
+  const map: Record<string, [string, string, string]> = {
+    // [up, down, stable]
+    "tomatoes":       ["High restaurant & export demand lifting prices",       "Peak-season surplus from Masvingo farms",               "Steady urban demand balancing supply"],
+    "red onions":     ["Low carryover stocks from last season",                 "Good rains boosted Nyanga yields",                     "Supply and demand in balance"],
+    "butternut":      ["Winter demand building early this year",               "Bumper crop in Mashonaland West",                       "Processing demand steady at current price"],
+    "potatoes":       ["Cold-storage draw-down supporting prices",             "New-season Nyanga crop hitting markets",                "Stable supply from Nyanga highlands"],
+    "cabbage":        ["Urban informal market demand rising",                  "Market glut in Harare peri-urban farms",               "Consistent demand from supermarkets"],
+    "sweet potatoes": ["Health-food trend boosting urban demand",              "Communal-area surplus entering markets",               "Seasonal supply matching demand"],
+    "green peppers":  ["Export order from SA lifting farm-gate price",         "Gweru greenhouse production scaling up",               "Steady restaurant and retail demand"],
+    "leafy greens":   ["Urban nutrition awareness driving demand",             "Post-rains abundance at peri-urban farms",             "Daily market turnover keeping price stable"],
+    "avocados":       ["Strong export demand to South Africa & Mozambique",    "Bumper harvest across Manicaland",                     "Domestic market absorbing supply well"],
+    "bananas":        ["Chipinge plantations in peak production",              "Year-round supply keeping competition high",           "Consistent demand from schools and vendors"],
+    "mangoes":        ["Late-season Mazowe mangoes commanding premium",        "Season ending — glut before final pick",               "Steady demand as season winds down"],
+    "oranges":        ["Citrus season starting — fresh demand",                "Abundance from Manicaland farms",                      "Stable supply from Mazowe estates"],
+    "pawpaw":         ["Growing urban health-food demand",                     "Year-round supply suppressing prices",                 "Steady informal market turnover"],
+    "white maize":    ["GMB strategic purchasing boosting farm-gate",          "Post-harvest surplus from communal areas",             "Price anchored near GMB support level"],
+    "yellow maize":   ["Stock-feed mills competing for grain",                 "Surplus from commercial farms entering market",        "Feed-industry demand balancing supply"],
+    "wheat":          ["Flour millers facing low carry-forward stocks",        "Good irrigated-wheat harvest in Mashonaland",          "Bread prices capping farm-gate ceiling"],
+    "sorghum":        ["Craft-brewing and small-grains drive demand",          "Good communal-area harvest in Masvingo",               "Niche demand keeping price steady"],
+    "millet":         ["Traditional-food revival lifting demand",              "Gweru communal surplus on the market",                 "Stable niche demand for small grains"],
+    "groundnuts":     ["Export demand for aflatoxin-tested lots",             "Good harvest in Mashonaland Central",                  "Oil-press demand underpinning prices"],
+    "cattle":         ["Festive slaughter demand building early",              "Farmers destocking ahead of dry season",               "Auction prices aligned with regional markets"],
+    "goats":          ["Cultural ceremony demand lifting prices",              "Communal-area supply increasing",                     "Informal market demand keeping price stable"],
+    "sheep":          ["Gweru feedlot throughput steady",                     "Grassland conditions allowing rapid weight gain",      "Consistent abbatoir supply and demand"],
+    "pigs":           ["Pork demand from urban supermarkets rising",          "Commercial operations scaling up supply",              "Stable demand from processors and retailers"],
+    "broilers":       ["Day-old chick shortage constraining supply",           "Improved feed availability cutting production cost",   "Commercial demand steady with consistent supply"],
+    "layers":         ["Egg demand lifting layer-bird prices",                 "Large commercial flocks increasing supply",            "Stable abbatoir and informal market demand"],
+    "eggs (tray 30)": ["School feeding programme demand rising",              "Commercial layer flock expansion boosting output",     "Consistent urban household demand"],
+    "ducks":          ["Artisanal restaurant demand lifting prices",          "Good hatchery season increasing supply",               "Niche demand stable at current level"],
+    "guinea fowl":    ["Holiday lodges placing bulk orders",                  "Good rainfall boosted communal flock sizes",           "Steady demand from tourism sector"],
+    "fresh milk":     ["Urban demand outpacing co-op collection",             "Good rains extending pasture season",                  "Co-op intake price keeping farm gate stable"],
+    "yoghurt":        ["Supermarket promo driving retail pull-through",       "Processor over-supply discounting shelf price",        "Steady urban household consumption"],
+    "sour milk":      ["Traditional diet demand staying strong",              "Communal production surplus in markets",               "Stable informal market demand"],
+    "cheese":         ["Hotel and restaurant sector demand rising",            "Imported cheese competing on shelf",                  "Stable high-end retail demand"],
+    "butter":         ["Bakery sector procurement driving demand",            "Dairy processor surplus in the market",                "Stable household demand at current price"],
+  };
+
+  const entry = map[name];
+  if (entry) {
+    return trend === "up" ? entry[0] : trend === "down" ? entry[1] : entry[2];
+  }
+
+  const catFallback: Record<string, [string, string, string]> = {
+    vegetables: ["Urban market demand rising this week",            "Good rains boosted field production",                "Supply meeting demand at Mbare Musika"],
+    fruits:     ["Export grade commanding higher prices",           "In-season abundance keeping costs low",              "Domestic consumption absorbing supply"],
+    grains:     ["Processor demand competing with exports",         "Post-harvest surplus from communal farms",           "Post-harvest volumes stabilising prices"],
+    livestock:  ["Strong regional cross-border demand",             "Increased destocking by communal farmers",           "Auction prices holding steady"],
+    poultry:    ["Output constrained by feed input costs",          "Large commercial farms increasing supply",           "Consistent demand from urban retailers"],
+    dairy:      ["City demand exceeding farm collection capacity",  "Seasonal milk flush improving supply",               "Processor intake prices unchanged"],
+  };
+  const cf = catFallback[cat];
+  if (cf) return trend === "up" ? cf[0] : trend === "down" ? cf[1] : cf[2];
+
+  return trend === "up" ? "Demand exceeding current supply"
+    : trend === "down" ? "Supply surplus in key markets"
+    : "Prices in equilibrium this week";
 }
 
 // Derive trend from price position within range when not explicitly provided
@@ -216,6 +297,34 @@ export function MarketPrices() {
   const trendingUp = filteredPrices.filter((p) => deriveTrend(p) === "up").length;
   const trendingDown = filteredPrices.filter((p) => deriveTrend(p) === "down").length;
   const trendingStable = filteredPrices.filter((p) => deriveTrend(p) === "stable").length;
+
+  // Insight computed values
+  const topGainers = useMemo(() =>
+    [...filteredPrices]
+      .filter(p => deriveTrend(p) === "up" && p._change != null && p._change > 0)
+      .sort((a, b) => (b._change ?? 0) - (a._change ?? 0))
+      .slice(0, 4),
+    [filteredPrices]
+  );
+  const topLosers = useMemo(() =>
+    [...filteredPrices]
+      .filter(p => deriveTrend(p) === "down" && p._change != null && p._change < 0)
+      .sort((a, b) => (a._change ?? 0) - (b._change ?? 0))
+      .slice(0, 3),
+    [filteredPrices]
+  );
+  const bestValue = useMemo(() => {
+    return [...filteredPrices]
+      .filter(p => p.price_max > p.price_min)
+      .map(p => ({ ...p, _pctFromLow: (p.price_avg - p.price_min) / (p.price_max - p.price_min) }))
+      .filter(p => p._pctFromLow <= 0.30)
+      .sort((a, b) => a._pctFromLow - b._pctFromLow)
+      .slice(0, 3);
+  }, [filteredPrices]);
+  const activeTip = useMemo(() =>
+    SEASONAL_TIPS[new Date().getDate() % SEASONAL_TIPS.length],
+    []
+  );
 
   const getTimeSinceUpdate = () => {
     const minutes = Math.floor((Date.now() - lastUpdated.getTime()) / 60000);
@@ -319,6 +428,173 @@ export function MarketPrices() {
         )}
       </div>
 
+      {/* ── Trend Insights Panel ───────────────────────────────────────────── */}
+      {!loading && filteredPrices.length > 0 && (
+        <div className="px-4 pt-4 space-y-4">
+
+          {/* 1. Market Pulse */}
+          <div className="bg-white rounded-xl p-4 shadow-sm">
+            <div className="flex items-center justify-between mb-3">
+              <div>
+                <h2 className="text-sm font-semibold text-[#2C2C2C] flex items-center gap-1.5">
+                  <TrendingUp className="w-4 h-4 text-[#2D5016]" />
+                  Market Pulse
+                </h2>
+                <p className="text-xs text-[#757575] mt-0.5">
+                  {filteredPrices.length} items tracked
+                  {selectedCategory !== "All" ? ` · ${PRICE_RANGES[selectedCategory]?.label ?? selectedCategory}` : ""}
+                </p>
+              </div>
+              <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ${
+                usingFallback ? "bg-amber-100 text-amber-700" : "bg-[#E8F5E9] text-[#2D5016]"
+              }`}>
+                {usingFallback ? "Estimated" : "Live"}
+              </span>
+            </div>
+            {/* Stacked proportion bar */}
+            <div className="flex rounded-full overflow-hidden h-3 mb-3 bg-[#E0E0E0]">
+              {trendingUp > 0 && (
+                <div
+                  className="bg-[#4CAF50] transition-all h-full"
+                  style={{ width: `${(trendingUp / filteredPrices.length) * 100}%` }}
+                />
+              )}
+              {trendingStable > 0 && (
+                <div
+                  className="bg-[#BDBDBD] h-full"
+                  style={{ width: `${(trendingStable / filteredPrices.length) * 100}%` }}
+                />
+              )}
+              {trendingDown > 0 && (
+                <div
+                  className="bg-[#EF5350] h-full"
+                  style={{ width: `${(trendingDown / filteredPrices.length) * 100}%` }}
+                />
+              )}
+            </div>
+            <div className="flex justify-between">
+              <span className="flex items-center gap-1 text-xs font-semibold text-[#4CAF50]">
+                <ArrowUpRight className="w-3.5 h-3.5" />{trendingUp} Rising
+              </span>
+              <span className="flex items-center gap-1 text-xs text-[#757575]">
+                <Minus className="w-3.5 h-3.5" />{trendingStable} Stable
+              </span>
+              <span className="flex items-center gap-1 text-xs font-semibold text-[#EF5350]">
+                <ArrowDownRight className="w-3.5 h-3.5" />{trendingDown} Falling
+              </span>
+            </div>
+          </div>
+
+          {/* 2. Hot Right Now */}
+          {topGainers.length > 0 && (
+            <div>
+              <div className="flex items-center gap-1.5 mb-2">
+                <Flame className="w-4 h-4 text-[#FF6D00]" />
+                <h2 className="text-sm font-semibold text-[#2C2C2C]">Hot Right Now</h2>
+                <span className="text-xs text-[#9E9E9E] ml-auto">Biggest gainers</span>
+              </div>
+              <div className="flex gap-3 overflow-x-auto pb-1">
+                {topGainers.map((item) => (
+                  <div
+                    key={item.produce_type}
+                    className="bg-white rounded-xl p-3 shadow-sm flex-shrink-0 w-36 border-l-4 border-[#4CAF50]"
+                  >
+                    <p className="text-xs font-semibold text-[#2C2C2C] truncate mb-0.5">{item.produce_type}</p>
+                    <p className="text-xl font-bold text-[#2D5016]">
+                      ${item.price_avg.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                    </p>
+                    <div className="flex items-center gap-0.5 mt-1">
+                      <ArrowUpRight className="w-3 h-3 text-[#4CAF50]" />
+                      <span className="text-xs font-bold text-[#4CAF50]">+{item._change}%</span>
+                    </div>
+                    <p className="text-[10px] text-[#9E9E9E] mt-1">per {item.unit} · {item.district}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* 3. Price Drops */}
+          {topLosers.length > 0 && (
+            <div>
+              <div className="flex items-center gap-1.5 mb-2">
+                <TrendingDown className="w-4 h-4 text-[#EF5350]" />
+                <h2 className="text-sm font-semibold text-[#2C2C2C]">Price Drops</h2>
+                <span className="text-xs text-[#9E9E9E] ml-auto">Best deals this week</span>
+              </div>
+              <div className="flex gap-3 overflow-x-auto pb-1">
+                {topLosers.map((item) => (
+                  <div
+                    key={item.produce_type}
+                    className="bg-white rounded-xl p-3 shadow-sm flex-shrink-0 w-36 border-l-4 border-[#EF5350]"
+                  >
+                    <p className="text-xs font-semibold text-[#2C2C2C] truncate mb-0.5">{item.produce_type}</p>
+                    <p className="text-xl font-bold text-[#EF5350]">
+                      ${item.price_avg.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                    </p>
+                    <div className="flex items-center gap-0.5 mt-1">
+                      <ArrowDownRight className="w-3 h-3 text-[#EF5350]" />
+                      <span className="text-xs font-bold text-[#EF5350]">{item._change}%</span>
+                    </div>
+                    <p className="text-[10px] text-[#9E9E9E] mt-1">per {item.unit} · {item.district}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* 4. Best Value Buys */}
+          {bestValue.length > 0 && (
+            <div className="bg-[#E8F5E9] rounded-xl p-4">
+              <div className="flex items-center gap-1.5 mb-1">
+                <Tag className="w-4 h-4 text-[#2D5016]" />
+                <h2 className="text-sm font-semibold text-[#2D5016]">Best Value Buys</h2>
+              </div>
+              <p className="text-xs text-[#556B2F] mb-3">Priced near seasonal low — good buying opportunity</p>
+              <div className="space-y-2">
+                {bestValue.map((item) => {
+                  const range = item.price_max - item.price_min;
+                  const pctFromLow = range > 0
+                    ? Math.round(((item.price_avg - item.price_min) / range) * 100)
+                    : 0;
+                  return (
+                    <div
+                      key={item.produce_type}
+                      className="flex items-center justify-between bg-white/80 rounded-lg px-3 py-2.5"
+                    >
+                      <div>
+                        <p className="text-xs font-semibold text-[#2C2C2C]">{item.produce_type}</p>
+                        <p className="text-[10px] text-[#757575] mt-0.5">
+                          {pctFromLow}% above seasonal low · {item.district}
+                        </p>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-sm font-bold text-[#2D5016]">
+                          ${item.price_avg.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                        </p>
+                        <p className="text-[10px] text-[#9E9E9E]">/{item.unit}</p>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
+          {/* 5. Seasonal Tip */}
+          <div className="bg-gradient-to-r from-[#FFF8E1] to-[#FFFDE7] border border-[#FFE082] rounded-xl p-4">
+            <div className="flex items-start gap-3">
+              <span className="text-2xl leading-none mt-0.5">{activeTip.icon}</span>
+              <div>
+                <p className="text-xs font-semibold text-[#856404] mb-1">March Seasonal Insight</p>
+                <p className="text-sm text-[#614F00] leading-snug">{activeTip.text}</p>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      )}
+
       {/* Price Cards */}
       <div className="p-4 space-y-3">
         {loading ? (
@@ -392,6 +668,12 @@ export function MarketPrices() {
                       </div>
                     );
                   })()}
+
+                  {/* Per-card trend insight */}
+                  <div className="flex items-start gap-1.5 mb-3">
+                    <Info className="w-3.5 h-3.5 text-[#9E9E9E] flex-shrink-0 mt-0.5" />
+                    <p className="text-xs text-[#757575] leading-snug italic">{getTrendInsight(item)}</p>
+                  </div>
 
                   {/* Footer */}
                   <div className="flex items-center justify-between pt-3 border-t border-[#E0E0E0]">

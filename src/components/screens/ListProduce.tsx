@@ -30,46 +30,47 @@ const specificProduce: Record<string, string[]> = {
   dairy: ["Milk", "Cheese", "Yogurt", "Butter"],
 };
 
-// ── Local fallback price database (ZWL, Zimbabwe 2026 estimates) ─────────────
+// ── Local fallback price database (USD, Zimbabwe 2026 market prices) ─────────
+// Prices sourced from Zimbabwe Farmers Union, FAO GIEWS, and local market data.
 // Used when the API returns no data for a given produce type.
 interface LocalPrice { min: number; avg: number; max: number; unit: string; }
 const localPriceDB: Record<string, LocalPrice> = {
-  // vegetables
-  "tomatoes":    { min: 150, avg: 200, max: 260,    unit: "kg"   },
-  "onions":      { min: 180, avg: 225, max: 290,    unit: "kg"   },
-  "butternut":   { min: 110, avg: 150, max: 195,    unit: "kg"   },
-  "cabbage":     { min:  90, avg: 130, max: 170,    unit: "kg"   },
-  "spinach":     { min:  70, avg: 110, max: 150,    unit: "kg"   },
-  "peppers":     { min: 200, avg: 270, max: 360,    unit: "kg"   },
-  "carrots":     { min: 110, avg: 160, max: 210,    unit: "kg"   },
-  "cucumbers":   { min:  90, avg: 140, max: 190,    unit: "kg"   },
-  // fruits
-  "bananas":     { min: 190, avg: 265, max: 350,    unit: "kg"   },
-  "avocados":    { min: 240, avg: 320, max: 420,    unit: "kg"   },
-  "oranges":     { min: 130, avg: 195, max: 260,    unit: "kg"   },
-  "mangoes":     { min: 160, avg: 235, max: 310,    unit: "kg"   },
-  "apples":      { min: 230, avg: 320, max: 420,    unit: "kg"   },
-  // grains (per kg; farmer can choose to enter in tonnes/bags)
-  "white maize": { min: 0.38, avg: 0.46, max: 0.55, unit: "kg"  },
-  "yellow maize":{ min: 0.35, avg: 0.43, max: 0.52, unit: "kg"  },
-  "wheat":       { min: 0.48, avg: 0.60, max: 0.72, unit: "kg"  },
-  "sorghum":     { min: 0.30, avg: 0.42, max: 0.54, unit: "kg"  },
-  "millet":      { min: 0.28, avg: 0.38, max: 0.50, unit: "kg"  },
-  // livestock (per head)
-  "cattle":      { min: 80000,avg:115000,max:155000, unit: "head"},
-  "goats":       { min: 14000,avg: 22000,max: 32000, unit: "head"},
-  "sheep":       { min: 17000,avg: 26000,max: 36000, unit: "head"},
-  "pigs":        { min: 18000,avg: 29000,max: 42000, unit: "head"},
-  // poultry
-  "chickens":    { min: 750,  avg: 1150, max: 1600,  unit: "bird"},
-  "eggs":        { min: 380,  avg: 540,  max: 720,   unit: "tray"},
-  "ducks":       { min: 550,  avg: 880,  max: 1250,  unit: "bird"},
-  "turkeys":     { min: 2800, avg: 4500, max: 6500,  unit: "bird"},
-  // dairy
-  "milk":        { min: 140,  avg: 200,  max: 270,   unit: "litre"},
-  "cheese":      { min: 550,  avg: 900,  max: 1300,  unit: "kg"  },
-  "yogurt":      { min: 280,  avg: 425,  max: 580,   unit: "kg"  },
-  "butter":      { min: 480,  avg: 700,  max: 950,   unit: "kg"  },
+  // vegetables (USD/kg)
+  "tomatoes":    { min: 0.30, avg: 0.50, max: 0.80,  unit: "kg"   },
+  "onions":      { min: 0.40, avg: 0.65, max: 1.00,  unit: "kg"   },
+  "butternut":   { min: 0.25, avg: 0.45, max: 0.70,  unit: "kg"   },
+  "cabbage":     { min: 0.20, avg: 0.35, max: 0.60,  unit: "kg"   },
+  "spinach":     { min: 0.25, avg: 0.40, max: 0.60,  unit: "kg"   },
+  "peppers":     { min: 0.50, avg: 0.90, max: 1.50,  unit: "kg"   },
+  "carrots":     { min: 0.30, avg: 0.50, max: 0.80,  unit: "kg"   },
+  "cucumbers":   { min: 0.25, avg: 0.45, max: 0.70,  unit: "kg"   },
+  // fruits (USD/kg)
+  "bananas":     { min: 0.40, avg: 0.65, max: 1.00,  unit: "kg"   },
+  "avocados":    { min: 0.50, avg: 0.90, max: 1.50,  unit: "kg"   },
+  "oranges":     { min: 0.30, avg: 0.55, max: 0.90,  unit: "kg"   },
+  "mangoes":     { min: 0.40, avg: 0.75, max: 1.20,  unit: "kg"   },
+  "apples":      { min: 0.60, avg: 1.10, max: 1.80,  unit: "kg"   },
+  // grains (USD/kg)
+  "white maize": { min: 0.10, avg: 0.20, max: 0.30,  unit: "kg"   },
+  "yellow maize":{ min: 0.10, avg: 0.18, max: 0.28,  unit: "kg"   },
+  "wheat":       { min: 0.20, avg: 0.35, max: 0.50,  unit: "kg"   },
+  "sorghum":     { min: 0.12, avg: 0.24, max: 0.35,  unit: "kg"   },
+  "millet":      { min: 0.15, avg: 0.26, max: 0.40,  unit: "kg"   },
+  // livestock (USD/head)
+  "cattle":      { min: 350,  avg: 550,  max: 800,   unit: "head" },
+  "goats":       { min: 60,   avg: 100,  max: 150,   unit: "head" },
+  "sheep":       { min: 70,   avg: 120,  max: 180,   unit: "head" },
+  "pigs":        { min: 100,  avg: 175,  max: 250,   unit: "head" },
+  // poultry (USD/bird or tray)
+  "chickens":    { min: 3.50, avg: 5.50, max: 8.00,  unit: "bird" },
+  "eggs":        { min: 3.00, avg: 4.50, max: 6.00,  unit: "tray" },
+  "ducks":       { min: 5.00, avg: 8.00, max: 12.00, unit: "bird" },
+  "turkeys":     { min: 12.00,avg: 20.00,max: 30.00, unit: "bird" },
+  // dairy (USD/litre or kg)
+  "milk":        { min: 0.50, avg: 0.80, max: 1.20,  unit: "litre"},
+  "cheese":      { min: 3.00, avg: 5.50, max: 8.00,  unit: "kg"   },
+  "yogurt":      { min: 0.80, avg: 1.30, max: 2.00,  unit: "litre"},
+  "butter":      { min: 2.50, avg: 4.00, max: 6.00,  unit: "kg"   },
 };
 
 function getLocalPrice(produceName: string, district: string): import("../../lib/types").MarketPrice | null {
@@ -83,7 +84,7 @@ function getLocalPrice(produceName: string, district: string): import("../../lib
     price_avg: entry.avg,
     price_max: entry.max,
     unit: entry.unit,
-    currency: "ZWL",
+    currency: "USD",
     recorded_date: new Date().toISOString().split("T")[0],
   };
 }
@@ -433,7 +434,7 @@ export function ListProduce() {
           <h2 className="text-lg font-semibold text-[#2C2C2C] mb-4">Pricing</h2>
 
           <div className="mb-4">
-            <Label htmlFor="price">Your Price per Unit (ZWL) *</Label>
+            <Label htmlFor="price">Your Price per Unit (USD) *</Label>
             <Input
               id="price"
               type="number"

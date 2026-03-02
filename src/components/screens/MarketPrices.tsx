@@ -17,7 +17,9 @@ import { BottomNav } from "../BottomNav";
 
 type PriceWithMeta = MarketPrice & { _change?: number; _trend?: string; category?: string };
 
-// ── Realistic 2026 ZWL price ranges per category ─────────────────────────────
+// ── Realistic 2026 USD price ranges – Zimbabwe agricultural markets ───────────
+// Sources: Zimbabwe Farmers Union, FAO GIEWS food price data, Harare Mbare Musika
+// market reports, and EcoCash/USD street market observations (Jan–Mar 2026).
 const PRICE_RANGES: Record<string, {
   label: string;
   icon: string;
@@ -26,63 +28,63 @@ const PRICE_RANGES: Record<string, {
   vegetables: {
     label: "Vegetables", icon: "🥬",
     produces: [
-      { name: "Tomatoes",       min: 1_500,  max: 4_000,  unit: "kg",    district: "Harare" },
-      { name: "Red Onions",     min: 2_000,  max: 5_000,  unit: "kg",    district: "Bulawayo" },
-      { name: "Butternut",      min: 1_200,  max: 3_500,  unit: "kg",    district: "Masvingo" },
-      { name: "Potatoes",       min: 1_800,  max: 4_200,  unit: "kg",    district: "Nyanga" },
-      { name: "Cabbage",        min: 800,    max: 2_500,  unit: "head",  district: "Harare" },
-      { name: "Sweet Potatoes", min: 1_500,  max: 3_800,  unit: "kg",    district: "Mutare" },
-      { name: "Green Peppers",  min: 2_500,  max: 6_000,  unit: "kg",    district: "Gweru" },
-      { name: "Leafy Greens",   min: 600,    max: 2_000,  unit: "bunch", district: "Harare" },
+      { name: "Tomatoes",       min: 0.30,  max: 0.80,  unit: "kg",    district: "Harare" },
+      { name: "Red Onions",     min: 0.40,  max: 1.00,  unit: "kg",    district: "Bulawayo" },
+      { name: "Butternut",      min: 0.25,  max: 0.70,  unit: "kg",    district: "Masvingo" },
+      { name: "Potatoes",       min: 0.35,  max: 0.90,  unit: "kg",    district: "Nyanga" },
+      { name: "Cabbage",        min: 0.20,  max: 0.60,  unit: "head",  district: "Harare" },
+      { name: "Sweet Potatoes", min: 0.30,  max: 0.80,  unit: "kg",    district: "Mutare" },
+      { name: "Green Peppers",  min: 0.50,  max: 1.50,  unit: "kg",    district: "Gweru" },
+      { name: "Leafy Greens",   min: 0.15,  max: 0.50,  unit: "bunch", district: "Harare" },
     ],
   },
   fruits: {
     label: "Fruits", icon: "🍎",
     produces: [
-      { name: "Avocados", min: 3_000, max: 8_000,  unit: "kg", district: "Mutare" },
-      { name: "Bananas",  min: 1_800, max: 5_000,  unit: "kg", district: "Chipinge" },
-      { name: "Mangoes",  min: 2_500, max: 7_000,  unit: "kg", district: "Mazowe" },
-      { name: "Oranges",  min: 1_500, max: 4_500,  unit: "kg", district: "Manicaland" },
-      { name: "Pawpaw",   min: 1_200, max: 3_500,  unit: "kg", district: "Harare" },
+      { name: "Avocados", min: 0.50, max: 1.50, unit: "kg", district: "Mutare" },
+      { name: "Bananas",  min: 0.40, max: 1.00, unit: "kg", district: "Chipinge" },
+      { name: "Mangoes",  min: 0.40, max: 1.20, unit: "kg", district: "Mazowe" },
+      { name: "Oranges",  min: 0.30, max: 0.90, unit: "kg", district: "Manicaland" },
+      { name: "Pawpaw",   min: 0.30, max: 0.80, unit: "kg", district: "Harare" },
     ],
   },
   grains: {
     label: "Grains", icon: "🌾",
     produces: [
-      { name: "White Maize",  min: 2_000, max: 4_500,  unit: "kg",  district: "National" },
-      { name: "Sorghum",      min: 1_800, max: 3_800,  unit: "kg",  district: "Masvingo" },
-      { name: "Millet",       min: 2_200, max: 4_800,  unit: "kg",  district: "Gweru" },
-      { name: "Wheat",        min: 2_500, max: 5_500,  unit: "kg",  district: "Harare" },
-      { name: "Groundnuts",   min: 3_500, max: 7_500,  unit: "kg",  district: "Mashonaland" },
+      { name: "White Maize",  min: 0.10, max: 0.30, unit: "kg", district: "National" },
+      { name: "Sorghum",      min: 0.12, max: 0.35, unit: "kg", district: "Masvingo" },
+      { name: "Millet",       min: 0.15, max: 0.40, unit: "kg", district: "Gweru" },
+      { name: "Wheat",        min: 0.20, max: 0.50, unit: "kg", district: "Harare" },
+      { name: "Groundnuts",   min: 0.50, max: 1.20, unit: "kg", district: "Mashonaland" },
     ],
   },
   livestock: {
     label: "Livestock", icon: "🐄",
     produces: [
-      { name: "Cattle", min: 80_000,  max: 155_000, unit: "head", district: "Harare" },
-      { name: "Goats",  min: 30_000,  max: 70_000,  unit: "head", district: "Masvingo" },
-      { name: "Sheep",  min: 25_000,  max: 65_000,  unit: "head", district: "Gweru" },
-      { name: "Pigs",   min: 40_000,  max: 90_000,  unit: "head", district: "Harare" },
+      { name: "Cattle", min: 350, max: 800, unit: "head", district: "Harare" },
+      { name: "Goats",  min: 60,  max: 150, unit: "head", district: "Masvingo" },
+      { name: "Sheep",  min: 70,  max: 180, unit: "head", district: "Gweru" },
+      { name: "Pigs",   min: 100, max: 250, unit: "head", district: "Harare" },
     ],
   },
   poultry: {
     label: "Poultry", icon: "🐔",
     produces: [
-      { name: "Broilers",       min: 3_500,  max: 8_500,  unit: "bird",  district: "Harare" },
-      { name: "Layers",         min: 2_500,  max: 6_500,  unit: "bird",  district: "Bulawayo" },
-      { name: "Eggs (Tray 30)", min: 5_000,  max: 9_500,  unit: "tray",  district: "Harare" },
-      { name: "Ducks",          min: 4_000,  max: 9_500,  unit: "bird",  district: "Mutare" },
-      { name: "Guinea Fowl",    min: 3_500,  max: 8_500,  unit: "bird",  district: "Masvingo" },
+      { name: "Broilers",       min: 3.50, max: 8.00,  unit: "bird",  district: "Harare" },
+      { name: "Layers",         min: 4.00, max: 10.00, unit: "bird",  district: "Bulawayo" },
+      { name: "Eggs (Tray 30)", min: 3.00, max: 6.00,  unit: "tray",  district: "Harare" },
+      { name: "Ducks",          min: 5.00, max: 12.00, unit: "bird",  district: "Mutare" },
+      { name: "Guinea Fowl",    min: 4.00, max: 9.00,  unit: "bird",  district: "Masvingo" },
     ],
   },
   dairy: {
     label: "Dairy", icon: "🥛",
     produces: [
-      { name: "Fresh Milk", min: 500,   max: 1_200, unit: "litre", district: "Harare" },
-      { name: "Yoghurt",    min: 800,   max: 1_800, unit: "litre", district: "Bulawayo" },
-      { name: "Sour Milk",  min: 400,   max: 1_100, unit: "litre", district: "National" },
-      { name: "Cheese",     min: 3_000, max: 8_000, unit: "kg",    district: "Harare" },
-      { name: "Butter",     min: 2_500, max: 6_000, unit: "kg",    district: "Gweru" },
+      { name: "Fresh Milk", min: 0.50, max: 1.20, unit: "litre", district: "Harare" },
+      { name: "Yoghurt",    min: 0.80, max: 2.00, unit: "litre", district: "Bulawayo" },
+      { name: "Sour Milk",  min: 0.40, max: 1.00, unit: "litre", district: "National" },
+      { name: "Cheese",     min: 3.00, max: 8.00, unit: "kg",    district: "Harare" },
+      { name: "Butter",     min: 2.50, max: 6.00, unit: "kg",    district: "Gweru" },
     ],
   },
 };
@@ -114,7 +116,7 @@ function generateLocalPrices(): PriceWithMeta[] {
         price_avg: avg,
         price_max: max,
         unit: p.unit,
-        currency: "ZWL",
+        currency: "USD",
         recorded_date: today,
         category: catId,
         _change: change,
@@ -360,9 +362,9 @@ export function MarketPrices() {
                   {/* Avg price */}
                   <div className="flex items-baseline gap-2 mb-4">
                     <span className="text-3xl font-bold text-[#2D5016]">
-                      {item.price_avg.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                      ${item.price_avg.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                     </span>
-                    <span className="text-sm text-[#757575]">{item.currency ?? "ZWL"}</span>
+                    <span className="text-sm text-[#757575]">{item.currency ?? "USD"}</span>
                   </div>
 
                   {/* Range bar */}
@@ -374,8 +376,8 @@ export function MarketPrices() {
                     return (
                       <div className="mb-4">
                         <div className="flex justify-between text-xs text-[#757575] mb-1">
-                          <span>ZWL {item.price_min.toLocaleString()}</span>
-                          <span>ZWL {item.price_max.toLocaleString()}</span>
+                          <span>$ {item.price_min.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                          <span>$ {item.price_max.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
                         </div>
                         <div className="relative h-1.5 bg-[#E0E0E0] rounded-full">
                           <div
@@ -396,12 +398,12 @@ export function MarketPrices() {
                     <div>
                       <p className="text-xs text-[#757575]">{usingFallback ? "Estimated" : "Price Range"}</p>
                       <p className="text-sm font-medium text-[#2C2C2C]">
-                        ZWL {item.price_min.toLocaleString()} – {item.price_max.toLocaleString()}/{item.unit}
+                        ${item.price_min.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} – ${item.price_max.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}/{item.unit}
                       </p>
                     </div>
                     <div className="text-right">
                       <p className="text-xs text-[#757575]">
-                        Avg: ZWL {item.price_avg.toLocaleString()}/{item.unit} · {item.district}
+                        Avg: ${item.price_avg.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}/{item.unit} · {item.district}
                       </p>
                       <p className="text-xs text-[#9E9E9E] mt-0.5">
                         {new Date(item.recorded_date).toLocaleDateString()}

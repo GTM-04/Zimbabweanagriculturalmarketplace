@@ -484,7 +484,7 @@ export function MyListings() {
 
                 <div className="flex items-center justify-between text-sm">
                   <span className="font-bold text-[#2D5016]">
-                    USD {Number(item.data.price_per_unit).toFixed(2)} / {item.data.unit}
+                    USD {(Number(item.data.price_per_unit) * Number(item.data.quantity_available)).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} per {item.data.quantity_available} {item.data.unit}
                   </span>
                   <span className="text-xs text-[#9E9E9E]">
                     Saved {new Date(item.savedAt).toLocaleDateString(undefined, { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })}
@@ -630,7 +630,7 @@ export function MyListings() {
 
                 <div className="flex items-center gap-2 mb-3">
                   <span className="text-lg font-bold text-[#2D5016]">
-                    {listing.currency || "ZWL"} {Number(listing.price_per_unit).toLocaleString()}
+                    USD {(Number(listing.price_per_unit) * Number(listing.quantity_available)).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                   </span>
                   <span className="text-sm text-[#757575]">
                     per {listing.quantity_available} {listing.unit}
@@ -790,7 +790,7 @@ export function MyListings() {
               </div>
 
               <div>
-                <Label htmlFor="edit-price">Total Price (ZWL)</Label>
+                <Label htmlFor="edit-price">Price per Unit (USD)</Label>
                 <Input
                   id="edit-price"
                   type="number"

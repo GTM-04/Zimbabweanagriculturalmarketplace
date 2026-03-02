@@ -190,7 +190,7 @@ export function ChatScreen() {
           </div>
           <div className="flex-1 min-w-0">
             <p className="text-sm font-semibold text-[#2C2C2C] truncate">White Maize</p>
-            <p className="text-sm text-[#2D5016] font-bold">ZWL 450/kg</p>
+            <p className="text-sm text-[#2D5016] font-bold">USD 0.45/kg</p>
           </div>
           <button
             onClick={() => navigate("/product/1")}

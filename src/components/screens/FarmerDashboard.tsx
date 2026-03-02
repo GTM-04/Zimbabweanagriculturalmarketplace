@@ -85,10 +85,9 @@ export function FarmerDashboard() {
   // Views and inquiries count across ALL listing statuses
   const totalViews = myListings.reduce((sum, l) => sum + (l.views ?? 0), 0);
   const totalInquiries = myListings.reduce((sum, l) => sum + (l.inquiries ?? 0), 0);
-  // Est. value = sum of price_per_unit for active listings
-  // (price_per_unit stores the total lot price, not per-unit, so no qty multiplication)
+  // Est. value = sum of (price_per_unit × quantity_available) across active listings
   const totalEarnings = activeListings.reduce(
-    (sum, l) => sum + (l.price_per_unit ?? 0),
+    (sum, l) => sum + (l.price_per_unit ?? 0) * (l.quantity_available ?? 1),
     0
   );
 
@@ -174,7 +173,7 @@ export function FarmerDashboard() {
             <p className="text-2xl font-bold text-[#2C2C2C]">
               {loadingStats
                 ? <Loader2 className="w-6 h-6 animate-spin text-[#4CAF50]" />
-                : `ZWL ${totalEarnings > 0 ? totalEarnings.toLocaleString() : "—"}`}
+                : `USD ${totalEarnings > 0 ? totalEarnings.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : "—"}`}
             </p>
           </div>
         </div>

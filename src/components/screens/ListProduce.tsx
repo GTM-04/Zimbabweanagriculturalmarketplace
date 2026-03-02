@@ -508,7 +508,7 @@ export function ListProduce() {
                     <div>
                       <div className="flex items-center gap-1.5 mb-0.5">
                         <p className="text-xs font-semibold text-[#2D5016]">
-                          {marketPrice.currency ?? "ZWL"} {marketPrice.price_min.toLocaleString()}–{marketPrice.price_max.toLocaleString()}/{marketPrice.unit}
+                          USD {marketPrice.price_min.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}–{marketPrice.price_max.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}/{marketPrice.unit}
                         </p>
                         <span className={`text-[10px] font-medium px-1.5 py-0.5 rounded-full ${
                           marketPriceIsLive
@@ -519,7 +519,7 @@ export function ListProduce() {
                         </span>
                       </div>
                       <p className="text-xs text-[#757575]">
-                        Avg: {marketPrice.currency ?? "ZWL"} {marketPrice.price_avg.toLocaleString()}/{marketPrice.unit}
+                        Avg: USD {marketPrice.price_avg.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}/{marketPrice.unit}
                         {marketPrice.district ? ` · ${marketPrice.district}` : ""}
                       </p>
                     </div>

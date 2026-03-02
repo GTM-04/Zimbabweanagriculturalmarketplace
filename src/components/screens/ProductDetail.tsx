@@ -92,8 +92,8 @@ export function ProductDetail() {
   const handleShare = async () => {
     if (!listing) return;
     const title = listing.title || listing.produce_type?.name || "Produce Listing";
-    const currency = listing.currency || "ZWL";
-    const text = `${title} — ${currency} ${Number(listing.price_per_unit).toLocaleString()} per ${listing.quantity_available} ${listing.unit}\nDistrict: ${listing.district}\nVillage to Marketplace`;
+    const totalPrice = (Number(listing.price_per_unit) * Number(listing.quantity_available)).toFixed(2);
+    const text = `${title} — USD ${totalPrice} per ${listing.quantity_available} ${listing.unit}\nDistrict: ${listing.district}\nVillage to Marketplace`;
     const url = window.location.href;
 
     if (navigator.share) {
@@ -192,7 +192,7 @@ export function ProductDetail() {
   }
 
   const images = listing.images?.length ? listing.images : [""];
-  const currency = listing.currency || "ZWL";
+  const currency = "USD";
 
   return (
     <div className="min-h-screen bg-white pb-24">
@@ -266,7 +266,7 @@ export function ProductDetail() {
         <div className="bg-[#2D5016]/5 rounded-xl p-4 mb-4 border-2 border-[#2D5016]/20">
           <div className="flex items-baseline gap-2 mb-2">
             <span className="text-3xl font-bold text-[#2D5016]">
-              {currency} {Number(listing.price_per_unit).toLocaleString()}
+              {currency} {(Number(listing.price_per_unit) * Number(listing.quantity_available)).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
             </span>
             <span className="text-lg text-[#757575]">
               per {listing.quantity_available} {listing.unit}

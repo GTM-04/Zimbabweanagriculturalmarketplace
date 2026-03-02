@@ -48,7 +48,7 @@ function fromApiListing(l: Listing): NormalizedListing {
     quantity: l.quantity_available,
     unit: l.unit,
     price: l.price_per_unit,
-    currency: l.currency ?? "ZWL",
+    currency: "USD",
     district: l.district,
     imageUrl: resolveImageUrl(l.images?.[0], FALLBACK_IMAGE),
     isOrganic: !!l.is_organic,
@@ -66,7 +66,7 @@ function fromStaticListing(l: (typeof produceListings)[0]): NormalizedListing {
     quantity: l.quantity,
     unit: l.unit,
     price: l.pricePerUnit,
-    currency: l.currency,
+    currency: "USD",
     district: l.district,
     imageUrl: staticImageMap[l.images[0]] ?? FALLBACK_IMAGE,
     isOrganic: false,
@@ -295,9 +295,9 @@ export function BuyerDashboard() {
 
                     <div className="flex items-baseline gap-1 mb-2">
                       <span className="text-lg font-bold text-[#2D5016]">
-                        {listing.currency} {listing.price.toLocaleString()}
+                        USD {(listing.price * listing.quantity).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                       </span>
-                      <span className="text-xs text-[#757575]">/{listing.quantity}{listing.unit}</span>
+                      <span className="text-xs text-[#757575]">per {listing.quantity} {listing.unit}</span>
                     </div>
 
                     {listing.farmerName && (

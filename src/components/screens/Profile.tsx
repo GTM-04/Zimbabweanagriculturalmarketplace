@@ -1,7 +1,10 @@
 import {
     ArrowLeft,
     Bell,
+    Building2,
+    CheckCircle,
     ChevronRight,
+    Edit3,
     FileText,
     Globe,
     HardDrive,
@@ -9,11 +12,16 @@ import {
     Info,
     Loader2,
     LogOut,
+    Mail,
     MapPin,
     Package,
     Phone,
+    Save,
     Shield,
-    Star
+    ShoppingBag,
+    Star,
+    WifiOff,
+    X,
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router";
@@ -22,6 +30,9 @@ import { listingsApi } from "../../lib/api";
 import type { User as UserType } from "../../lib/types";
 import { useAuth } from "../../lib/useAuth";
 import { BottomNav } from "../BottomNav";
+import { Button } from "../ui/button";
+import { Input } from "../ui/input";
+import { Label } from "../ui/label";
 
 export function Profile() {
   const navigate = useNavigate();

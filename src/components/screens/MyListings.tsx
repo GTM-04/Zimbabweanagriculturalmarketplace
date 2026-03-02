@@ -1,10 +1,18 @@
-import { AlertCircle, ArrowLeft, Eye, Filter, Loader2, MessageCircle, MoreVertical, Plus, Search, WifiOff } from "lucide-react";
+import { AlertCircle, ArrowLeft, CheckCircle2, Eye, Filter, Loader2, MessageCircle, MoreVertical, Plus, Search, Trash2, WifiOff } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router";
+import { toast } from "sonner";
 import { listingsApi, resolveImageUrl } from "../../lib/api";
 import type { Listing } from "../../lib/types";
 import { BottomNav } from "../BottomNav";
 import { Button } from "../ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "../ui/dropdown-menu";
 
 const CACHE_KEY_PREFIX = "cached_my_listings_";
 
@@ -17,6 +25,10 @@ export function MyListings() {
   const [error, setError] = useState<string | null>(null);
   const [isOnline, setIsOnline] = useState(navigator.onLine);
   const [usingCache, setUsingCache] = useState(false);
+  // id of listing pending delete confirmation; null = no confirm open
+  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
+  // id of listing currently being acted on (status change or delete)
+  const [actionLoadingId, setActionLoadingId] = useState<string | null>(null);
 
   // Get logged-in user from localStorage
   const storedUser = localStorage.getItem("user");
@@ -105,6 +117,47 @@ export function MyListings() {
       l.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
       l.produce_type?.name?.toLowerCase().includes(searchQuery.toLowerCase())
     );
+
+  const handleStatusChange = async (
+    listing: Listing,
+    newStatus: 'active' | 'sold' | 'expired'
+  ) => {
+    setActionLoadingId(listing.id);
+    try {
+      const updated = await listingsApi.updateStatus(listing.id, newStatus);
+      setListings(prev => prev.map(l => l.id === updated.id ? updated : l));
+      // Update cache
+      if (cacheKey) {
+        const fresh = listings.map(l => l.id === updated.id ? updated : l);
+        localStorage.setItem(cacheKey, JSON.stringify(fresh));
+      }
+      toast.success("Listing updated", {
+        description: `Marked as ${newStatus}.`,
+      });
+    } catch (err: any) {
+      toast.error("Update failed", { description: err?.message || "Please try again." });
+    } finally {
+      setActionLoadingId(null);
+    }
+  };
+
+  const handleDelete = async (id: string) => {
+    setActionLoadingId(id);
+    setConfirmDeleteId(null);
+    try {
+      await listingsApi.delete(id);
+      setListings(prev => prev.filter(l => l.id !== id));
+      if (cacheKey) {
+        const fresh = listings.filter(l => l.id !== id);
+        localStorage.setItem(cacheKey, JSON.stringify(fresh));
+      }
+      toast.success("Listing deleted");
+    } catch (err: any) {
+      toast.error("Delete failed", { description: err?.message || "Please try again." });
+    } finally {
+      setActionLoadingId(null);
+    }
+  };
 
   const countByStatus = (status: string) => ownListings.filter(l => l.status === status).length;
 

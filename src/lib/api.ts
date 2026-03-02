@@ -390,11 +390,23 @@ export const listingsApi = {
   },
 
   /**
+   * Update listing status (active | sold | expired) — owner only.
+   */
+  updateStatus: async (id: string, status: 'active' | 'sold' | 'expired'): Promise<Listing> => {
+    try {
+      const response = await api.patch<Listing>(`/listings/${id}/`, { status });
+      return response.data;
+    } catch (error) {
+      return handleApiError(error);
+    }
+  },
+
+  /**
    * Delete a listing (owner only)
    */
   delete: async (id: string): Promise<void> => {
     try {
-      await api.delete(`/listings/${id}`);
+      await api.delete(`/listings/${id}/`);
     } catch (error) {
       return handleApiError(error);
     }
@@ -445,6 +457,22 @@ export const listingsApi = {
 // ============================================================================
 
 export const messagingApi = {
+  /**
+   * Start or retrieve an existing conversation with another user.
+   * POST /messaging/conversations/ — returns the conversation (existing or newly created).
+   */
+  startConversation: async (otherUserId: string, listingId?: string): Promise<Conversation> => {
+    try {
+      const response = await api.post<Conversation>('/messaging/conversations/', {
+        other_user_id: otherUserId,
+        ...(listingId ? { listing_id: listingId } : {}),
+      });
+      return response.data;
+    } catch (error) {
+      return handleApiError(error);
+    }
+  },
+
   /**
    * Get all conversations for current user
    */

@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router";
+import { toast } from "sonner";
 import { listingsApi, pricingApi, resolveImageUrl } from "../../lib/api";
 import type { Listing, MarketPrice } from "../../lib/types";
 import { Button } from "../ui/button";
@@ -24,6 +25,75 @@ export function ProductDetail() {
   const [marketPrice, setMarketPrice] = useState<MarketPrice | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [messagingLoading, setMessagingLoading] = useState(false);
+  const [contactLoading, setContactLoading] = useState(false);
+
+  /** Open/create a conversation with the farmer and go to the chat screen. */
+  const handleMessage = async () => {
+    if (!listing?.farmer_id) return;
+    setMessagingLoading(true);
+    try {
+      const conversation = await messagingApi.startConversation(
+        listing.farmer_id,
+        listing.id
+      );
+      navigate(`/messages/${conversation.id}`);
+    } catch (err: any) {
+      toast.error("Could not open chat", { description: err?.message || "Please try again." });
+    } finally {
+      setMessagingLoading(false);
+    }
+  };
+
+  /** Call the farmer directly if phone is available, otherwise fall back to chat. */
+  const handleContact = async () => {
+    if (!listing) return;
+    if (listing.farmer_phone) {
+      window.location.href = `tel:${listing.farmer_phone}`;
+      return;
+    }
+    // No phone on record — open chat instead
+    if (!listing.farmer_id) return;
+    setContactLoading(true);
+    try {
+      const conversation = await messagingApi.startConversation(
+        listing.farmer_id,
+        listing.id
+      );
+      navigate(`/messages/${conversation.id}`);
+    } catch (err: any) {
+      toast.error("Could not contact farmer", { description: err?.message || "Please try again." });
+    } finally {
+      setContactLoading(false);
+    }
+  };
+
+  const handleShare = async () => {
+    if (!listing) return;
+    const title = listing.title || listing.produce_type?.name || "Produce Listing";
+    const currency = listing.currency || "ZWL";
+    const text = `${title} — ${currency} ${Number(listing.price_per_unit).toLocaleString()} per ${listing.quantity_available} ${listing.unit}\nDistrict: ${listing.district}\nVillage to Marketplace`;
+    const url = window.location.href;
+
+    if (navigator.share) {
+      try {
+        await navigator.share({ title, text, url });
+      } catch (err: any) {
+        // User cancelled share — not an error
+        if (err?.name !== "AbortError") {
+          toast.error("Could not share", { description: err?.message });
+        }
+      }
+    } else {
+      // Fallback: copy link to clipboard
+      try {
+        await navigator.clipboard.writeText(url);
+        toast.success("Link copied!", { description: "Product link copied to clipboard." });
+      } catch {
+        toast.error("Sharing not supported", { description: "Please copy the URL manually." });
+      }
+    }
+  };
 
   useEffect(() => {
     if (!id) {
@@ -114,7 +184,7 @@ export function ProductDetail() {
           <ArrowLeft className="w-5 h-5 text-[#2C2C2C]" />
         </button>
         <div className="flex items-center gap-2">
-          <button className="p-2 hover:bg-[#F5F5F5] rounded-full transition-colors">
+          <button onClick={handleShare} className="p-2 hover:bg-[#F5F5F5] rounded-full transition-colors" title="Share listing">
             <Share2 className="w-5 h-5 text-[#2C2C2C]" />
           </button>
           <button className="p-2 hover:bg-[#F5F5F5] rounded-full transition-colors">
@@ -289,21 +359,25 @@ export function ProductDetail() {
       <div className="fixed bottom-0 left-0 right-0 bg-white border-t-2 border-[#E0E0E0] p-4 z-10">
         <div className="max-w-2xl mx-auto grid grid-cols-2 gap-3">
           <Button
-            onClick={() => listing.farmer_id && navigate(`/messages/${listing.farmer_id}`)}
+            onClick={handleMessage}
             variant="outline"
-            disabled={!listing.farmer_id}
+            disabled={!listing.farmer_id || messagingLoading}
             className="h-12 border-2 border-[#2D5016] text-[#2D5016] hover:bg-[#2D5016]/5 flex items-center justify-center gap-2"
           >
-            <MessageCircle className="w-5 h-5" />
+            {messagingLoading
+              ? <Loader2 className="w-5 h-5 animate-spin" />
+              : <MessageCircle className="w-5 h-5" />}
             Message
           </Button>
           <Button
-            onClick={() => listing.farmer_id && navigate(`/messages/${listing.farmer_id}`)}
-            disabled={!listing.farmer_id}
+            onClick={handleContact}
+            disabled={!listing.farmer_id || contactLoading}
             className="h-12 bg-[#2D5016] hover:bg-[#234010] text-white flex items-center justify-center gap-2"
           >
-            <Phone className="w-5 h-5" />
-            Contact
+            {contactLoading
+              ? <Loader2 className="w-5 h-5 animate-spin" />
+              : <Phone className="w-5 h-5" />}
+            {listing.farmer_phone ? "Call" : "Contact"}
           </Button>
         </div>
       </div>

@@ -95,6 +95,7 @@ export interface Listing {
   images: (string | { image?: string; url?: string; file?: string; image_url?: string })[]
   farmer_id?: string;
   farmer_name?: string;
+  farmer_phone?: string;
   created_at?: string;
   updated_at?: string;
   views?: number;

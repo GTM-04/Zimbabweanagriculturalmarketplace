@@ -85,9 +85,10 @@ export function FarmerDashboard() {
   // Views and inquiries count across ALL listing statuses
   const totalViews = myListings.reduce((sum, l) => sum + (l.views ?? 0), 0);
   const totalInquiries = myListings.reduce((sum, l) => sum + (l.inquiries ?? 0), 0);
-  // Est. value = sum of (price × quantity) for active listings only
+  // Est. value = sum of price_per_unit for active listings
+  // (price_per_unit stores the total lot price, not per-unit, so no qty multiplication)
   const totalEarnings = activeListings.reduce(
-    (sum, l) => sum + (l.price_per_unit ?? 0) * (l.quantity_available ?? 0),
+    (sum, l) => sum + (l.price_per_unit ?? 0),
     0
   );
 

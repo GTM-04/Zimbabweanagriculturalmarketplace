@@ -1,5 +1,5 @@
-import { AlertCircle, ArrowLeft, CheckCircle2, Eye, Filter, Loader2, MessageCircle, MoreVertical, Plus, Search, Trash2, WifiOff } from "lucide-react";
-import { useEffect, useState } from "react";
+import { AlertCircle, ArrowLeft, CheckCircle2, Eye, Filter, Loader2, MessageCircle, MoreVertical, Pencil, Plus, Search, Trash2, WifiOff } from "lucide-react";
+import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router";
 import { toast } from "sonner";
 import { listingsApi, resolveImageUrl } from "../../lib/api";
@@ -13,6 +13,9 @@ import {
     DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from "../ui/dropdown-menu";
+import { Input } from "../ui/input";
+import { Label } from "../ui/label";
+import { Textarea } from "../ui/textarea";
 
 const CACHE_KEY_PREFIX = "cached_my_listings_";
 
@@ -29,6 +32,16 @@ export function MyListings() {
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
   // id of listing currently being acted on (status change or delete)
   const [actionLoadingId, setActionLoadingId] = useState<string | null>(null);
+  // listing open in edit modal
+  const [editListing, setEditListing] = useState<Listing | null>(null);
+  const [editSaving, setEditSaving] = useState(false);
+  const [editForm, setEditForm] = useState({
+    title: "",
+    price_per_unit: "",
+    quantity_available: "",
+    unit: "",
+    description: "",
+  });
 
   // Get logged-in user from localStorage
   const storedUser = localStorage.getItem("user");
@@ -156,6 +169,44 @@ export function MyListings() {
       toast.error("Delete failed", { description: err?.message || "Please try again." });
     } finally {
       setActionLoadingId(null);
+    }
+  };
+
+  const openEdit = (listing: Listing) => {
+    setEditListing(listing);
+    setEditForm({
+      title: listing.title || listing.produce_type?.name || "",
+      price_per_unit: String(listing.price_per_unit ?? ""),
+      quantity_available: String(listing.quantity_available ?? ""),
+      unit: listing.unit || "",
+      description: (listing as any).description || "",
+    });
+  };
+
+  const handleSaveEdit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editListing) return;
+    setEditSaving(true);
+    try {
+      const patch: Partial<Listing> = {
+        price_per_unit: Number(editForm.price_per_unit),
+        quantity_available: Number(editForm.quantity_available),
+        unit: editForm.unit.trim(),
+      };
+      if (editForm.title.trim()) patch.title = editForm.title.trim();
+      if (editForm.description.trim()) (patch as any).description = editForm.description.trim();
+      const updated = await listingsApi.update(editListing.id, patch);
+      setListings(prev => prev.map(l => l.id === updated.id ? updated : l));
+      if (cacheKey) {
+        const fresh = listings.map(l => l.id === updated.id ? updated : l);
+        localStorage.setItem(cacheKey, JSON.stringify(fresh));
+      }
+      toast.success("Listing updated");
+      setEditListing(null);
+    } catch (err: any) {
+      toast.error("Save failed", { description: err?.message || "Please try again." });
+    } finally {
+      setEditSaving(false);
     }
   };
 
@@ -347,6 +398,12 @@ export function MyListings() {
                         >
                           <Eye className="w-4 h-4" /> View Listing
                         </DropdownMenuItem>
+                        <DropdownMenuItem
+                          onClick={() => openEdit(listing)}
+                          className="gap-2 text-[#2D5016]"
+                        >
+                          <Pencil className="w-4 h-4" /> Edit Listing
+                        </DropdownMenuItem>
                         {listing.status !== "active" && (
                           <DropdownMenuItem
                             onClick={() => handleStatusChange(listing, "active")}
@@ -480,6 +537,114 @@ export function MyListings() {
                 Delete
               </Button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Edit listing modal */}
+      {editListing && (
+        <div
+          className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/40"
+          onClick={() => !editSaving && setEditListing(null)}
+        >
+          <div
+            className="bg-white w-full sm:max-w-md rounded-t-2xl sm:rounded-2xl shadow-xl overflow-y-auto max-h-[90vh]"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between px-5 pt-5 pb-3 border-b border-[#E0E0E0]">
+              <h2 className="text-lg font-semibold text-[#2C2C2C]">Edit Listing</h2>
+              <button
+                onClick={() => setEditListing(null)}
+                disabled={editSaving}
+                className="p-1 hover:bg-[#F5F5F5] rounded-full"
+              >
+                <Trash2 className="w-4 h-4 text-[#757575] rotate-45" />
+              </button>
+            </div>
+
+            <form onSubmit={handleSaveEdit} className="p-5 space-y-4">
+              <div>
+                <Label htmlFor="edit-title">Title / Produce Name</Label>
+                <Input
+                  id="edit-title"
+                  value={editForm.title}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => setEditForm(f => ({ ...f, title: e.target.value }))}
+                  placeholder="e.g. Tomatoes"
+                  className="mt-1"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <Label htmlFor="edit-qty">Quantity</Label>
+                  <Input
+                    id="edit-qty"
+                    type="number"
+                    min={0}
+                    value={editForm.quantity_available}
+                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => setEditForm(f => ({ ...f, quantity_available: e.target.value }))}
+                    placeholder="0"
+                    required
+                    className="mt-1"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="edit-unit">Unit</Label>
+                  <Input
+                    id="edit-unit"
+                    value={editForm.unit}
+                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => setEditForm(f => ({ ...f, unit: e.target.value }))}
+                    placeholder="kg"
+                    className="mt-1"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <Label htmlFor="edit-price">Total Price (ZWL)</Label>
+                <Input
+                  id="edit-price"
+                  type="number"
+                  min={0}
+                  value={editForm.price_per_unit}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => setEditForm(f => ({ ...f, price_per_unit: e.target.value }))}
+                  placeholder="0.00"
+                  required
+                  className="mt-1"
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="edit-desc">Description</Label>
+                <Textarea
+                  id="edit-desc"
+                  value={editForm.description}
+                  onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setEditForm(f => ({ ...f, description: e.target.value }))}
+                  placeholder="Add details about quality, harvest date, etc."
+                  rows={3}
+                  className="mt-1"
+                />
+              </div>
+
+              <div className="flex gap-3 pt-1">
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="flex-1"
+                  onClick={() => setEditListing(null)}
+                  disabled={editSaving}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  type="submit"
+                  className="flex-1 bg-[#2D5016] hover:bg-[#234010] text-white"
+                  disabled={editSaving}
+                >
+                  {editSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : "Save Changes"}
+                </Button>
+              </div>
+            </form>
           </div>
         </div>
       )}

@@ -390,6 +390,18 @@ export const listingsApi = {
   },
 
   /**
+   * Partially update a listing (owner only) — generic PATCH.
+   */
+  update: async (id: string, data: Partial<Listing>): Promise<Listing> => {
+    try {
+      const response = await api.patch<Listing>(`/listings/${id}/`, data);
+      return response.data;
+    } catch (error) {
+      return handleApiError(error);
+    }
+  },
+
+  /**
    * Update listing status (active | sold | expired) — owner only.
    */
   updateStatus: async (id: string, status: 'active' | 'sold' | 'expired'): Promise<Listing> => {

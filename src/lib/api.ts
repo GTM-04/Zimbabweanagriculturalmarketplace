@@ -476,7 +476,7 @@ export const messagingApi = {
   startConversation: async (otherUserId: string, listingId?: string): Promise<Conversation> => {
     try {
       const response = await api.post<Conversation>('/messaging/conversations/', {
-        other_user_id: otherUserId,
+        recipient_id: otherUserId,
         ...(listingId ? { listing_id: listingId } : {}),
       });
       return response.data;

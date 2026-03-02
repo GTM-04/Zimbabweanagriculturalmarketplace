@@ -404,25 +404,39 @@ export const listingsApi = {
    * Upload images for a listing
    */
   uploadImages: async (listingId: string, files: File[]): Promise<string[]> => {
-    try {
-      const formData = new FormData();
-      files.forEach((file) => {
-        formData.append('images', file);
-      });
+    // Upload each file individually — Django's ImageField serialiser expects
+    // one file per request with field name "image" (singular) and returns
+    // { id, image: "/media/listings/..." } per upload.
+    const urls: string[] = [];
+    for (const file of files) {
+      try {
+        const formData = new FormData();
+        // Use "image" (singular) — the standard DRF ImageField name
+        formData.append('image', file);
 
-      const response = await api.post<{ images: string[] }>(
-        `/listings/${listingId}/images/`,
-        formData,
-        {
-          headers: {
-            'Content-Type': 'multipart/form-data',
-          },
+        const response = await api.post<
+          // Handle both shapes the backend might return:
+          //   { image: string }  — single ImageField
+          //   { images: string[] } — array wrapper (older shape)
+          | { image: string; id?: number }
+          | { images: string[] }
+        >(
+          `/listings/${listingId}/images/`,
+          formData,
+          { headers: { 'Content-Type': 'multipart/form-data' } }
+        );
+
+        const data = response.data as any;
+        if (typeof data?.image === 'string' && data.image) {
+          urls.push(data.image);
+        } else if (Array.isArray(data?.images)) {
+          urls.push(...data.images);
         }
-      );
-      return response.data.images;
-    } catch (error) {
-      return handleApiError(error);
+      } catch (err) {
+        console.warn('Image upload failed for one file:', err);
+      }
     }
+    return urls;
   },
 };
 

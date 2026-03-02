@@ -11,27 +11,119 @@ import {
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router";
 import { pricingApi } from "../../lib/api";
-import { marketPrices as staticMarketPrices } from "../../lib/data";
 import type { MarketPrice } from "../../lib/types";
 import { useOnlineStatus } from "../../lib/useOnlineStatus";
 import { BottomNav } from "../BottomNav";
 
-// ── local fallback: convert static data to MarketPrice shape ─────────────────
-const LOCAL_PRICES: MarketPrice[] = staticMarketPrices.map((p) => ({
-  produce_type: p.produce,
-  district: "National",
-  price_min: p.min,
-  price_avg: p.currentPrice,
-  price_max: p.max,
-  unit: p.unit,
-  currency: "ZWL",
-  recorded_date: new Date().toISOString().split("T")[0],
-  // attach trend metadata via extra fields (we read these below)
-  _change: p.change,
-  _trend: p.trend,
-} as MarketPrice & { _change: number; _trend: string }));
+type PriceWithMeta = MarketPrice & { _change?: number; _trend?: string; category?: string };
 
-type PriceWithMeta = MarketPrice & { _change?: number; _trend?: string };
+// ── Realistic 2026 ZWL price ranges per category ─────────────────────────────
+const PRICE_RANGES: Record<string, {
+  label: string;
+  icon: string;
+  produces: Array<{ name: string; min: number; max: number; unit: string; district: string }>;
+}> = {
+  vegetables: {
+    label: "Vegetables", icon: "🥬",
+    produces: [
+      { name: "Tomatoes",       min: 1_500,  max: 4_000,  unit: "kg",    district: "Harare" },
+      { name: "Red Onions",     min: 2_000,  max: 5_000,  unit: "kg",    district: "Bulawayo" },
+      { name: "Butternut",      min: 1_200,  max: 3_500,  unit: "kg",    district: "Masvingo" },
+      { name: "Potatoes",       min: 1_800,  max: 4_200,  unit: "kg",    district: "Nyanga" },
+      { name: "Cabbage",        min: 800,    max: 2_500,  unit: "head",  district: "Harare" },
+      { name: "Sweet Potatoes", min: 1_500,  max: 3_800,  unit: "kg",    district: "Mutare" },
+      { name: "Green Peppers",  min: 2_500,  max: 6_000,  unit: "kg",    district: "Gweru" },
+      { name: "Leafy Greens",   min: 600,    max: 2_000,  unit: "bunch", district: "Harare" },
+    ],
+  },
+  fruits: {
+    label: "Fruits", icon: "🍎",
+    produces: [
+      { name: "Avocados", min: 3_000, max: 8_000,  unit: "kg", district: "Mutare" },
+      { name: "Bananas",  min: 1_800, max: 5_000,  unit: "kg", district: "Chipinge" },
+      { name: "Mangoes",  min: 2_500, max: 7_000,  unit: "kg", district: "Mazowe" },
+      { name: "Oranges",  min: 1_500, max: 4_500,  unit: "kg", district: "Manicaland" },
+      { name: "Pawpaw",   min: 1_200, max: 3_500,  unit: "kg", district: "Harare" },
+    ],
+  },
+  grains: {
+    label: "Grains", icon: "🌾",
+    produces: [
+      { name: "White Maize",  min: 2_000, max: 4_500,  unit: "kg",  district: "National" },
+      { name: "Sorghum",      min: 1_800, max: 3_800,  unit: "kg",  district: "Masvingo" },
+      { name: "Millet",       min: 2_200, max: 4_800,  unit: "kg",  district: "Gweru" },
+      { name: "Wheat",        min: 2_500, max: 5_500,  unit: "kg",  district: "Harare" },
+      { name: "Groundnuts",   min: 3_500, max: 7_500,  unit: "kg",  district: "Mashonaland" },
+    ],
+  },
+  livestock: {
+    label: "Livestock", icon: "🐄",
+    produces: [
+      { name: "Cattle", min: 80_000,  max: 155_000, unit: "head", district: "Harare" },
+      { name: "Goats",  min: 30_000,  max: 70_000,  unit: "head", district: "Masvingo" },
+      { name: "Sheep",  min: 25_000,  max: 65_000,  unit: "head", district: "Gweru" },
+      { name: "Pigs",   min: 40_000,  max: 90_000,  unit: "head", district: "Harare" },
+    ],
+  },
+  poultry: {
+    label: "Poultry", icon: "🐔",
+    produces: [
+      { name: "Broilers",       min: 3_500,  max: 8_500,  unit: "bird",  district: "Harare" },
+      { name: "Layers",         min: 2_500,  max: 6_500,  unit: "bird",  district: "Bulawayo" },
+      { name: "Eggs (Tray 30)", min: 5_000,  max: 9_500,  unit: "tray",  district: "Harare" },
+      { name: "Ducks",          min: 4_000,  max: 9_500,  unit: "bird",  district: "Mutare" },
+      { name: "Guinea Fowl",    min: 3_500,  max: 8_500,  unit: "bird",  district: "Masvingo" },
+    ],
+  },
+  dairy: {
+    label: "Dairy", icon: "🥛",
+    produces: [
+      { name: "Fresh Milk", min: 500,   max: 1_200, unit: "litre", district: "Harare" },
+      { name: "Yoghurt",    min: 800,   max: 1_800, unit: "litre", district: "Bulawayo" },
+      { name: "Sour Milk",  min: 400,   max: 1_100, unit: "litre", district: "National" },
+      { name: "Cheese",     min: 3_000, max: 8_000, unit: "kg",    district: "Harare" },
+      { name: "Butter",     min: 2_500, max: 6_000, unit: "kg",    district: "Gweru" },
+    ],
+  },
+};
+
+/** Produce a fresh set of randomised prices within each produce's realistic range. */
+function generateLocalPrices(): PriceWithMeta[] {
+  const today = new Date().toISOString().split("T")[0];
+  const result: PriceWithMeta[] = [];
+  for (const [catId, cat] of Object.entries(PRICE_RANGES)) {
+    for (const p of cat.produces) {
+      const spread = p.max - p.min;
+      // Slightly contract the outer edges so the range looks tight but realistic
+      const min = Math.round(p.min + Math.random() * spread * 0.12);
+      const max = Math.round(p.max - Math.random() * spread * 0.12);
+      const avg = Math.round(min + Math.random() * (max - min));
+      const mid = (min + max) / 2;
+      const trend: "up" | "down" | "stable" =
+        avg > mid * 1.04 ? "up" : avg < mid * 0.96 ? "down" : "stable";
+      const change =
+        trend === "up"
+          ? Math.round(Math.random() * 15 + 1)
+          : trend === "down"
+          ? -Math.round(Math.random() * 10 + 1)
+          : 0;
+      result.push({
+        produce_type: p.name,
+        district: p.district,
+        price_min: min,
+        price_avg: avg,
+        price_max: max,
+        unit: p.unit,
+        currency: "ZWL",
+        recorded_date: today,
+        category: catId,
+        _change: change,
+        _trend: trend,
+      });
+    }
+  }
+  return result;
+}
 
 // Derive trend from price position within range when not explicitly provided
 function deriveTrend(p: PriceWithMeta): "up" | "down" | "stable" {
@@ -68,6 +160,7 @@ export function MarketPrices() {
   const isOnline = useOnlineStatus();
 
   const [searchQuery, setSearchQuery] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState("All");
   const [selectedDistrict, setSelectedDistrict] = useState("All");
   const [prices, setPrices] = useState<PriceWithMeta[]>([]);
   const [loading, setLoading] = useState(true);
@@ -76,16 +169,18 @@ export function MarketPrices() {
   const [lastUpdated, setLastUpdated] = useState<Date>(new Date());
 
   const fetchPrices = async (isRefresh = false) => {
+    // Always generate fresh local prices so randomisation updates on each load/refresh
+    const freshLocal = generateLocalPrices();
     try {
       isRefresh ? setRefreshing(true) : setLoading(true);
       const data = await pricingApi.getMarketPrices();
       setPrices(data as PriceWithMeta[]);
       setUsingFallback(false);
       setLastUpdated(new Date());
-    } catch (err: any) {
-      // Fall back to static local data so the page is never empty
-      setPrices(LOCAL_PRICES as PriceWithMeta[]);
+    } catch {
+      setPrices(freshLocal);
       setUsingFallback(true);
+      setLastUpdated(new Date());
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -109,9 +204,11 @@ export function MarketPrices() {
         .includes(searchQuery.toLowerCase());
       const matchesDistrict =
         selectedDistrict === "All" || item.district === selectedDistrict;
-      return matchesSearch && matchesDistrict;
+      const matchesCategory =
+        selectedCategory === "All" || (item as PriceWithMeta).category === selectedCategory;
+      return matchesSearch && matchesDistrict && matchesCategory;
     });
-  }, [prices, searchQuery, selectedDistrict]);
+  }, [prices, searchQuery, selectedDistrict, selectedCategory]);
 
   // Summary counts
   const trendingUp = filteredPrices.filter((p) => deriveTrend(p) === "up").length;
@@ -179,6 +276,25 @@ export function MarketPrices() {
           </div>
         </div>
 
+        {/* Category filter chips */}
+        <div className="px-4 pb-3 overflow-x-auto">
+          <div className="flex gap-2 min-w-max">
+            {([{ id: "All", label: "All", icon: "🛒" }, ...Object.entries(PRICE_RANGES).map(([id, c]) => ({ id, label: c.label, icon: c.icon }))] as { id: string; label: string; icon: string }[]).map((cat) => (
+              <button
+                key={cat.id}
+                onClick={() => { setSelectedCategory(cat.id); setSelectedDistrict("All"); }}
+                className={`px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition-all flex items-center gap-1 ${
+                  selectedCategory === cat.id
+                    ? "bg-[#2D5016] text-white"
+                    : "bg-[#F5F5F5] text-[#757575] hover:bg-[#E0E0E0]"
+                }`}
+              >
+                <span>{cat.icon}</span>{cat.label}
+              </button>
+            ))}
+          </div>
+        </div>
+
         {/* District filter – only show when we have multi-district data */}
         {districts.length > 2 && (
           <div className="px-4 pb-3 overflow-x-auto">
@@ -189,7 +305,7 @@ export function MarketPrices() {
                   onClick={() => setSelectedDistrict(d)}
                   className={`px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition-all ${
                     selectedDistrict === d
-                      ? "bg-[#2D5016] text-white"
+                      ? "bg-[#4A90E2] text-white"
                       : "bg-[#F5F5F5] text-[#757575] hover:bg-[#E0E0E0]"
                   }`}
                 >
@@ -278,14 +394,16 @@ export function MarketPrices() {
                   {/* Footer */}
                   <div className="flex items-center justify-between pt-3 border-t border-[#E0E0E0]">
                     <div>
-                      <p className="text-xs text-[#757575]">Price Range</p>
+                      <p className="text-xs text-[#757575]">{usingFallback ? "Estimated" : "Price Range"}</p>
                       <p className="text-sm font-medium text-[#2C2C2C]">
-                        ZWL {item.price_min.toLocaleString()} – {item.price_max.toLocaleString()}
+                        ZWL {item.price_min.toLocaleString()} – {item.price_max.toLocaleString()}/{item.unit}
                       </p>
                     </div>
                     <div className="text-right">
-                      <p className="text-xs text-[#757575]">Recorded</p>
-                      <p className="text-sm font-medium text-[#2C2C2C]">
+                      <p className="text-xs text-[#757575]">
+                        Avg: ZWL {item.price_avg.toLocaleString()}/{item.unit} · {item.district}
+                      </p>
+                      <p className="text-xs text-[#9E9E9E] mt-0.5">
                         {new Date(item.recorded_date).toLocaleDateString()}
                       </p>
                     </div>

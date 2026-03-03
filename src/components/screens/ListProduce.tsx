@@ -21,6 +21,30 @@ import { Textarea } from "../ui/textarea";
 
 const units = ["kg", "tonnes", "bags", "crates", "heads", "trays", "birds"];
 
+/**
+ * Performs a real HTTP probe against the backend to confirm actual internet/server
+ * reachability at the moment of submission — not just navigator.onLine which can
+ * be stale (e.g. device is connected to a router with no WAN).
+ * Resolves true = reachable, false = unreachable.
+ */
+async function probeConnectivity(): Promise<boolean> {
+  const apiBase = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000/api/v1';
+  const controller = new AbortController();
+  const timerId = setTimeout(() => controller.abort(), 4000); // 4 s timeout
+  try {
+    await fetch(`${apiBase}/listings/?page_size=1`, {
+      method: 'HEAD',
+      signal: controller.signal,
+      cache: 'no-store',
+    });
+    clearTimeout(timerId);
+    return true;
+  } catch {
+    clearTimeout(timerId);
+    return false;
+  }
+}
+
 const specificProduce: Record<string, string[]> = {
   vegetables: ["Tomatoes", "Onions", "Butternut", "Cabbage", "Spinach", "Peppers", "Carrots", "Cucumbers"],
   fruits: ["Bananas", "Avocados", "Oranges", "Mangoes", "Apples"],
@@ -219,6 +243,12 @@ export function ListProduce() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
+
+    // ── Live connectivity probe ───────────────────────────────────────────────
+    // We probe the actual backend instead of trusting navigator.onLine (stale).
+    setChecking(true);
+    const liveOnline = await probeConnectivity();
+    setChecking(false);
     setLoading(true);
 
     // ── Resolve the produce name to its backend numeric ID ───────────────────
@@ -230,7 +260,7 @@ export function ListProduce() {
       map[formData.produce.trim()] ??
       null;
 
-    if (isOnline && !resolvedId) {
+    if (liveOnline && !resolvedId) {
       // Map not populated yet (network slow) — try one more fetch
       const fresh = await produceTypesApi.list();
       fresh.forEach((t) => { map[t.name.toLowerCase().trim()] = t.id; });
@@ -242,7 +272,7 @@ export function ListProduce() {
       produceTypeMapRef.current[formData.produce.trim()] ??
       0; // 0 signals an unresolved type below
 
-    if (isOnline && produceTypeId === 0) {
+    if (liveOnline && produceTypeId === 0) {
       setError(
         `Could not find produce type "${formData.produce}" in the system. ` +
         'Please check your connection and try again, or contact support.'
@@ -252,7 +282,7 @@ export function ListProduce() {
     }
 
     const listingPayload = {
-      produce_type_id: isOnline ? produceTypeId : 0, // 0 is fine for offline saves
+      produce_type_id: liveOnline ? produceTypeId : 0, // 0 is fine for offline saves
       quantity_available: parseFloat(formData.quantity),
       unit: formData.unit,
       price_per_unit: parseFloat(formData.price),
@@ -270,13 +300,13 @@ export function ListProduce() {
     };
 
     // ── OFFLINE: save locally ────────────────────────────────────────────────
-    if (!isOnline) {
+    if (!liveOnline) {
       savePendingListing(listingPayload);
       setPendingCount((c) => c + 1);
-      toast.success("Listing saved locally!", {
+      toast.success("Saved locally!", {
         description:
-          "Your listing has been saved on this device and will be synced when you go online.",
-        duration: 5000,
+          "No internet connection detected. Your listing has been saved on this device and will be published automatically when you're back online.",
+        duration: 6000,
       });
       setLoading(false);
       setTimeout(() => navigate(-1), 600);
@@ -291,15 +321,15 @@ export function ListProduce() {
         await listingsApi.uploadImages(listing.id, uploadedImages);
       }
 
-      toast.success("Listing Created!", {
-        description: "Your produce has been listed successfully",
+      toast.success("Listing Published!", {
+        description: "Your produce has been listed successfully on the marketplace.",
       });
 
       setTimeout(() => navigate("/farmer/my-listings"), 500);
     } catch (err: any) {
       const errorMsg = err.message || "Failed to create listing. Please try again.";
       setError(errorMsg);
-      toast.error("Failed to Create Listing", { description: errorMsg });
+      toast.error("Failed to Publish Listing", { description: errorMsg });
     } finally {
       setLoading(false);
     }
@@ -685,13 +715,18 @@ export function ListProduce() {
           </Button>
           <Button
             type="submit"
-            disabled={loading || !formData.category || !formData.produce || !formData.quantity || !formData.price}
+            disabled={checking || loading || !formData.category || !formData.produce || !formData.quantity || !formData.price}
             className="flex-1 h-12 bg-[#2D5016] hover:bg-[#234010] text-white disabled:opacity-50"
           >
-            {loading ? (
+            {checking ? (
               <>
                 <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                {isOnline ? "Publishing..." : "Saving..."}
+                Checking connection...
+              </>
+            ) : loading ? (
+              <>
+                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                {isOnline ? "Publishing..." : "Saving locally..."}
               </>
             ) : !isOnline ? (
               <>

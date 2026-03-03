@@ -294,6 +294,50 @@ export const authApi = {
   logout: () => {
     handleLogout();
   },
+
+  /**
+   * Request a password reset token for a phone number.
+   * In dev the token is returned directly; in production it would be sent via SMS.
+   */
+  passwordResetRequest: async (
+    phone_number: string
+  ): Promise<{ message: string; reset_token: string | null; display_for_seconds: number }> => {
+    try {
+      const response = await api.post<{
+        message: string;
+        reset_token: string | null;
+        display_for_seconds: number;
+      }>('/auth/password-reset/request', { phone_number });
+      return response.data;
+    } catch (error) {
+      return handleApiError(error);
+    }
+  },
+
+  /**
+   * Confirm password reset using the token from passwordResetRequest.
+   * Returns fresh auth tokens so the user is logged in immediately.
+   */
+  passwordResetConfirm: async (
+    reset_token: string,
+    new_password: string
+  ): Promise<AuthResponse> => {
+    try {
+      const response = await api.post<AuthResponse>('/auth/password-reset/confirm', {
+        reset_token,
+        new_password,
+      });
+      const { access_token, refresh_token, user } = response.data;
+      if (access_token) {
+        localStorage.setItem('access_token', access_token);
+        localStorage.setItem('refresh_token', refresh_token);
+        localStorage.setItem('user', JSON.stringify(user));
+      }
+      return response.data;
+    } catch (error) {
+      return handleApiError(error);
+    }
+  },
 };
 
 // ============================================================================

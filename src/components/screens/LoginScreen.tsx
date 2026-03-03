@@ -1,7 +1,8 @@
-import { ArrowLeft, Eye, EyeOff, Loader2, Sprout, WifiOff } from "lucide-react";
-import { useState } from "react";
+import { ArrowLeft, CheckCircle2, Copy, Eye, EyeOff, Loader2, Sprout, WifiOff } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router";
 import { toast } from "sonner";
+import { authApi } from "../../lib/api";
 import { useAuth } from "../../lib/useAuth";
 import { useOnlineStatus } from "../../lib/useOnlineStatus";
 import { Alert } from "../ui/alert";
@@ -21,6 +22,109 @@ export function LoginScreen() {
     password: "",
     remember: false,
   });
+
+  // ── Forgot-password state ─────────────────────────────────────────────────
+  // step: null = closed | "request" = enter phone | "token" = show token | "confirm" = enter new pwd
+  type FpStep = null | "request" | "token" | "confirm";
+  const [fpStep, setFpStep] = useState<FpStep>(null);
+  const [fpPhone, setFpPhone] = useState("+263 ");
+  const [fpToken, setFpToken] = useState(""); // token returned by backend
+  const [fpTokenInput, setFpTokenInput] = useState(""); // token typed by user in confirm step
+  const [fpNewPwd, setFpNewPwd] = useState("");
+  const [fpShowPwd, setFpShowPwd] = useState(false);
+  const [fpLoading, setFpLoading] = useState(false);
+  const [fpError, setFpError] = useState("");
+  const [fpCountdown, setFpCountdown] = useState(0);
+  const [fpCopied, setFpCopied] = useState(false);
+  const countdownRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Auto-dismiss countdown for the token display step
+  useEffect(() => {
+    if (fpStep === "token" && fpCountdown > 0) {
+      countdownRef.current = setInterval(() => {
+        setFpCountdown((c) => {
+          if (c <= 1) {
+            clearInterval(countdownRef.current!);
+            return 0;
+          }
+          return c - 1;
+        });
+      }, 1000);
+    }
+    return () => { if (countdownRef.current) clearInterval(countdownRef.current); };
+  }, [fpStep]);
+
+  const closeFp = () => {
+    setFpStep(null);
+    setFpPhone("+263 ");
+    setFpToken("");
+    setFpTokenInput("");
+    setFpNewPwd("");
+    setFpError("");
+    setFpCountdown(0);
+    setFpCopied(false);
+    if (countdownRef.current) clearInterval(countdownRef.current);
+  };
+
+  const handleFpRequest = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setFpError("");
+    const clean = fpPhone.replace(/\s/g, "");
+    if (!clean.startsWith("+263") || clean.length < 12) {
+      setFpError("Please enter a valid Zimbabwe phone number");
+      return;
+    }
+    setFpLoading(true);
+    try {
+      const res = await authApi.passwordResetRequest(clean);
+      if (res.reset_token) {
+        setFpToken(res.reset_token);
+        setFpCountdown(res.display_for_seconds ?? 30);
+        setFpStep("token");
+      } else {
+        // Phone not registered — don't leak info, move to confirm anyway
+        setFpStep("confirm");
+      }
+    } catch (err: any) {
+      setFpError(err.message || "Request failed. Please try again.");
+    } finally {
+      setFpLoading(false);
+    }
+  };
+
+  const handleCopyToken = async () => {
+    try {
+      await navigator.clipboard.writeText(fpToken);
+      setFpCopied(true);
+      setTimeout(() => setFpCopied(false), 2000);
+    } catch {
+      // clipboard not available — user can select manually
+    }
+  };
+
+  const handleFpConfirm = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setFpError("");
+    if (!fpTokenInput.trim()) { setFpError("Please enter the reset token"); return; }
+    if (fpNewPwd.length < 6) { setFpError("Password must be at least 6 characters"); return; }
+    setFpLoading(true);
+    try {
+      const res = await authApi.passwordResetConfirm(fpTokenInput.trim(), fpNewPwd);
+      toast.success("Password updated!", {
+        description: `Welcome back, ${res.user?.full_name ?? ""}. You are now signed in.`,
+      });
+      closeFp();
+      // Navigate to the correct dashboard
+      setTimeout(() => {
+        if (res.user?.user_type === "farmer") navigate("/farmer/dashboard");
+        else navigate("/buyer/dashboard");
+      }, 400);
+    } catch (err: any) {
+      setFpError(err.message || "Invalid or expired token. Please request a new one.");
+    } finally {
+      setFpLoading(false);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -167,7 +271,11 @@ export function LoginScreen() {
                 Remember Me
               </label>
             </div>
-            <button type="button" className="text-sm text-[#2D5016] font-medium hover:underline">
+            <button
+              type="button"
+              onClick={() => setFpStep("request")}
+              className="text-sm text-[#2D5016] font-medium hover:underline"
+            >
               Forgot Password?
             </button>
           </div>
@@ -208,6 +316,142 @@ export function LoginScreen() {
           </div>
         </form>
       </div>
+
+      {/* ── Forgot Password Modal ─────────────────────────────────────────── */}
+      {fpStep !== null && (
+        <div
+          className="fixed inset-0 z-50 flex items-end justify-center sm:items-center bg-black/50"
+          onClick={(e) => { if (e.target === e.currentTarget) closeFp(); }}
+        >
+          <div className="bg-white rounded-t-2xl sm:rounded-2xl w-full max-w-md p-6 shadow-xl">
+
+            {/* Step 1 — Enter phone */}
+            {fpStep === "request" && (
+              <form onSubmit={handleFpRequest}>
+                <h2 className="text-lg font-bold text-[#2C2C2C] mb-1">Reset Password</h2>
+                <p className="text-sm text-[#757575] mb-5">
+                  Enter your registered phone number and we'll generate a reset code.
+                </p>
+                {fpError && (
+                  <Alert variant="destructive" className="mb-4">
+                    <p className="text-sm">{fpError}</p>
+                  </Alert>
+                )}
+                <Label htmlFor="fp-phone">Phone Number</Label>
+                <Input
+                  id="fp-phone"
+                  type="tel"
+                  className="mt-2 mb-5"
+                  value={fpPhone}
+                  onChange={(e) => setFpPhone(e.target.value)}
+                  placeholder="+263 77 123 4567"
+                />
+                <div className="flex gap-3">
+                  <Button type="button" variant="outline" className="flex-1" onClick={closeFp}>
+                    Cancel
+                  </Button>
+                  <Button
+                    type="submit"
+                    disabled={fpLoading}
+                    className="flex-1 bg-[#2D5016] hover:bg-[#234010] text-white"
+                  >
+                    {fpLoading ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Sending...</> : "Get Reset Code"}
+                  </Button>
+                </div>
+              </form>
+            )}
+
+            {/* Step 2 — Show token (dev mode — in production this arrives via SMS) */}
+            {fpStep === "token" && (
+              <div>
+                <h2 className="text-lg font-bold text-[#2C2C2C] mb-1">Your Reset Code</h2>
+                <p className="text-sm text-[#757575] mb-4">
+                  Copy this code and use it in the next step. It expires in 15 minutes.
+                  {fpCountdown > 0 && (
+                    <span className="ml-1 text-[#FFA726] font-medium">Visible for {fpCountdown}s</span>
+                  )}
+                </p>
+                <div className="flex items-center gap-2 bg-[#F5F5F5] border border-[#E0E0E0] rounded-lg px-4 py-3 mb-5">
+                  <code className="flex-1 text-xs break-all text-[#2C2C2C] select-all font-mono">{fpToken}</code>
+                  <button
+                    type="button"
+                    onClick={handleCopyToken}
+                    className="flex-shrink-0 text-[#2D5016] hover:text-[#234010] transition-colors"
+                    title="Copy token"
+                  >
+                    {fpCopied ? <CheckCircle2 className="w-5 h-5" /> : <Copy className="w-5 h-5" />}
+                  </button>
+                </div>
+                <Button
+                  className="w-full bg-[#2D5016] hover:bg-[#234010] text-white"
+                  onClick={() => setFpStep("confirm")}
+                >
+                  I've copied the code — Continue
+                </Button>
+              </div>
+            )}
+
+            {/* Step 3 — Enter token + new password */}
+            {fpStep === "confirm" && (
+              <form onSubmit={handleFpConfirm}>
+                <h2 className="text-lg font-bold text-[#2C2C2C] mb-1">Set New Password</h2>
+                <p className="text-sm text-[#757575] mb-5">
+                  Paste your reset code and choose a new password.
+                </p>
+                {fpError && (
+                  <Alert variant="destructive" className="mb-4">
+                    <p className="text-sm">{fpError}</p>
+                  </Alert>
+                )}
+                <Label htmlFor="fp-token">Reset Code</Label>
+                <Input
+                  id="fp-token"
+                  className="mt-2 mb-4 font-mono text-xs"
+                  value={fpTokenInput}
+                  onChange={(e) => setFpTokenInput(e.target.value)}
+                  placeholder="Paste reset code here"
+                />
+                <Label htmlFor="fp-newpwd">New Password</Label>
+                <div className="relative mt-2 mb-5">
+                  <Input
+                    id="fp-newpwd"
+                    type={fpShowPwd ? "text" : "password"}
+                    className="pr-12"
+                    value={fpNewPwd}
+                    onChange={(e) => setFpNewPwd(e.target.value)}
+                    placeholder="At least 6 characters"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setFpShowPwd((v) => !v)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-[#757575] hover:text-[#2C2C2C]"
+                  >
+                    {fpShowPwd ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                  </button>
+                </div>
+                <div className="flex gap-3">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="flex-1"
+                    onClick={() => { setFpStep("request"); setFpError(""); }}
+                  >
+                    Back
+                  </Button>
+                  <Button
+                    type="submit"
+                    disabled={fpLoading}
+                    className="flex-1 bg-[#2D5016] hover:bg-[#234010] text-white"
+                  >
+                    {fpLoading ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Saving...</> : "Update Password"}
+                  </Button>
+                </div>
+              </form>
+            )}
+
+          </div>
+        </div>
+      )}
     </div>
   );
 }

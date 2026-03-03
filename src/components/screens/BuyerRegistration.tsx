@@ -245,7 +245,7 @@ export function BuyerRegistration() {
           <Checkbox
             id="terms"
             checked={formData.terms}
-            onCheckedChange={(checked) => setFormData({ ...formData, terms: checked as boolean })}
+            onCheckedChange={(checked: boolean) => setFormData({ ...formData, terms: checked })}
           />
           <label htmlFor="terms" className="text-sm text-[#757575] leading-relaxed cursor-pointer">
             I agree to the{" "}

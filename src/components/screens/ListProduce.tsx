@@ -118,6 +118,7 @@ export function ListProduce() {
   const { user } = useAuth();
   const isOnline = useOnlineStatus();
   const [loading, setLoading] = useState(false);
+  const [checking, setChecking] = useState(false);
   const [syncing, setSyncing] = useState(false);
   const [pendingCount, setPendingCount] = useState(0);
   const [error, setError] = useState("");

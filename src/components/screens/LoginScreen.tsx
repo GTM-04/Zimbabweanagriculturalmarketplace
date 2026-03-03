@@ -79,10 +79,20 @@ export function LoginScreen() {
       const res = await authApi.passwordResetRequest(clean);
       if (res.reset_token) {
         setFpToken(res.reset_token);
+        // Pre-fill the confirm step input so the user never needs to copy manually
+        setFpTokenInput(res.reset_token);
         setFpCountdown(res.display_for_seconds ?? 30);
+
+        // Show the code as a toast so it's impossible to miss
+        toast.info("Reset code generated", {
+          description: "Your reset code is shown below. Copy it before it disappears.",
+          duration: (res.display_for_seconds ?? 30) * 1000,
+        });
+
         setFpStep("token");
       } else {
-        // Phone not registered — don't leak info, move to confirm anyway
+        // Phone not registered — show a neutral message, go to confirm
+        toast.info("If that number is registered, a code has been generated.");
         setFpStep("confirm");
       }
     } catch (err: any) {
@@ -265,7 +275,7 @@ export function LoginScreen() {
               <Checkbox
                 id="remember"
                 checked={formData.remember}
-                onCheckedChange={(checked) => setFormData({ ...formData, remember: checked as boolean })}
+                onCheckedChange={(checked: boolean | "indeterminate") => setFormData({ ...formData, remember: checked as boolean })}
               />
               <label htmlFor="remember" className="text-sm text-[#757575] cursor-pointer">
                 Remember Me
@@ -361,32 +371,44 @@ export function LoginScreen() {
               </form>
             )}
 
-            {/* Step 2 — Show token (dev mode — in production this arrives via SMS) */}
+            {/* Step 2 — Show token */}
             {fpStep === "token" && (
               <div>
                 <h2 className="text-lg font-bold text-[#2C2C2C] mb-1">Your Reset Code</h2>
                 <p className="text-sm text-[#757575] mb-4">
-                  Copy this code and use it in the next step. It expires in 15 minutes.
+                  Your code is shown below and has been auto-filled in the next step.
+                  It expires in 15 minutes.
                   {fpCountdown > 0 && (
-                    <span className="ml-1 text-[#FFA726] font-medium">Visible for {fpCountdown}s</span>
+                    <span className="ml-1 text-[#FFA726] font-semibold">({fpCountdown}s remaining)</span>
                   )}
                 </p>
-                <div className="flex items-center gap-2 bg-[#F5F5F5] border border-[#E0E0E0] rounded-lg px-4 py-3 mb-5">
-                  <code className="flex-1 text-xs break-all text-[#2C2C2C] select-all font-mono">{fpToken}</code>
+
+                {/* Prominent code box */}
+                <div className="bg-[#2D5016]/5 border-2 border-[#2D5016]/30 rounded-xl px-4 py-4 mb-2">
+                  <p className="text-xs text-[#757575] mb-2 font-medium uppercase tracking-wide">Reset Token</p>
+                  <code className="block text-xs break-all text-[#2C2C2C] select-all font-mono leading-relaxed">
+                    {fpToken}
+                  </code>
+                </div>
+
+                {/* Copy row */}
+                <div className="flex items-center justify-end mb-5">
                   <button
                     type="button"
                     onClick={handleCopyToken}
-                    className="flex-shrink-0 text-[#2D5016] hover:text-[#234010] transition-colors"
-                    title="Copy token"
+                    className="flex items-center gap-1.5 text-sm text-[#2D5016] font-medium hover:underline"
                   >
-                    {fpCopied ? <CheckCircle2 className="w-5 h-5" /> : <Copy className="w-5 h-5" />}
+                    {fpCopied
+                      ? <><CheckCircle2 className="w-4 h-4" /> Copied!</>
+                      : <><Copy className="w-4 h-4" /> Copy code</>}
                   </button>
                 </div>
+
                 <Button
                   className="w-full bg-[#2D5016] hover:bg-[#234010] text-white"
                   onClick={() => setFpStep("confirm")}
                 >
-                  I've copied the code — Continue
+                  Continue — Set New Password
                 </Button>
               </div>
             )}
@@ -406,11 +428,17 @@ export function LoginScreen() {
                 <Label htmlFor="fp-token">Reset Code</Label>
                 <Input
                   id="fp-token"
-                  className="mt-2 mb-4 font-mono text-xs"
+                  className="mt-2 mb-1 font-mono text-xs"
                   value={fpTokenInput}
                   onChange={(e) => setFpTokenInput(e.target.value)}
                   placeholder="Paste reset code here"
                 />
+                {fpToken && fpTokenInput === fpToken && (
+                  <p className="text-xs text-[#4CAF50] mb-4 flex items-center gap-1">
+                    <CheckCircle2 className="w-3 h-3" /> Code pre-filled from previous step
+                  </p>
+                )}
+                {(!fpToken || fpTokenInput !== fpToken) && <div className="mb-4" />}
                 <Label htmlFor="fp-newpwd">New Password</Label>
                 <div className="relative mt-2 mb-5">
                   <Input

@@ -5,10 +5,10 @@ import { toast } from "sonner";
 import { listingsApi, pricingApi, produceTypesApi } from "../../lib/api";
 import { categories, zimbabweDistricts } from "../../lib/data";
 import {
-    getPendingListings,
-    markListingSynced,
-    removeSyncedListings,
-    savePendingListing
+  getPendingListings,
+  markListingSynced,
+  removeSyncedListings,
+  savePendingListing
 } from "../../lib/offlineStorage";
 import type { MarketPrice } from "../../lib/types";
 import { useAuth } from "../../lib/useAuth";
@@ -17,6 +17,7 @@ import { Alert } from "../ui/alert";
 import { Button } from "../ui/button";
 import { Input } from "../ui/input";
 import { Label } from "../ui/label";
+import { Switch } from "../ui/switch";
 import { Textarea } from "../ui/textarea";
 
 const units = ["kg", "tonnes", "bags", "crates", "heads", "trays", "birds"];
@@ -117,6 +118,7 @@ export function ListProduce() {
   const navigate = useNavigate();
   const { user } = useAuth();
   const isOnline = useOnlineStatus();
+  const [demoOfflineMode, setDemoOfflineMode] = useState(false);
   const [loading, setLoading] = useState(false);
   const [checking, setChecking] = useState(false);
   const [syncing, setSyncing] = useState(false);
@@ -247,8 +249,9 @@ export function ListProduce() {
 
     // ── Live connectivity probe ───────────────────────────────────────────────
     // We probe the actual backend instead of trusting navigator.onLine (stale).
+    // In demo mode, we simulate offline by returning false.
     setChecking(true);
-    const liveOnline = await probeConnectivity();
+    const liveOnline = demoOfflineMode ? false : await probeConnectivity();
     setChecking(false);
     setLoading(true);
 
@@ -371,11 +374,11 @@ export function ListProduce() {
   return (
     <div className="min-h-screen bg-[#F5F5F5]">
       {/* Offline Banner */}
-      {!isOnline && (
+      {(!isOnline || demoOfflineMode) && (
         <div className="bg-[#FFA726] text-[#2C2C2C] px-4 py-2 flex items-center gap-2 text-sm font-medium">
           <WifiOff className="w-4 h-4 flex-shrink-0" />
           <span>
-            You're offline. Listings will be saved locally and synced when online.
+            {demoOfflineMode ? "[DEMO MODE] " : ""}You're offline. Listings will be saved locally and synced when online.
           </span>
         </div>
       )}
@@ -402,14 +405,24 @@ export function ListProduce() {
       )}
 
       {/* Header */}
-      <div className="sticky top-0 bg-white border-b border-[#E0E0E0] px-4 py-4 flex items-center gap-3 z-10 shadow-sm">
-        <button
-          onClick={() => navigate(-1)}
-          className="p-2 hover:bg-[#F5F5F5] rounded-full transition-colors"
-        >
-          <ArrowLeft className="w-5 h-5 text-[#2C2C2C]" />
-        </button>
-        <h1 className="text-xl font-semibold text-[#2C2C2C]">List Your Produce</h1>
+      <div className="sticky top-0 bg-white border-b border-[#E0E0E0] px-4 py-4 flex items-center justify-between gap-3 z-10 shadow-sm">
+        <div className="flex items-center gap-3">
+          <button
+            onClick={() => navigate(-1)}
+            className="p-2 hover:bg-[#F5F5F5] rounded-full transition-colors"
+          >
+            <ArrowLeft className="w-5 h-5 text-[#2C2C2C]" />
+          </button>
+          <h1 className="text-xl font-semibold text-[#2C2C2C]">List Your Produce</h1>
+        </div>
+        <div className="flex items-center gap-2 px-3 py-2 bg-[#2D5016] border border-[#1a3d0a] rounded-lg">
+          <span className="text-sm text-white font-medium">Offline Mode:</span>
+          <Switch
+            checked={demoOfflineMode}
+            onCheckedChange={setDemoOfflineMode}
+            className="data-[state=checked]:bg-white"
+          />
+        </div>
       </div>
 
       <form onSubmit={handleSubmit} className="p-4 max-w-2xl mx-auto pb-24">

@@ -5,10 +5,11 @@ import { toast } from "sonner";
 import { listingsApi, pricingApi, produceTypesApi } from "../../lib/api";
 import { categories, zimbabweDistricts } from "../../lib/data";
 import {
-  getPendingListings,
-  markListingSynced,
-  removeSyncedListings,
-  savePendingListing
+    getPendingListings,
+    markListingSynced,
+    removeSyncedListings,
+    savePendingListing,
+    type PendingListing
 } from "../../lib/offlineStorage";
 import type { MarketPrice } from "../../lib/types";
 import { useAuth } from "../../lib/useAuth";
@@ -123,6 +124,7 @@ export function ListProduce() {
   const [checking, setChecking] = useState(false);
   const [syncing, setSyncing] = useState(false);
   const [pendingCount, setPendingCount] = useState(0);
+  const [pendingItems, setPendingItems] = useState<PendingListing[]>([]);
   const [error, setError] = useState("");
   const [uploadedImages, setUploadedImages] = useState<File[]>([]);
   const [marketPrice, setMarketPrice] = useState<MarketPrice | null>(null);
@@ -148,7 +150,9 @@ export function ListProduce() {
 
   // Refresh pending count whenever online status or component mounts
   useEffect(() => {
-    setPendingCount(getPendingListings().filter((l) => !l.synced).length);
+    const unsynced = getPendingListings().filter((l) => !l.synced);
+    setPendingCount(unsynced.length);
+    setPendingItems(unsynced);
   }, [isOnline]);
 
   // Fetch produce types from backend to build the name→id map
@@ -306,7 +310,9 @@ export function ListProduce() {
     // ── OFFLINE: save locally ────────────────────────────────────────────────
     if (!liveOnline) {
       savePendingListing(listingPayload);
-      setPendingCount((c) => c + 1);
+      const unsynced = getPendingListings().filter((l) => !l.synced);
+      setPendingCount(unsynced.length);
+      setPendingItems(unsynced);
       toast.success("Saved locally!", {
         description:
           "No internet connection detected. Your listing has been saved on this device and will be published automatically when you're back online.",
@@ -347,18 +353,56 @@ export function ListProduce() {
     let successCount = 0;
     let failCount = 0;
 
+    // Fetch produce types to resolve offline-saved listings
+    let produceTypeMap: Record<string, number> = {};
+    try {
+      const types = await produceTypesApi.list();
+      types.forEach((t) => {
+        produceTypeMap[t.name.toLowerCase().trim()] = t.id;
+      });
+    } catch (err) {
+      console.error('Failed to fetch produce types:', err);
+      // Continue anyway - we might be able to sync some listings
+    }
+
     for (const item of pending) {
       try {
-        await listingsApi.create(item.data);
+        // If produce_type_id is 0 (offline saved), try to resolve from produce name
+        let produceTypeId = item.data.produce_type_id;
+        if (produceTypeId === 0 && item.data.produceName) {
+          const resolved = produceTypeMap[item.data.produceName.toLowerCase().trim()];
+          if (resolved) {
+            produceTypeId = resolved;
+          } else {
+            throw new Error(
+              `Cannot resolve produce type "${item.data.produceName}". Please list it again.`
+            );
+          }
+        }
+
+        // Extract only valid CreateListingRequest fields (exclude display metadata)
+        const cleanData = {
+          produce_type_id: produceTypeId,
+          quantity_available: item.data.quantity_available,
+          unit: item.data.unit,
+          price_per_unit: item.data.price_per_unit,
+          description: item.data.description,
+          is_organic: item.data.is_organic,
+          harvest_date: item.data.harvest_date,
+        };
+        await listingsApi.create(cleanData);
         markListingSynced(item.localId);
         successCount++;
-      } catch {
+      } catch (err) {
+        console.error('Sync error:', err);
         failCount++;
       }
     }
 
     removeSyncedListings();
-    setPendingCount(getPendingListings().filter((l) => !l.synced).length);
+    const unsynced = getPendingListings().filter((l) => !l.synced);
+    setPendingCount(unsynced.length);
+    setPendingItems(unsynced);
 
     if (successCount > 0) {
       toast.success(
@@ -385,22 +429,37 @@ export function ListProduce() {
 
       {/* Pending Sync Banner */}
       {isOnline && pendingCount > 0 && (
-        <div className="bg-[#2D5016] text-white px-4 py-2 flex items-center justify-between gap-2 text-sm">
-          <span>
-            {pendingCount} offline listing{pendingCount > 1 ? "s" : ""} waiting to sync
-          </span>
-          <button
-            onClick={handleSync}
-            disabled={syncing}
-            className="flex items-center gap-1.5 bg-white text-[#2D5016] font-semibold px-3 py-1 rounded-full hover:bg-[#F5F5F5] transition-colors disabled:opacity-60"
-          >
-            {syncing ? (
-              <Loader2 className="w-3.5 h-3.5 animate-spin" />
-            ) : (
-              <CloudUpload className="w-3.5 h-3.5" />
-            )}
-            {syncing ? "Syncing..." : "Sync Now"}
-          </button>
+        <div className="bg-[#2D5016] text-white px-4 py-3 text-sm">
+          <div className="mb-2 flex items-center justify-between gap-2">
+            <span>
+              {pendingCount} offline listing{pendingCount > 1 ? "s" : ""} waiting to sync
+            </span>
+            <button
+              onClick={handleSync}
+              disabled={syncing}
+              className="flex items-center gap-1.5 bg-white text-[#2D5016] font-semibold px-3 py-1 rounded-full hover:bg-[#F5F5F5] transition-colors disabled:opacity-60"
+            >
+              {syncing ? (
+                <Loader2 className="w-3.5 h-3.5 animate-spin" />
+              ) : (
+                <CloudUpload className="w-3.5 h-3.5" />
+              )}
+              {syncing ? "Syncing..." : "Sync Now"}
+            </button>
+          </div>
+
+          <div className="max-h-28 overflow-y-auto rounded-md bg-white/15 px-2 py-1.5 text-xs">
+            {pendingItems.map((item) => (
+              <div key={item.localId} className="flex items-center justify-between py-1">
+                <span className="truncate pr-2">
+                  {item.data.produceName || "Produce listing"} • {item.data.quantity_available} {item.data.unit}
+                </span>
+                <span className="opacity-80">
+                  {new Date(item.savedAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                </span>
+              </div>
+            ))}
+          </div>
         </div>
       )}
 

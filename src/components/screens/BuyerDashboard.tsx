@@ -1,9 +1,9 @@
 import { Bell, Heart, Loader2, MapPin, Search, TrendingUp, WifiOff } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router";
-import { listingsApi, resolveImageUrl } from "../../lib/api";
+import { listingsApi, pricingApi, resolveImageUrl } from "../../lib/api";
 import { categories, getFarmerById, produceListings } from "../../lib/data";
-import type { Listing } from "../../lib/types";
+import type { Listing, PriceTrend } from "../../lib/types";
 import { useAuth } from "../../lib/useAuth";
 import { useOnlineStatus } from "../../lib/useOnlineStatus";
 import { BottomNav } from "../BottomNav";
@@ -87,6 +87,9 @@ export function BuyerDashboard() {
   const [apiListings, setApiListings] = useState<Listing[]>([]);
   const [loadingListings, setLoadingListings] = useState(true);
   const [usingFallback, setUsingFallback] = useState(false);
+  const [trendWindow, setTrendWindow] = useState<7 | 30>(7);
+  const [priceTrends, setPriceTrends] = useState<PriceTrend[]>([]);
+  const [loadingTrends, setLoadingTrends] = useState(true);
 
   // Fetch real listings from backend; fall back to static demo data on failure
   useEffect(() => {
@@ -104,6 +107,26 @@ export function BuyerDashboard() {
     };
     fetchListings();
   }, []);
+
+  useEffect(() => {
+    const fetchTrends = async () => {
+      setLoadingTrends(true);
+      try {
+        const trends = await pricingApi.getPriceTrends({
+          days: trendWindow,
+          district: user?.district,
+          limit: 6,
+        });
+        setPriceTrends(trends);
+      } catch {
+        setPriceTrends([]);
+      } finally {
+        setLoadingTrends(false);
+      }
+    };
+
+    fetchTrends();
+  }, [trendWindow, user?.district]);
 
   // Normalise whichever source we have into one list
   const allListings: NormalizedListing[] = useMemo(() => {
@@ -129,6 +152,15 @@ export function BuyerDashboard() {
       return matchesCategory && matchesSearch;
     });
   }, [allListings, selectedCategory, searchQuery]);
+
+  const topTrendItems = useMemo(() => {
+    return [...priceTrends]
+      .sort(
+        (a, b) =>
+          Math.abs(b.price_change_percent) - Math.abs(a.price_change_percent)
+      )
+      .slice(0, 3);
+  }, [priceTrends]);
 
   return (
     <div className="min-h-screen bg-[#F5F5F5] pb-20">
@@ -217,7 +249,13 @@ export function BuyerDashboard() {
               : categories.find((c) => c.id === selectedCategory)?.name ?? "Listings"}
           </h2>
           <button
-            onClick={() => navigate("/buyer/search")}
+            onClick={() =>
+              navigate(
+                searchQuery.trim()
+                  ? `/buyer/search?q=${encodeURIComponent(searchQuery.trim())}`
+                  : "/buyer/search"
+              )
+            }
             className="text-sm text-[#4A90E2] font-medium hover:underline"
           >
             View All
@@ -322,7 +360,13 @@ export function BuyerDashboard() {
 
             {filteredListings.length > 20 && (
               <button
-                onClick={() => navigate("/buyer/search")}
+                onClick={() =>
+                  navigate(
+                    searchQuery.trim()
+                      ? `/buyer/search?q=${encodeURIComponent(searchQuery.trim())}`
+                      : "/buyer/search"
+                  )
+                }
                 className="w-full mt-4 py-3 rounded-xl border-2 border-[#2D5016] text-[#2D5016] text-sm font-semibold hover:bg-[#2D5016]/5 transition-colors"
               >
                 View {filteredListings.length - 20} more listings →
@@ -335,22 +379,79 @@ export function BuyerDashboard() {
       {/* Market Insights */}
       <div className="px-4 pb-6">
         <h2 className="text-lg font-semibold text-[#2C2C2C] mb-3">Market Insights</h2>
-        <div className="bg-gradient-to-r from-[#4A90E2]/10 to-[#2D5016]/10 rounded-xl p-4 border-l-4 border-[#4A90E2]">
-          <div className="flex items-start gap-3">
-            <TrendingUp className="w-5 h-5 text-[#4A90E2] flex-shrink-0 mt-0.5" />
-            <div>
-              <p className="font-medium text-[#2C2C2C] mb-1">Price Trends</p>
-              <p className="text-sm text-[#757575]">
-                Butternut prices down 5% this week — Great time to buy!
-              </p>
+        <div className="rounded-xl border border-[#DDE7F6] bg-gradient-to-r from-[#EEF5FF] to-[#F3FAF4] p-4">
+          <div className="mb-3 flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <TrendingUp className="h-5 w-5 text-[#3D7EDB]" />
+              <p className="font-medium text-[#2C2C2C]">Price Trends</p>
+            </div>
+            <div className="flex items-center gap-1 rounded-full bg-white p-1">
               <button
-                onClick={() => navigate("/market-prices")}
-                className="text-sm text-[#4A90E2] font-medium mt-2 hover:underline"
+                onClick={() => setTrendWindow(7)}
+                className={`rounded-full px-2.5 py-1 text-xs font-semibold transition-colors ${
+                  trendWindow === 7
+                    ? "bg-[#2D5016] text-white"
+                    : "text-[#757575] hover:bg-[#F1F1F1]"
+                }`}
               >
-                View all prices →
+                7D
+              </button>
+              <button
+                onClick={() => setTrendWindow(30)}
+                className={`rounded-full px-2.5 py-1 text-xs font-semibold transition-colors ${
+                  trendWindow === 30
+                    ? "bg-[#2D5016] text-white"
+                    : "text-[#757575] hover:bg-[#F1F1F1]"
+                }`}
+              >
+                30D
               </button>
             </div>
           </div>
+
+          {loadingTrends ? (
+            <div className="flex items-center gap-2 py-2 text-sm text-[#5E6A78]">
+              <Loader2 className="h-4 w-4 animate-spin" />
+              <span>Loading trend signals...</span>
+            </div>
+          ) : topTrendItems.length === 0 ? (
+            <p className="text-sm text-[#5E6A78]">
+              No live trend data yet. Use Market Prices for current averages.
+            </p>
+          ) : (
+            <div className="space-y-2">
+              {topTrendItems.map((trend) => {
+                const change = trend.price_change_percent;
+                const isUp = change > 0;
+                const bar = Math.min(100, Math.max(10, Math.abs(change) * 4));
+                return (
+                  <div key={`${trend.produce_type}-${trend.district}`} className="rounded-lg bg-white p-2.5">
+                    <div className="mb-1 flex items-center justify-between text-sm">
+                      <span className="font-medium text-[#2C2C2C]">{trend.produce_type}</span>
+                      <span className={`${isUp ? "text-[#2D5016]" : "text-[#D14343]"} font-semibold`}>
+                        {isUp ? "+" : ""}
+                        {change.toFixed(1)}%
+                      </span>
+                    </div>
+                    <div className="mb-1 h-2 overflow-hidden rounded-full bg-[#E9EEF4]">
+                      <div
+                        className={`h-full rounded-full ${isUp ? "bg-[#3B9A5A]" : "bg-[#E06767]"}`}
+                        style={{ width: `${bar}%` }}
+                      />
+                    </div>
+                    <p className="text-xs text-[#657180]">{trend.district} • Avg USD {trend.average_price.toFixed(2)}</p>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+
+          <button
+            onClick={() => navigate("/market-prices")}
+            className="mt-3 text-sm font-medium text-[#3D7EDB] hover:underline"
+          >
+            View all prices →
+          </button>
         </div>
       </div>
 

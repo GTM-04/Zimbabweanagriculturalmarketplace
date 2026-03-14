@@ -1,13 +1,38 @@
 import { ArrowLeft, Grid, Heart, List as ListIcon, Loader2, MapPin, Search, SlidersHorizontal } from "lucide-react";
-import { useEffect, useState } from "react";
-import { useNavigate } from "react-router";
+import { useEffect, useMemo, useState } from "react";
+import { useNavigate, useSearchParams } from "react-router";
 import { listingsApi, resolveImageUrl } from "../../lib/api";
+import { getFarmerById, produceListings } from "../../lib/data";
 import type { Listing } from "../../lib/types";
+import { useOnlineStatus } from "../../lib/useOnlineStatus";
 import { BottomNav } from "../BottomNav";
+
+const fallbackImage = "https://images.unsplash.com/photo-1761370980657-22586ea44093?w=400";
+
+function fromStaticListing(item: (typeof produceListings)[number]): Listing {
+  const farmer = getFarmerById(item.farmerId);
+  return {
+    id: item.id,
+    title: item.produceName,
+    produce_type: { id: 0, name: item.produceName },
+    quantity_available: item.quantity,
+    unit: item.unit,
+    price_per_unit: item.pricePerUnit,
+    currency: item.currency,
+    district: item.district,
+    status: "active",
+    is_organic: false,
+    description: item.description,
+    images: [fallbackImage],
+    farmer_name: farmer?.name,
+  };
+}
 
 export function SearchResults() {
   const navigate = useNavigate();
-  const [searchQuery, setSearchQuery] = useState("");
+  const isOnline = useOnlineStatus();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [searchQuery, setSearchQuery] = useState(searchParams.get("q") || "");
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [showFilters, setShowFilters] = useState(false);
   const [listings, setListings] = useState<Listing[]>([]);
@@ -19,10 +44,16 @@ export function SearchResults() {
     const fetchListings = async () => {
       try {
         setLoading(true);
-        const data = await listingsApi.list({ status: "active" });
-        setListings(data);
+        const data = await listingsApi.list({ status: "active", page_size: 200 });
+        if (data.length === 0) {
+          setListings(produceListings.filter((l) => l.status === "active").map(fromStaticListing));
+        } else {
+          setListings(data);
+        }
+        setError("");
       } catch (err: any) {
-        setError(err.message || "Failed to load listings");
+        setListings(produceListings.filter((l) => l.status === "active").map(fromStaticListing));
+        setError(err.message || "Using cached listings while server is unavailable");
       } finally {
         setLoading(false);
       }
@@ -31,10 +62,35 @@ export function SearchResults() {
     fetchListings();
   }, []);
 
-  const filteredListings = listings.filter(listing =>
-    listing.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    listing.produce_type.name.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  useEffect(() => {
+    const next = new URLSearchParams(searchParams);
+    const value = searchQuery.trim();
+    if (value) {
+      next.set("q", value);
+    } else {
+      next.delete("q");
+    }
+    setSearchParams(next, { replace: true });
+  }, [searchQuery, searchParams, setSearchParams]);
+
+  const filteredListings = useMemo(() => {
+    const q = searchQuery.trim().toLowerCase();
+    if (!q) return listings;
+    return listings.filter((listing) => {
+      const title = (listing.title || "").toLowerCase();
+      const produceType = (listing.produce_type?.name || "").toLowerCase();
+      const district = (listing.district || "").toLowerCase();
+      const farmer = (listing.farmer_name || "").toLowerCase();
+      const description = (listing.description || "").toLowerCase();
+      return (
+        title.includes(q) ||
+        produceType.includes(q) ||
+        district.includes(q) ||
+        farmer.includes(q) ||
+        description.includes(q)
+      );
+    });
+  }, [listings, searchQuery]);
 
   return (
     <div className="min-h-screen bg-[#F5F5F5] pb-20">
@@ -118,6 +174,12 @@ export function SearchResults() {
 
       {/* Results */}
       <div className="p-4">
+        {!isOnline && (
+          <div className="mb-3 rounded-xl border border-[#FFD28A] bg-[#FFF6E6] px-3 py-2 text-xs text-[#7A4A00]">
+            You are offline. Searching cached listings only.
+          </div>
+        )}
+
         {loading ? (
           <div className="flex flex-col items-center justify-center py-12">
             <Loader2 className="w-10 h-10 text-[#2D5016] animate-spin mb-3" />
@@ -143,14 +205,14 @@ export function SearchResults() {
                 >
                   <div className="relative aspect-[4/3] bg-[#F5F5F5]">
                     <img
-                      src={resolveImageUrl(listing.images?.[0], "https://images.unsplash.com/photo-1761370980657-22586ea44093?w=400")}
+                      src={resolveImageUrl(listing.images?.[0], fallbackImage)}
                       alt={listing.title}
                       className="w-full h-full object-cover"
                       onError={(e) => {
                         const el = e.currentTarget as HTMLImageElement;
                         if (!el.dataset.fallback) {
                           el.dataset.fallback = 'true';
-                          el.src = 'https://images.unsplash.com/photo-1761370980657-22586ea44093?w=400';
+                          el.src = fallbackImage;
                         }
                       }}
                     />
@@ -171,7 +233,7 @@ export function SearchResults() {
 
                   <div className="p-3">
                     <h3 className="font-semibold text-[#2C2C2C] truncate mb-1">
-                      {listing.produce_type.name}
+                      {listing.produce_type?.name || listing.title}
                     </h3>
                     <p className="text-xs text-[#757575] mb-2">
                       {listing.quantity_available} {listing.unit}
@@ -179,7 +241,7 @@ export function SearchResults() {
 
                     <div className="flex items-baseline gap-1 mb-2">
                       <span className="text-lg font-bold text-[#2D5016]">
-                        {listing.currency} {listing.price_per_unit}
+                        {(listing.currency || "USD")} {listing.price_per_unit}
                       </span>
                       <span className="text-xs text-[#757575]">/{listing.unit}</span>
                     </div>
@@ -203,14 +265,14 @@ export function SearchResults() {
                   <div className="flex gap-4 p-4">
                     <div className="w-24 h-24 rounded-lg overflow-hidden bg-[#F5F5F5] flex-shrink-0">
                       <img
-                        src={resolveImageUrl(listing.images?.[0], "https://images.unsplash.com/photo-1761370980657-22586ea44093?w=400")}
+                        src={resolveImageUrl(listing.images?.[0], fallbackImage)}
                         alt={listing.title}
                         className="w-full h-full object-cover"
                         onError={(e) => {
                           const el = e.currentTarget as HTMLImageElement;
                           if (!el.dataset.fallback) {
                             el.dataset.fallback = 'true';
-                            el.src = 'https://images.unsplash.com/photo-1761370980657-22586ea44093?w=400';
+                            el.src = fallbackImage;
                           }
                         }}
                       />
@@ -218,7 +280,7 @@ export function SearchResults() {
 
                     <div className="flex-1 min-w-0">
                       <h3 className="font-semibold text-[#2C2C2C] truncate mb-1">
-                        {listing.produce_type.name}
+                        {listing.produce_type?.name || listing.title}
                       </h3>
                       <p className="text-sm text-[#757575] mb-2">
                         {listing.quantity_available} {listing.unit} • {listing.district}
@@ -226,7 +288,7 @@ export function SearchResults() {
 
                       <div className="flex items-baseline gap-1 mb-2">
                         <span className="text-xl font-bold text-[#2D5016]">
-                          {listing.currency} {listing.price_per_unit}
+                          {(listing.currency || "USD")} {listing.price_per_unit}
                         </span>
                         <span className="text-sm text-[#757575]">/{listing.unit}</span>
                       </div>

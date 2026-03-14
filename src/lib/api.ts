@@ -16,6 +16,7 @@ import type {
     Message,
     Notification,
     Order,
+    PriceTrend,
     RefreshTokenRequest,
     RegisterRequest,
     SyncRequest,
@@ -27,8 +28,8 @@ import type {
 // Configuration
 // ============================================================================
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000/api/v1';
-export const WS_BASE_URL = import.meta.env.VITE_WS_URL || 'ws://127.0.0.1:8000/ws';
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8001/api/v1';
+export const WS_BASE_URL = import.meta.env.VITE_WS_URL || 'ws://127.0.0.1:8001/ws';
 
 // Derive the server origin (e.g. http://127.0.0.1:8000) from the API base URL
 const SERVER_ORIGIN = (() => {
@@ -210,7 +211,20 @@ const handleApiError = (error: any): never => {
   
   if (axios.isAxiosError(error) && error.response) {
     const apiError: ApiError = error.response.data;
-    errorMessage = apiError.error || (apiError.details ? JSON.stringify(apiError.details) : '') || `Error: ${error.response.status}`;
+    const details = error.response.data as any;
+    const validationIssues = Array.isArray(details?.detail)
+      ? details.detail
+          .map((item: any) => item?.msg)
+          .filter(Boolean)
+          .join(', ')
+      : null;
+
+    errorMessage =
+      apiError?.error ||
+      details?.detail ||
+      validationIssues ||
+      (apiError.details ? JSON.stringify(apiError.details) : '') ||
+      `Error: ${error.response.status}`;
     
     // Log 403 errors with more detail
     if (error.response.status === 403) {
@@ -612,6 +626,20 @@ export const pricingApi = {
   getMarketPrices: async (params?: MarketPricesQueryParams): Promise<MarketPrice[]> => {
     try {
       const response = await api.get<MarketPrice[]>('/pricing/market-prices', { params });
+      return response.data;
+    } catch (error) {
+      return handleApiError(error);
+    }
+  },
+
+  getPriceTrends: async (params?: {
+    produce_type?: string;
+    district?: string;
+    days?: number;
+    limit?: number;
+  }): Promise<PriceTrend[]> => {
+    try {
+      const response = await api.get<PriceTrend[]>('/pricing/trends', { params });
       return response.data;
     } catch (error) {
       return handleApiError(error);

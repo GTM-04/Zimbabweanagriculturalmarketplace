@@ -115,6 +115,7 @@ export interface CreateListingRequest {
 export interface ListingsQueryParams {
   district?: string;
   produce_type?: number;
+  q?: string;
   status?: ListingStatus;
   farmer_id?: string;
   page?: number;
@@ -201,6 +202,17 @@ export interface MarketPrice {
 export interface MarketPricesQueryParams {
   district?: string;
   produce_type?: string;
+}
+
+export interface PriceTrend {
+  produce_type: string;
+  district: string;
+  period_start: string;
+  period_end: string;
+  trend_direction: 'increasing' | 'decreasing' | 'stable' | 'volatile' | string;
+  price_change_percent: number;
+  average_price: number;
+  forecast_next_period?: number | null;
 }
 
 // ============================================================================

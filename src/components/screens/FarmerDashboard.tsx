@@ -2,6 +2,7 @@ import { AlertCircle, Bell, DollarSign, Eye, List, Loader2, MessageCircle, Packa
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router";
 import { listingsApi, notificationsApi } from "../../lib/api";
+import { getPendingListings } from "../../lib/offlineStorage";
 import type { Listing, Notification } from "../../lib/types";
 import { useAuth } from "../../lib/useAuth";
 import { useOnlineStatus } from "../../lib/useOnlineStatus";
@@ -17,6 +18,7 @@ export function FarmerDashboard() {
   const [loadingStats, setLoadingStats] = useState(true);
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [loadingActivity, setLoadingActivity] = useState(true);
+  const [pendingOfflineCount, setPendingOfflineCount] = useState(0);
 
   const farmerName = user?.full_name?.split(" ")[0] ?? "Farmer";
 
@@ -39,9 +41,9 @@ export function FarmerDashboard() {
       case "inquiry":
         return { icon: <MessageCircle className="w-5 h-5 text-[#F5A623]" />, bg: "bg-[#F5A623]/10" };
       case "price_alert":
-        return { icon: <TrendingUp className="w-5 h-5 text-[#4CAF50]" />, bg: "bg-[#4CAF50]/10" };
+        return { icon: <TrendingUp className="w-5 h-5 text-[var(--success)]" />, bg: "bg-[var(--success-bg)]" };
       case "new_listing":
-        return { icon: <Package className="w-5 h-5 text-[#2D5016]" />, bg: "bg-[#2D5016]/10" };
+        return { icon: <Package className="w-5 h-5 text-[var(--primary-800)]" />, bg: "bg-[var(--primary-50)]" };
       case "order_status":
         return { icon: <DollarSign className="w-5 h-5 text-[#4A90E2]" />, bg: "bg-[#4A90E2]/10" };
       default:
@@ -80,6 +82,17 @@ export function FarmerDashboard() {
     fetchActivity();
   }, []);
 
+  // Check for any locally saved offline listings so the farmer can see
+  // at a glance what is still waiting to sync.
+  useEffect(() => {
+    try {
+      const pending = getPendingListings().filter((l) => !l.synced);
+      setPendingOfflineCount(pending.length);
+    } catch {
+      setPendingOfflineCount(0);
+    }
+  }, []);
+
   // Compute stats from the farmer's own listings
   const activeListings = myListings.filter(l => l.status === "active");
   // Views and inquiries count across ALL listing statuses
@@ -99,91 +112,138 @@ export function FarmerDashboard() {
   };
 
   return (
-    <div className="min-h-screen bg-[#F5F5F5] pb-20">
+    <div className="min-h-screen bg-[var(--gray-50)] pb-20">
       {/* Offline Banner */}
       {!isOnline && (
-        <div className="bg-[#FFA726] text-[#2C2C2C] px-4 py-2 flex items-center gap-2 text-sm font-medium">
+        <div className="offline-banner flex items-center gap-2 text-sm font-medium">
           <WifiOff className="w-4 h-4" />
           <span>You're offline. Some features are limited.</span>
         </div>
       )}
 
       {/* Header */}
-      <div className="bg-white px-4 py-4 shadow-sm">
-        <div className="flex items-center justify-between mb-4">
+      <div className="bg-white shadow-sm">
+        <div className="px-4 pt-4 pb-3 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-12 h-12 rounded-full bg-[#2D5016] flex items-center justify-center text-white font-semibold text-lg">
+            <div className="w-12 h-12 rounded-full bg-[var(--primary-700)] flex items-center justify-center text-white font-semibold text-lg">
               {farmerName[0]}
             </div>
             <div>
-              <p className="text-sm text-[#757575]">{getGreeting()},</p>
-              <h1 className="text-lg font-semibold text-[#2C2C2C]">{farmerName}</h1>
+              <p className="text-xs text-[var(--gray-500)]">{getGreeting()},</p>
+              <h1
+                className="text-[var(--gray-900)]"
+                style={{ fontFamily: "var(--font-heading)", fontSize: "1.4rem", fontWeight: 800 }}
+              >
+                {farmerName}
+              </h1>
+              <div className="flex items-center gap-2 mt-1 text-[11px] text-[var(--gray-600)]">
+                <span
+                  className={`w-2 h-2 rounded-full ${
+                    isOnline ? "bg-[var(--success)]" : "bg-[var(--gray-500)]"
+                  }`}
+                />
+                <span>{user?.district ?? "Zimbabwe"}</span>
+              </div>
             </div>
           </div>
-          <button className="relative p-2 hover:bg-[#F5F5F5] rounded-full transition-colors">
-            <Bell className="w-6 h-6 text-[#2C2C2C]" />
-            <span className="absolute top-1 right-1 w-2 h-2 bg-[#EF5350] rounded-full"></span>
+          <button className="relative p-2 rounded-full bg-[var(--gray-100)] hover:bg-[var(--gray-200)] transition-colors">
+            <Bell className="w-5 h-5 text-[var(--gray-800)]" />
+            <span className="absolute top-1 right-1 w-2 h-2 bg-[var(--error-red)] rounded-full"></span>
           </button>
-        </div>
-
-        <div className="flex items-center gap-2 text-sm text-[#757575]">
-          <span className={`w-2 h-2 rounded-full ${isOnline ? "bg-[#4CAF50]" : "bg-[#757575]"}`}></span>
-          <span>{user?.district ?? "Zimbabwe"}</span>
         </div>
       </div>
 
       {/* Quick Stats */}
-      <div className="px-4 py-6 overflow-x-auto">
+      <div className="px-4 py-5 overflow-x-auto">
         <div className="flex gap-4 min-w-max">
-          <div className="bg-white rounded-xl p-4 shadow-sm min-w-[140px]">
+          <div className="card min-w-[150px] bg-white">
             <div className="flex items-center gap-2 mb-2">
-              <Package className="w-5 h-5 text-[#2D5016]" />
-              <span className="text-sm text-[#757575]">Active Listings</span>
+              <div className="w-8 h-8 rounded-xl flex items-center justify-center bg-[var(--primary-50)] text-[var(--primary-700)]">
+                <Package className="w-4 h-4" />
+              </div>
+              <span className="text-xs text-[var(--gray-600)]">Active Listings</span>
             </div>
-            <p className="text-2xl font-bold text-[#2C2C2C]">
-              {loadingStats ? <Loader2 className="w-6 h-6 animate-spin text-[#2D5016]" /> : activeListings.length}
+            <p className="text-2xl font-bold text-[var(--gray-900)]">
+              {loadingStats ? <Loader2 className="w-6 h-6 animate-spin text-[var(--primary-700)]" /> : activeListings.length}
             </p>
           </div>
 
-          <div className="bg-white rounded-xl p-4 shadow-sm min-w-[140px]">
+          <div className="card min-w-[150px] bg-white">
             <div className="flex items-center gap-2 mb-2">
-              <Eye className="w-5 h-5 text-[#4A90E2]" />
-              <span className="text-sm text-[#757575]">Total Views</span>
+              <div className="w-8 h-8 rounded-xl flex items-center justify-center bg-[var(--accent-50)] text-[var(--accent-600)]">
+                <Eye className="w-4 h-4" />
+              </div>
+              <span className="text-xs text-[var(--gray-600)]">Total Views</span>
             </div>
-            <p className="text-2xl font-bold text-[#2C2C2C]">
-              {loadingStats ? <Loader2 className="w-6 h-6 animate-spin text-[#4A90E2]" /> : totalViews.toLocaleString()}
+            <p className="text-2xl font-bold text-[var(--gray-900)]">
+              {loadingStats ? <Loader2 className="w-6 h-6 animate-spin text-[var(--accent-600)]" /> : totalViews.toLocaleString()}
             </p>
           </div>
 
-          <div className="bg-white rounded-xl p-4 shadow-sm min-w-[140px]">
+          <div className="card min-w-[150px] bg-white">
             <div className="flex items-center gap-2 mb-2">
-              <MessageCircle className="w-5 h-5 text-[#F5A623]" />
-              <span className="text-sm text-[#757575]">Inquiries</span>
+              <div className="w-8 h-8 rounded-xl flex items-center justify-center bg-[var(--accent-50)] text-[var(--accent-700)]">
+                <MessageCircle className="w-4 h-4" />
+              </div>
+              <span className="text-xs text-[var(--gray-600)]">Inquiries</span>
             </div>
-            <p className="text-2xl font-bold text-[#2C2C2C]">
-              {loadingStats ? <Loader2 className="w-6 h-6 animate-spin text-[#F5A623]" /> : totalInquiries.toLocaleString()}
+            <p className="text-2xl font-bold text-[var(--gray-900)]">
+              {loadingStats ? <Loader2 className="w-6 h-6 animate-spin text-[var(--accent-700)]" /> : totalInquiries.toLocaleString()}
             </p>
           </div>
 
-          <div className="bg-white rounded-xl p-4 shadow-sm min-w-[140px]">
+          <div className="card min-w-[150px] bg-white">
             <div className="flex items-center gap-2 mb-2">
-              <DollarSign className="w-5 h-5 text-[#4CAF50]" />
-              <span className="text-sm text-[#757575]">Est. Value</span>
+              <div className="w-8 h-8 rounded-xl flex items-center justify-center bg-[var(--success-bg)] text-[var(--success)]">
+                <DollarSign className="w-4 h-4" />
+              </div>
+              <span className="text-xs text-[var(--gray-600)]">Est. Value</span>
             </div>
-            <p className="text-2xl font-bold text-[#2C2C2C]">
+            <p className="text-2xl font-bold text-[var(--gray-900)]">
               {loadingStats
-                ? <Loader2 className="w-6 h-6 animate-spin text-[#4CAF50]" />
-                : `USD ${totalEarnings > 0 ? totalEarnings.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : "—"}`}
+                ? <Loader2 className="w-6 h-6 animate-spin text-[var(--success)]" />
+                : `USD ${
+                    totalEarnings > 0
+                      ? totalEarnings.toLocaleString(undefined, {
+                          minimumFractionDigits: 2,
+                          maximumFractionDigits: 2,
+                        })
+                      : "—"
+                  }`}
             </p>
           </div>
         </div>
       </div>
+
+      {/* Offline sync summary for pending listings */}
+      {pendingOfflineCount > 0 && (
+        <div className="px-4 -mt-2 mb-4">
+            <div className="rounded-xl border border-[#FFE082] bg-[#FFF8E1] px-3 py-2 text-xs text-[#7A4A00] flex flex-col gap-1">
+            <div className="flex items-center justify-between gap-2">
+              <span className="font-semibold">
+                {pendingOfflineCount} offline listing{pendingOfflineCount > 1 ? "s" : ""} waiting to sync
+              </span>
+              <button
+                type="button"
+                onClick={() => navigate("/farmer/list-produce")}
+                className="text-[11px] font-semibold text-[var(--primary-800)] hover:underline whitespace-nowrap"
+              >
+                View queue
+              </button>
+            </div>
+            <p>
+              These were saved while you were offline. Go to “List Produce” to review and sync them when you have
+              a stable connection.
+            </p>
+          </div>
+        </div>
+      )}
 
       {/* Quick Actions */}
       <div className="px-4 mb-6">
         <Button
           onClick={() => navigate("/farmer/list-produce")}
-          className="w-full h-14 bg-[#2D5016] hover:bg-[#234010] text-white rounded-xl flex items-center justify-center gap-2 shadow-lg"
+          className="w-full h-14 rounded-xl bg-[var(--accent-500)] hover:bg-[var(--accent-600)] text-white flex items-center justify-center gap-2 shadow-lg"
         >
           <Plus className="w-6 h-6" />
           <span className="font-semibold">List New Produce</span>
@@ -193,7 +253,7 @@ export function FarmerDashboard() {
           <Button
             onClick={() => navigate("/farmer/my-listings")}
             variant="outline"
-            className="h-12 border-2 border-[#E0E0E0] hover:border-[#2D5016] hover:bg-[#2D5016]/5"
+            className="h-12 border border-[var(--gray-200)] rounded-xl hover:border-[var(--primary-700)] hover:bg-[var(--primary-50)]"
           >
             <div className="flex flex-col items-center gap-1">
               <List className="w-5 h-5" />
@@ -204,7 +264,7 @@ export function FarmerDashboard() {
           <Button
             onClick={() => navigate("/messages")}
             variant="outline"
-            className="h-12 border-2 border-[#E0E0E0] hover:border-[#2D5016] hover:bg-[#2D5016]/5"
+            className="h-12 border border-[var(--gray-200)] rounded-xl hover:border-[var(--primary-700)] hover:bg-[var(--primary-50)]"
           >
             <div className="flex flex-col items-center gap-1">
               <MessageCircle className="w-5 h-5" />
@@ -215,7 +275,7 @@ export function FarmerDashboard() {
           <Button
             onClick={() => navigate("/market-prices")}
             variant="outline"
-            className="h-12 border-2 border-[#E0E0E0] hover:border-[#2D5016] hover:bg-[#2D5016]/5"
+            className="h-12 border border-[var(--gray-200)] rounded-xl hover:border-[var(--primary-700)] hover:bg-[var(--primary-50)]"
           >
             <div className="flex flex-col items-center gap-1">
               <TrendingUp className="w-5 h-5" />
@@ -227,7 +287,7 @@ export function FarmerDashboard() {
 
       {/* Recent Activity */}
       <div className="px-4 mb-6">
-        <h2 className="text-lg font-semibold text-[#2C2C2C] mb-3">Recent Activity</h2>
+        <h2 className="text-lg font-semibold text-[var(--gray-900)] mb-3">Recent Activity</h2>
         {loadingActivity ? (
           <div className="space-y-3">
             {[1, 2, 3].map((i) => (
@@ -242,25 +302,30 @@ export function FarmerDashboard() {
           </div>
         ) : notifications.length === 0 ? (
           <div className="bg-white rounded-xl p-6 shadow-sm text-center">
-            <Bell className="w-8 h-8 text-[#E0E0E0] mx-auto mb-2" />
-            <p className="text-sm text-[#757575]">No recent activity</p>
+            <Bell className="w-8 h-8 text-[var(--gray-200)] mx-auto mb-2" />
+            <p className="text-sm text-[var(--gray-600)]">No recent activity</p>
           </div>
         ) : (
           <div className="space-y-3">
             {notifications.map((n) => {
               const { icon, bg } = activityMeta(n.notification_type);
               return (
-                <div key={n.id} className={`bg-white rounded-xl p-4 shadow-sm flex items-start gap-3 ${!n.is_read ? "border-l-4 border-[#2D5016]" : ""}`}>
+                <div
+                  key={n.id}
+                  className={`bg-white rounded-xl p-4 shadow-sm flex items-start gap-3 ${
+                    !n.is_read ? "border-l-4 border-[var(--primary-700)]" : ""
+                  }`}
+                >
                   <div className={`w-10 h-10 rounded-full ${bg} flex items-center justify-center flex-shrink-0`}>
                     {icon}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-[#2C2C2C]">{n.title}</p>
-                    <p className="text-sm text-[#757575] mt-0.5 truncate">{n.message}</p>
-                    <p className="text-xs text-[#9E9E9E] mt-1">{timeAgo(n.created_at)}</p>
+                    <p className="text-sm font-medium text-[var(--gray-900)]">{n.title}</p>
+                    <p className="text-sm text-[var(--gray-600)] mt-0.5 truncate">{n.message}</p>
+                    <p className="text-xs text-[var(--gray-400)] mt-1">{timeAgo(n.created_at)}</p>
                   </div>
                   {!n.is_read && (
-                    <span className="w-2 h-2 rounded-full bg-[#2D5016] mt-1.5 flex-shrink-0" />
+                    <span className="w-2 h-2 rounded-full bg-[var(--primary-700)] mt-1.5 flex-shrink-0" />
                   )}
                 </div>
               );
@@ -271,24 +336,24 @@ export function FarmerDashboard() {
 
       {/* Market Insights */}
       <div className="px-4 mb-6">
-        <h2 className="text-lg font-semibold text-[#2C2C2C] mb-3">Market Insights</h2>
+        <h2 className="text-lg font-semibold text-[var(--gray-900)] mb-3">Market Insights</h2>
         <div className="space-y-3">
           <div className="bg-gradient-to-r from-[#F5A623]/10 to-[#FF6B35]/10 rounded-xl p-4 border-l-4 border-[#F5A623]">
             <div className="flex items-start gap-3">
               <AlertCircle className="w-5 h-5 text-[#F5A623] flex-shrink-0 mt-0.5" />
               <div>
-                <p className="font-medium text-[#2C2C2C] mb-1">Trending Now</p>
-                <p className="text-sm text-[#757575]">High demand for butternut squash in Harare markets</p>
+                <p className="font-medium text-[var(--gray-900)] mb-1">Trending Now</p>
+                <p className="text-sm text-[var(--gray-600)]">High demand for butternut squash in Harare markets</p>
               </div>
             </div>
           </div>
 
-          <div className="bg-gradient-to-r from-[#4CAF50]/10 to-[#7CB342]/10 rounded-xl p-4 border-l-4 border-[#4CAF50]">
+          <div className="bg-gradient-to-r from-[var(--success)]/10 to-[var(--primary-700)]/10 rounded-xl p-4 border-l-4 border-[var(--success)]">
             <div className="flex items-start gap-3">
-              <TrendingUp className="w-5 h-5 text-[#4CAF50] flex-shrink-0 mt-0.5" />
+              <TrendingUp className="w-5 h-5 text-[var(--success)] flex-shrink-0 mt-0.5" />
               <div>
-                <p className="font-medium text-[#2C2C2C] mb-1">Price Alert</p>
-                <p className="text-sm text-[#757575]">Onion prices up 20% this week - Good time to sell!</p>
+                <p className="font-medium text-[var(--gray-900)] mb-1">Price Alert</p>
+                <p className="text-sm text-[var(--gray-600)]">Onion prices up 20% this week - Good time to sell!</p>
               </div>
             </div>
           </div>

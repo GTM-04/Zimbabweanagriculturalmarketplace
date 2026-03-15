@@ -1,6 +1,6 @@
+import { Sprout, WifiOff } from "lucide-react";
 import { useEffect } from "react";
 import { useNavigate } from "react-router";
-import { Sprout, Wifi, WifiOff } from "lucide-react";
 
 export function SplashScreen() {
   const navigate = useNavigate();
@@ -15,10 +15,10 @@ export function SplashScreen() {
   }, [navigate]);
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-b from-[#2D5016] to-[#7CB342] text-white p-6 relative">
+    <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-b from-[var(--primary-800)] to-[var(--success)] text-white p-6 relative">
       {/* Offline Indicator */}
       {!isOnline && (
-        <div className="absolute top-4 right-4 flex items-center gap-2 bg-[#FFA726] text-[#2C2C2C] px-3 py-1.5 rounded-full text-sm font-medium">
+        <div className="absolute top-4 right-4 flex items-center gap-2 bg-[var(--accent-soft)] text-[var(--gray-900)] px-3 py-1.5 rounded-full text-sm font-medium">
           <WifiOff className="w-4 h-4" />
           <span>Offline</span>
         </div>
@@ -27,7 +27,7 @@ export function SplashScreen() {
       {/* Logo */}
       <div className="mb-8 relative">
         <div className="w-24 h-24 bg-white rounded-full flex items-center justify-center shadow-lg">
-          <Sprout className="w-14 h-14 text-[#2D5016]" />
+          <Sprout className="w-14 h-14 text-[var(--primary-800)]" />
         </div>
         <div className="absolute -bottom-2 -right-2 w-12 h-12 bg-[#F5A623] rounded-full flex items-center justify-center">
           <span className="text-2xl">🌾</span>

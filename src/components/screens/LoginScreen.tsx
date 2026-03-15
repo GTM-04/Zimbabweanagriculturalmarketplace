@@ -184,10 +184,10 @@ export function LoginScreen() {
   };
 
   return (
-    <div className="min-h-screen bg-white flex flex-col">
+    <div className="auth-layout">
       {/* Offline Indicator */}
       {!isOnline && (
-        <div className="bg-[#FFA726] text-[#2C2C2C] px-4 py-3 flex items-start gap-3 text-sm font-medium">
+        <div className="offline-banner flex items-start justify-center gap-3 text-sm font-medium">
           <WifiOff className="w-5 h-5 flex-shrink-0 mt-0.5" />
           <div>
             <p className="font-semibold">You are offline</p>
@@ -198,133 +198,229 @@ export function LoginScreen() {
         </div>
       )}
 
-      {/* Header */}
-      <div className="px-4 py-4 flex items-center gap-3">
-        <button
-          onClick={() => navigate(-1)}
-          className="p-2 hover:bg-[#F5F5F5] rounded-full transition-colors"
-        >
-          <ArrowLeft className="w-5 h-5 text-[#2C2C2C]" />
-        </button>
-      </div>
+      {/* Left marketing / brand panel */}
+      <div className="auth-panel-left animate-fade-in-up">
+        <div className="flex items-center justify-between mb-10">
+          <button
+            onClick={() => navigate(-1)}
+            className="inline-flex items-center justify-center w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 transition-colors"
+          >
+            <ArrowLeft className="w-5 h-5 text-white" />
+          </button>
+          <span className="badge badge-accent hidden sm:inline-flex items-center gap-2">
+            <span className="text-xs">ZIMBABWE'S FARM MARKETPLACE</span>
+          </span>
+        </div>
 
-      {/* Content */}
-      <div className="flex-1 flex flex-col items-center justify-center px-6 py-12">
-        {/* Logo */}
-        <div className="mb-8">
-          <div className="w-20 h-20 bg-[#2D5016] rounded-full flex items-center justify-center">
-            <Sprout className="w-12 h-12 text-white" />
+        <div className="space-y-6 max-w-md">
+          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 border border-white/25 text-[11px] font-semibold uppercase tracking-[0.16em]">
+            <span className="text-sm">🏆</span>
+            <span>Zimbabwe's #1 farm-to-market platform</span>
+          </div>
+
+          <h1 className="text-white" style={{ fontFamily: "var(--font-display)", fontSize: "clamp(2.5rem, 4vw, 3.5rem)", fontWeight: 900, lineHeight: 1.1, letterSpacing: "-0.03em" }}>
+            Connect Directly.
+            <br />
+            <span style={{ color: "var(--accent-500)" }}>Sell Fair.</span>
+            <br />
+            Grow Together.
+          </h1>
+
+          <p className="text-sm sm:text-base leading-relaxed text-white/90" style={{ fontFamily: "var(--font-body)" }}>
+            From Village to Market connects rural farmers with urban buyers using offline-first technology,
+            transparent pricing, and instant messaging.
+          </p>
+
+          <div className="grid grid-cols-3 gap-3 mt-6">
+            <div className="stat-card bg-white/5 rounded-xl border border-white/10">
+              <div className="stat-number text-[1.8rem]" style={{ backgroundImage: "var(--gradient-primary)" }}>24k+</div>
+              <div className="stat-label text-[11px] tracking-wide uppercase text-white/80">Farmers</div>
+            </div>
+            <div className="stat-card bg-white/5 rounded-xl border border-white/10">
+              <div className="stat-number text-[1.8rem]" style={{ backgroundImage: "var(--gradient-accent)" }}>3.8k</div>
+              <div className="stat-label text-[11px] tracking-wide uppercase text-white/80">Buyers</div>
+            </div>
+            <div className="stat-card bg-white/5 rounded-xl border border-white/10">
+              <div className="stat-number text-[1.8rem]" style={{ backgroundImage: "linear-gradient(135deg,#14B8A6,#38BDF8)" }}>$2.8M</div>
+              <div className="stat-label text-[11px] tracking-wide uppercase text-white/80">Trade Volume</div>
+            </div>
           </div>
         </div>
 
-        {/* Title */}
-        <h1 className="text-2xl font-bold text-[#2C2C2C] mb-2">Welcome Back</h1>
-        <p className="text-base text-[#757575] mb-8">Sign in to continue</p>
-
-        {/* Error Alert */}
-        {(localError || error) && (
-          <div className="w-full max-w-md mb-4">
-            <Alert variant="destructive">
-              <p className="text-sm">{localError || error}</p>
-            </Alert>
+        <div className="mt-10 hidden lg:block">
+          <div className="flex items-center gap-4 text-xs text-white/85">
+            <div className="inline-flex items-center gap-2">
+              <span className="w-2 h-2 rounded-full bg-[var(--success)]" />
+              <span>Offline-first &amp; low data usage</span>
+            </div>
+            <div className="inline-flex items-center gap-2">
+              <span className="w-2 h-2 rounded-full bg-[var(--accent-500)]" />
+              <span>Built for all 10 provinces</span>
+            </div>
           </div>
-        )}
+        </div>
+      </div>
 
-        {/* Form */}
-        <form onSubmit={handleSubmit} className="w-full max-w-md">
-          {/* Phone Number */}
-          <div className="mb-6">
-            <Label htmlFor="phone">Phone Number</Label>
-            <Input
-              id="phone"
-              type="tel"
-              placeholder="+263 77 123 4567"
-              value={formData.phone}
-              onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-              required
-              className="mt-2"
-            />
+      {/* Right auth form panel */}
+      <div className="auth-panel-right animate-scale-fade-in">
+        <div className="w-full max-w-md">
+          {/* Logo + heading */}
+          <div className="flex items-center gap-3 mb-6">
+            <div className="w-12 h-12 rounded-full bg-[var(--primary-700)] flex items-center justify-center text-white shadow-md">
+              <Sprout className="w-7 h-7" />
+            </div>
+            <div>
+              <p className="text-xs font-semibold tracking-[0.22em] text-[var(--gray-500)] uppercase">From Village to Market</p>
+              <p className="text-sm text-[var(--gray-600)]">Connect farms to buyers in Zimbabwe</p>
+            </div>
           </div>
 
-          {/* Password */}
-          <div className="mb-4">
-            <Label htmlFor="password">Password</Label>
-            <div className="relative mt-2">
-              <Input
-                id="password"
-                type={showPassword ? "text" : "password"}
-                placeholder="Enter your password"
-                value={formData.password}
-                onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                required
-                className="pr-12"
-              />
+          <h2 className="mb-1" style={{ fontFamily: "var(--font-heading)", fontSize: "1.8rem", fontWeight: 800, color: "var(--gray-900)" }}>
+            Welcome back
+          </h2>
+          <p className="mb-6 text-sm text-[var(--gray-600)]">Login to continue to your marketplace dashboard.</p>
+
+          {/* Error Alert */}
+          {(localError || error) && (
+            <div className="mb-4">
+              <Alert variant="destructive">
+                <p className="text-sm">{localError || error}</p>
+              </Alert>
+            </div>
+          )}
+
+          {/* Form */}
+          <form onSubmit={handleSubmit} className="space-y-4">
+            {/* Phone Number */}
+            <div>
+              <Label htmlFor="phone">Phone Number</Label>
+              <div className="mt-2 flex items-stretch rounded-xl border border-[var(--gray-200)] bg-[var(--gray-50)] focus-within:ring-2 focus-within:ring-[var(--primary-500)] focus-within:border-transparent overflow-hidden">
+                <div className="px-3 sm:px-4 flex items-center gap-1 border-r border-[var(--gray-200)] bg-white text-sm text-[var(--gray-700)]">
+                  <span className="text-base">🇿🇼</span>
+                  <span className="hidden sm:inline text-xs font-medium text-[var(--gray-500)]">+263</span>
+                </div>
+                <Input
+                  id="phone"
+                  type="tel"
+                  placeholder="77 123 4567"
+                  value={formData.phone}
+                  onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                  required
+                  className="flex-1 border-0 bg-transparent focus-visible:ring-0 focus-visible:outline-none px-3 sm:px-4 h-12 text-sm"
+                />
+              </div>
+            </div>
+
+            {/* Password */}
+            <div>
+              <Label htmlFor="password">Password</Label>
+              <div className="relative mt-2">
+                <Input
+                  id="password"
+                  type={showPassword ? "text" : "password"}
+                  placeholder="Enter your password"
+                  value={formData.password}
+                  onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                  required
+                  className="pr-12 h-12 rounded-xl border border-[var(--gray-200)] bg-[var(--gray-50)] focus-visible:ring-2 focus-visible:ring-[var(--primary-500)] focus-visible:border-transparent text-sm"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--gray-500)] hover:text-[var(--primary-700)]"
+                >
+                  {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                </button>
+              </div>
+            </div>
+
+            {/* Remember Me & Forgot Password */}
+            <div className="flex items-center justify-between">
               <button
                 type="button"
-                onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-[#757575] hover:text-[#2C2C2C]"
+                onClick={() => setFormData({ ...formData, remember: !formData.remember })}
+                className="flex items-center gap-2 cursor-pointer select-none"
               >
-                {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                <Checkbox
+                  id="remember"
+                  checked={formData.remember}
+                  onCheckedChange={(checked: boolean | "indeterminate") =>
+                    setFormData({ ...formData, remember: checked as boolean })
+                  }
+                  className="w-4 h-4 border-2 border-[var(--gray-300)] data-[state=checked]:bg-[var(--primary-700)] data-[state=checked]:border-[var(--primary-700)]"
+                />
+                <span className="text-xs sm:text-sm text-[var(--gray-700)] font-medium">
+                  Remember me
+                </span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setFpStep("request")}
+                className="text-xs sm:text-sm font-medium text-[var(--primary-700)] hover:underline"
+              >
+                Forgot password?
               </button>
             </div>
-          </div>
 
-          {/* Remember Me & Forgot Password */}
-          <div className="flex items-center justify-between mb-8">
-            <div className="flex items-center gap-2">
-              <Checkbox
-                id="remember"
-                checked={formData.remember}
-                onCheckedChange={(checked: boolean | "indeterminate") => setFormData({ ...formData, remember: checked as boolean })}
-              />
-              <label htmlFor="remember" className="text-sm text-[#757575] cursor-pointer">
-                Remember Me
-              </label>
-            </div>
-            <button
-              type="button"
-              onClick={() => setFpStep("request")}
-              className="text-sm text-[#2D5016] font-medium hover:underline"
+            {/* Sign In Button */}
+            <Button
+              type="submit"
+              disabled={!formData.phone || !formData.password || loading}
+              className="w-full h-12 rounded-xl bg-[var(--accent-500)] hover:bg-[var(--accent-600)] text-white font-semibold shadow-md disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
             >
-              Forgot Password?
-            </button>
-          </div>
+              {loading ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  <span>Signing in…</span>
+                </>
+              ) : !isOnline ? (
+                <>
+                  <WifiOff className="w-4 h-4" />
+                  <span>Sign in offline</span>
+                </>
+              ) : (
+                <span>Login</span>
+              )}
+            </Button>
 
-          {/* Sign In Button */}
-          <Button
-            type="submit"
-            disabled={!formData.phone || !formData.password || loading}
-            className="w-full h-12 bg-[#2D5016] hover:bg-[#234010] text-white rounded-lg disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            {loading ? (
-              <>
-                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                Signing In...
-              </>
-            ) : !isOnline ? (
-              <>
-                <WifiOff className="w-4 h-4 mr-2" />
-                Sign In Offline
-              </>
-            ) : (
-              "Sign In"
-            )}
-          </Button>
+            {/* Divider */}
+            <div className="flex items-center gap-3 pt-1">
+              <div className="h-px flex-1 bg-[var(--gray-200)]" />
+              <span className="text-[10px] font-medium tracking-[0.18em] text-[var(--gray-500)] uppercase">Or continue with</span>
+              <div className="h-px flex-1 bg-[var(--gray-200)]" />
+            </div>
 
-          {/* Register Link */}
-          <div className="mt-6 text-center">
-            <p className="text-sm text-[#757575]">
+            {/* Social icons (UI only) */}
+            <div className="flex items-center gap-3">
+              <button
+                type="button"
+                className="flex-1 h-11 rounded-xl border-2 border-[var(--gray-200)] bg-white flex items-center justify-center text-sm text-[var(--gray-700)] hover:border-[var(--primary-700)] hover:bg-[var(--gray-50)] shadow-sm hover:shadow-md transition-all"
+              >
+                <span className="text-base mr-2">🔐</span>
+                <span>Google</span>
+              </button>
+              <button
+                type="button"
+                className="flex-1 h-11 rounded-xl border-2 border-[var(--gray-200)] bg-white flex items-center justify-center text-sm text-[var(--gray-700)] hover:border-[var(--primary-700)] hover:bg-[var(--gray-50)] shadow-sm hover:shadow-md transition-all"
+              >
+                <span className="text-base mr-2">💬</span>
+                <span>WhatsApp</span>
+              </button>
+            </div>
+
+            {/* Register Link */}
+            <div className="pt-2 text-center text-xs sm:text-sm text-[var(--gray-600)]">
               Don't have an account?{" "}
               <button
                 type="button"
                 onClick={() => navigate("/user-type")}
-                className="text-[#2D5016] font-medium hover:underline"
+                className="font-semibold text-[var(--primary-700)] hover:underline"
               >
-                Register
+                Sign up as Farmer or Buyer
               </button>
-            </p>
-          </div>
-        </form>
+            </div>
+          </form>
+        </div>
       </div>
 
       {/* ── Forgot Password Modal ─────────────────────────────────────────── */}
@@ -338,8 +434,8 @@ export function LoginScreen() {
             {/* Step 1 — Enter phone */}
             {fpStep === "request" && (
               <form onSubmit={handleFpRequest}>
-                <h2 className="text-lg font-bold text-[#2C2C2C] mb-1">Reset Password</h2>
-                <p className="text-sm text-[#757575] mb-5">
+                <h2 className="text-lg font-bold text-[var(--gray-900)] mb-1">Reset Password</h2>
+                <p className="text-sm text-[var(--gray-600)] mb-5">
                   Enter your registered phone number and we'll generate a reset code.
                 </p>
                 {fpError && (
@@ -363,7 +459,7 @@ export function LoginScreen() {
                   <Button
                     type="submit"
                     disabled={fpLoading}
-                    className="flex-1 bg-[#2D5016] hover:bg-[#234010] text-white"
+                    className="flex-1 bg-[var(--accent-500)] hover:bg-[var(--accent-600)] text-white"
                   >
                     {fpLoading ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Sending...</> : "Get Reset Code"}
                   </Button>
@@ -374,8 +470,8 @@ export function LoginScreen() {
             {/* Step 2 — Show token */}
             {fpStep === "token" && (
               <div>
-                <h2 className="text-lg font-bold text-[#2C2C2C] mb-1">Your Reset Code</h2>
-                <p className="text-sm text-[#757575] mb-4">
+                <h2 className="text-lg font-bold text-[var(--gray-900)] mb-1">Your Reset Code</h2>
+                <p className="text-sm text-[var(--gray-600)] mb-4">
                   Your code is shown below and has been auto-filled in the next step.
                   It expires in 15 minutes.
                   {fpCountdown > 0 && (
@@ -384,9 +480,9 @@ export function LoginScreen() {
                 </p>
 
                 {/* Prominent code box */}
-                <div className="bg-[#2D5016]/5 border-2 border-[#2D5016]/30 rounded-xl px-4 py-4 mb-2">
-                  <p className="text-xs text-[#757575] mb-2 font-medium uppercase tracking-wide">Reset Token</p>
-                  <code className="block text-xs break-all text-[#2C2C2C] select-all font-mono leading-relaxed">
+                <div className="bg-[var(--primary-50)] border-2 border-[var(--primary-200)] rounded-xl px-4 py-4 mb-2">
+                  <p className="text-xs text-[var(--gray-600)] mb-2 font-medium uppercase tracking-wide">Reset Token</p>
+                  <code className="block text-xs break-all text-[var(--gray-900)] select-all font-mono leading-relaxed">
                     {fpToken}
                   </code>
                 </div>
@@ -396,7 +492,7 @@ export function LoginScreen() {
                   <button
                     type="button"
                     onClick={handleCopyToken}
-                    className="flex items-center gap-1.5 text-sm text-[#2D5016] font-medium hover:underline"
+                    className="flex items-center gap-1.5 text-sm text-[var(--primary-800)] font-medium hover:underline"
                   >
                     {fpCopied
                       ? <><CheckCircle2 className="w-4 h-4" /> Copied!</>
@@ -405,7 +501,7 @@ export function LoginScreen() {
                 </div>
 
                 <Button
-                  className="w-full bg-[#2D5016] hover:bg-[#234010] text-white"
+                  className="w-full bg-[var(--accent-500)] hover:bg-[var(--accent-600)] text-white"
                   onClick={() => setFpStep("confirm")}
                 >
                   Continue — Set New Password
@@ -416,8 +512,8 @@ export function LoginScreen() {
             {/* Step 3 — Enter token + new password */}
             {fpStep === "confirm" && (
               <form onSubmit={handleFpConfirm}>
-                <h2 className="text-lg font-bold text-[#2C2C2C] mb-1">Set New Password</h2>
-                <p className="text-sm text-[#757575] mb-5">
+                <h2 className="text-lg font-bold text-[var(--gray-900)] mb-1">Set New Password</h2>
+                <p className="text-sm text-[var(--gray-600)] mb-5">
                   Paste your reset code and choose a new password.
                 </p>
                 {fpError && (
@@ -434,7 +530,7 @@ export function LoginScreen() {
                   placeholder="Paste reset code here"
                 />
                 {fpToken && fpTokenInput === fpToken && (
-                  <p className="text-xs text-[#4CAF50] mb-4 flex items-center gap-1">
+                  <p className="text-xs text-[var(--success)] mb-4 flex items-center gap-1">
                     <CheckCircle2 className="w-3 h-3" /> Code pre-filled from previous step
                   </p>
                 )}
@@ -452,7 +548,7 @@ export function LoginScreen() {
                   <button
                     type="button"
                     onClick={() => setFpShowPwd((v) => !v)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-[#757575] hover:text-[#2C2C2C]"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--gray-500)] hover:text-[var(--gray-800)]"
                   >
                     {fpShowPwd ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                   </button>
@@ -469,7 +565,7 @@ export function LoginScreen() {
                   <Button
                     type="submit"
                     disabled={fpLoading}
-                    className="flex-1 bg-[#2D5016] hover:bg-[#234010] text-white"
+                    className="flex-1 bg-[var(--accent-500)] hover:bg-[var(--accent-600)] text-white"
                   >
                     {fpLoading ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Saving...</> : "Update Password"}
                   </Button>

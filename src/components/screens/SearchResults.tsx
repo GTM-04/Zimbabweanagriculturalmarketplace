@@ -93,9 +93,9 @@ export function SearchResults() {
   }, [listings, searchQuery]);
 
   return (
-    <div className="min-h-screen bg-[#F5F5F5] pb-20">
+    <div className="min-h-screen bg-[var(--gray-50)] pb-20">
       {/* Header */}
-      <div className="sticky top-0 bg-white border-b border-[#E0E0E0] z-10 shadow-sm">
+      <div className="sticky top-0 bg-white border-b border-[var(--gray-200)] z-10 shadow-sm">
         <div className="px-4 py-3 flex items-center gap-3">
           <button
             onClick={() => navigate(-1)}
@@ -106,14 +106,14 @@ export function SearchResults() {
           
           {/* Search Input */}
           <div className="flex-1 relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-[#757575]" />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-[var(--gray-500)]" />
             <input
               type="text"
               placeholder="Search for produce..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               autoFocus
-              className="w-full h-10 pl-10 pr-4 bg-[#F5F5F5] border border-[#E0E0E0] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#4A90E2] focus:border-transparent"
+              className="w-full h-10 pl-10 pr-4 bg-[var(--gray-50)] border border-[var(--gray-200)] rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--accent-600)] focus:border-transparent text-sm"
             />
           </div>
         </div>
@@ -123,21 +123,21 @@ export function SearchResults() {
           <div className="flex items-center gap-2">
             <button
               onClick={() => setShowFilters(!showFilters)}
-              className="flex items-center gap-2 px-4 py-2 bg-[#F5F5F5] hover:bg-[#E0E0E0] rounded-lg text-sm font-medium text-[#2C2C2C] transition-colors"
+              className="flex items-center gap-2 px-4 py-2 bg-[var(--gray-50)] hover:bg-[var(--gray-100)] rounded-lg text-sm font-medium text-[var(--gray-800)] transition-colors"
             >
               <SlidersHorizontal className="w-4 h-4" />
               Filters
             </button>
-            <span className="text-sm text-[#757575]">
+            <span className="text-sm text-[var(--gray-600)]">
               {filteredListings.length} results
             </span>
           </div>
 
-          <div className="flex items-center gap-1 bg-[#F5F5F5] rounded-lg p-1">
+          <div className="flex items-center gap-1 bg-[var(--gray-50)] rounded-lg p-1">
             <button
               onClick={() => setViewMode("grid")}
               className={`p-2 rounded transition-colors ${
-                viewMode === "grid" ? "bg-white shadow-sm" : "hover:bg-[#E0E0E0]"
+                viewMode === "grid" ? "bg-white shadow-sm" : "hover:bg-[var(--gray-100)]"
               }`}
             >
               <Grid className="w-4 h-4 text-[#2C2C2C]" />
@@ -145,7 +145,7 @@ export function SearchResults() {
             <button
               onClick={() => setViewMode("list")}
               className={`p-2 rounded transition-colors ${
-                viewMode === "list" ? "bg-white shadow-sm" : "hover:bg-[#E0E0E0]"
+                viewMode === "list" ? "bg-white shadow-sm" : "hover:bg-[var(--gray-100)]"
               }`}
             >
               <ListIcon className="w-4 h-4 text-[#2C2C2C]" />
@@ -156,13 +156,13 @@ export function SearchResults() {
         {/* Popular Searches */}
         {!searchQuery && (
           <div className="px-4 pb-3">
-            <p className="text-sm text-[#757575] mb-2">Popular Searches</p>
+            <p className="text-sm text-[var(--gray-600)] mb-2">Popular Searches</p>
             <div className="flex flex-wrap gap-2">
               {["Maize", "Tomatoes", "Butternut", "Onions", "Eggs"].map((term) => (
                 <button
                   key={term}
                   onClick={() => setSearchQuery(term)}
-                  className="px-3 py-1 bg-[#F5F5F5] hover:bg-[#E0E0E0] rounded-full text-sm text-[#2C2C2C] transition-colors"
+                  className="px-3 py-1 bg-[var(--gray-50)] hover:bg-[var(--gray-100)] rounded-full text-xs sm:text-sm text-[var(--gray-800)] transition-colors"
                 >
                   {term}
                 </button>
@@ -182,15 +182,15 @@ export function SearchResults() {
 
         {loading ? (
           <div className="flex flex-col items-center justify-center py-12">
-            <Loader2 className="w-10 h-10 text-[#2D5016] animate-spin mb-3" />
-            <p className="text-[#757575]">Loading listings...</p>
+            <Loader2 className="w-10 h-10 text-[var(--primary-700)] animate-spin mb-3" />
+            <p className="text-[var(--gray-600)]">Loading listings...</p>
           </div>
         ) : error ? (
           <div className="text-center py-12">
-            <p className="text-[#EF5350] mb-2">{error}</p>
+            <p className="text-[var(--error-red)] mb-2">{error}</p>
             <button
               onClick={() => window.location.reload()}
-              className="text-[#2D5016] text-sm font-medium hover:underline"
+              className="text-[var(--primary-700)] text-sm font-medium hover:underline"
             >
               Try again
             </button>
@@ -201,9 +201,9 @@ export function SearchResults() {
                 <div
                   key={listing.id}
                   onClick={() => navigate(`/product/${listing.id}`)}
-                  className="bg-white rounded-xl shadow-sm overflow-hidden hover:shadow-md transition-shadow cursor-pointer"
+                  className="bg-white rounded-2xl shadow-sm overflow-hidden hover:shadow-md hover:-translate-y-0.5 transition-all cursor-pointer border border-[var(--gray-100)]"
                 >
-                  <div className="relative aspect-[4/3] bg-[#F5F5F5]">
+                  <div className="relative aspect-[4/3] bg-[var(--gray-100)]">
                     <img
                       src={resolveImageUrl(listing.images?.[0], fallbackImage)}
                       alt={listing.title}
@@ -217,7 +217,7 @@ export function SearchResults() {
                       }}
                     />
                     {listing.is_organic && (
-                      <div className="absolute top-2 left-2 px-2 py-1 bg-[#4CAF50] text-white text-xs font-medium rounded">
+                      <div className="absolute top-2 left-2 badge badge-primary text-[9px] px-2 py-0.5">
                         Organic
                       </div>
                     )}
@@ -227,26 +227,26 @@ export function SearchResults() {
                       }}
                       className="absolute top-2 right-2 w-8 h-8 rounded-full bg-white/90 hover:bg-white flex items-center justify-center shadow-sm"
                     >
-                      <Heart className="w-4 h-4 text-[#757575]" />
+                      <Heart className="w-4 h-4 text-[var(--gray-500)]" />
                     </button>
                   </div>
 
                   <div className="p-3">
-                    <h3 className="font-semibold text-[#2C2C2C] truncate mb-1">
+                    <h3 className="font-semibold text-[var(--gray-900)] truncate mb-1 text-sm">
                       {listing.produce_type?.name || listing.title}
                     </h3>
-                    <p className="text-xs text-[#757575] mb-2">
-                      {listing.quantity_available} {listing.unit}
+                    <p className="text-[10px] text-[var(--gray-600)] mb-2">
+                      {listing.quantity_available} {listing.unit} • {listing.district}
                     </p>
 
                     <div className="flex items-baseline gap-1 mb-2">
-                      <span className="text-lg font-bold text-[#2D5016]">
+                      <span className="text-base font-bold text-[var(--primary-800)]">
                         {(listing.currency || "USD")} {listing.price_per_unit}
                       </span>
-                      <span className="text-xs text-[#757575]">/{listing.unit}</span>
+                      <span className="text-[10px] text-[var(--gray-600)]">/{listing.unit}</span>
                     </div>
 
-                    <div className="flex items-center gap-1 text-xs text-[#757575]">
+                    <div className="flex items-center gap-1 text-[10px] text-[var(--gray-600)]">
                       <MapPin className="w-3 h-3" />
                       <span className="truncate">{listing.district}</span>
                     </div>
@@ -260,10 +260,10 @@ export function SearchResults() {
                 <div
                   key={listing.id}
                   onClick={() => navigate(`/product/${listing.id}`)}
-                  className="bg-white rounded-xl shadow-sm overflow-hidden hover:shadow-md transition-shadow cursor-pointer"
+                  className="bg-white rounded-2xl shadow-sm overflow-hidden hover:shadow-md hover:-translate-y-0.5 transition-all cursor-pointer border border-[var(--gray-100)]"
                 >
                   <div className="flex gap-4 p-4">
-                    <div className="w-24 h-24 rounded-lg overflow-hidden bg-[#F5F5F5] flex-shrink-0">
+                    <div className="w-24 h-24 rounded-lg overflow-hidden bg-[var(--gray-100)] flex-shrink-0">
                       <img
                         src={resolveImageUrl(listing.images?.[0], fallbackImage)}
                         alt={listing.title}
@@ -279,22 +279,22 @@ export function SearchResults() {
                     </div>
 
                     <div className="flex-1 min-w-0">
-                      <h3 className="font-semibold text-[#2C2C2C] truncate mb-1">
+                      <h3 className="font-semibold text-[var(--gray-900)] truncate mb-1">
                         {listing.produce_type?.name || listing.title}
                       </h3>
-                      <p className="text-sm text-[#757575] mb-2">
+                      <p className="text-sm text-[var(--gray-600)] mb-2">
                         {listing.quantity_available} {listing.unit} • {listing.district}
                       </p>
 
                       <div className="flex items-baseline gap-1 mb-2">
-                        <span className="text-xl font-bold text-[#2D5016]">
+                        <span className="text-xl font-bold text-[var(--primary-800)]">
                           {(listing.currency || "USD")} {listing.price_per_unit}
                         </span>
-                        <span className="text-sm text-[#757575]">/{listing.unit}</span>
+                        <span className="text-sm text-[var(--gray-600)]">/{listing.unit}</span>
                       </div>
 
                       {listing.is_organic && (
-                        <span className="inline-block px-2 py-0.5 bg-[#4CAF50] text-white text-xs font-medium rounded">
+                        <span className="inline-block px-2 py-0.5 bg-[var(--success)] text-white text-xs font-medium rounded">
                           Organic
                         </span>
                       )}
@@ -304,9 +304,9 @@ export function SearchResults() {
                       onClick={(e) => {
                         e.stopPropagation();
                       }}
-                      className="p-2 hover:bg-[#F5F5F5] rounded-full transition-colors self-start"
+                        className="p-2 hover:bg-[var(--gray-100)] rounded-full transition-colors self-start"
                     >
-                      <Heart className="w-5 h-5 text-[#757575]" />
+                        <Heart className="w-5 h-5 text-[var(--gray-500)]" />
                     </button>
                   </div>
                 </div>
@@ -316,11 +316,11 @@ export function SearchResults() {
 
         {filteredListings.length === 0 && searchQuery && (
           <div className="text-center py-12">
-            <div className="w-20 h-20 rounded-full bg-[#F5F5F5] flex items-center justify-center mx-auto mb-4">
-              <Search className="w-10 h-10 text-[#757575]" />
+            <div className="w-20 h-20 rounded-full bg-[var(--gray-100)] flex items-center justify-center mx-auto mb-4">
+              <Search className="w-10 h-10 text-[var(--gray-500)]" />
             </div>
-            <p className="text-[#757575] mb-2">No results found for "{searchQuery}"</p>
-            <p className="text-sm text-[#757575]">Try different keywords or browse categories</p>
+            <p className="text-[var(--gray-600)] mb-2">No results found for "{searchQuery}"</p>
+            <p className="text-sm text-[var(--gray-600)]">Try different keywords or browse categories</p>
           </div>
         )}
       </div>

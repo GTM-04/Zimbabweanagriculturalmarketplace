@@ -42,6 +42,7 @@ export function Profile() {
   const [listingCount, setListingCount] = useState(0);
   const [editOpen, setEditOpen] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [roleSaving, setRoleSaving] = useState(false);
   const [editForm, setEditForm] = useState({
     full_name: "",
     email: "",
@@ -110,9 +111,9 @@ export function Profile() {
 
   if (!user) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center gap-4">
-        <Loader2 className="w-8 h-8 text-[#2D5016] animate-spin" />
-        <p className="text-[#757575] text-sm">Loading profile…</p>
+      <div className="min-h-screen flex flex-col items-center justify-center gap-4 bg-[var(--gray-50)]">
+        <Loader2 className="w-8 h-8 text-[var(--primary-700)] animate-spin" />
+        <p className="text-[var(--gray-600)] text-sm">Loading profile…</p>
       </div>
     );
   }
@@ -144,28 +145,33 @@ export function Profile() {
   ];
 
   return (
-    <div className="min-h-screen bg-[#F5F5F5] pb-20">
+    <div className="min-h-screen bg-[var(--gray-50)] pb-20">
       {/* Offline banner */}
       {isOffline && (
-        <div className="bg-[#FFA726] text-[#2C2C2C] px-4 py-2 flex items-center gap-2 text-sm font-medium">
+        <div className="offline-banner flex items-center gap-2 text-sm font-medium">
           <WifiOff className="w-4 h-4 flex-shrink-0" />
           You're offline — showing cached profile.
         </div>
       )}
 
       {/* Header */}
-      <div className="sticky top-0 bg-white border-b border-[#E0E0E0] px-4 py-4 flex items-center gap-3 z-10 shadow-sm">
+      <div className="sticky top-0 bg-white border-b border-[var(--gray-200)] px-4 py-4 flex items-center gap-3 z-10 shadow-sm">
         <button
           onClick={() => navigate(-1)}
-          className="p-2 hover:bg-[#F5F5F5] rounded-full transition-colors"
+          className="p-2 hover:bg-[var(--gray-100)] rounded-full transition-colors"
         >
-          <ArrowLeft className="w-5 h-5 text-[#2C2C2C]" />
+          <ArrowLeft className="w-5 h-5 text-[var(--gray-800)]" />
         </button>
-        <h1 className="text-xl font-semibold text-[#2C2C2C] flex-1">Profile</h1>
+        <h1
+          className="flex-1 text-[var(--gray-900)]"
+          style={{ fontFamily: "var(--font-heading)", fontSize: "1.4rem", fontWeight: 800 }}
+        >
+          Profile
+        </h1>
         {!isOffline && (
           <button
             onClick={handleRefresh}
-            className="text-xs text-[#4A90E2] font-medium hover:underline"
+            className="text-xs text-[var(--accent-600)] font-medium hover:underline"
           >
             Refresh
           </button>
@@ -174,10 +180,10 @@ export function Profile() {
 
       {/* Cover & Avatar */}
       <div className="relative">
-        <div className="h-32 bg-gradient-to-r from-[#2D5016] to-[#7CB342]" />
+        <div className="h-32 bg-gradient-to-r from-[var(--primary-800)] to-[var(--success)]" />
         <div className="absolute -bottom-12 left-4">
           <div className="w-24 h-24 rounded-full bg-white p-1 shadow-md">
-            <div className="w-full h-full rounded-full bg-[#2D5016] flex items-center justify-center text-white text-3xl font-bold select-none">
+            <div className="w-full h-full rounded-full bg-[var(--primary-700)] flex items-center justify-center text-white text-3xl font-bold select-none">
               {initials}
             </div>
           </div>
@@ -195,23 +201,23 @@ export function Profile() {
       <div className="mt-14 px-4 pb-4 bg-white">
         <div className="mb-2">
           <div className="flex items-center gap-2 mb-1">
-            <h2 className="text-xl font-bold text-[#2C2C2C]">{displayName}</h2>
+            <h2 className="text-xl font-bold text-[var(--gray-900)]">{displayName}</h2>
             {user.is_verified && (
               <CheckCircle className="w-5 h-5 text-[#4A90E2]" />
             )}
           </div>
           {orgName && (
-            <div className="flex items-center gap-1 text-sm text-[#757575] mb-1">
+            <div className="flex items-center gap-1 text-sm text-[var(--gray-600)] mb-1">
               <Building2 className="w-3.5 h-3.5" />
               <span>{orgName}</span>
             </div>
           )}
-          <span className="inline-block bg-[#2D5016]/10 text-[#2D5016] px-3 py-1 rounded-full text-xs font-medium capitalize">
+          <span className="inline-block bg-[var(--primary-50)] text-[var(--primary-800)] px-3 py-1 rounded-full text-xs font-medium capitalize">
             {isFarmer ? "Farmer" : (user.profile as any)?.buyer_type || "Buyer"}
           </span>
         </div>
 
-        <div className="space-y-2 mt-4 text-sm text-[#757575]">
+        <div className="space-y-2 mt-4 text-sm text-[var(--gray-600)]">
           {user.district && (
             <div className="flex items-center gap-2">
               <MapPin className="w-4 h-4 flex-shrink-0" />
@@ -234,23 +240,93 @@ export function Profile() {
         </div>
       </div>
 
+      {/* Role Switcher */}
+      <div className="bg-white px-4 py-4 mt-3 mb-3">
+        <div className="flex items-center justify-between mb-2">
+          <p className="text-sm font-semibold text-[var(--gray-900)]">Account role</p>
+          {roleSaving && (
+            <span className="text-xs text-[var(--gray-600)] flex items-center gap-1">
+              <Loader2 className="w-3 h-3 animate-spin" />
+              Switching…
+            </span>
+          )}
+        </div>
+        <p className="text-xs text-[var(--gray-600)] mb-3">
+          Use the same account as a farmer or a buyer. You can switch anytime without creating a new account.
+        </p>
+        <div className="flex gap-2">
+          <Button
+            type="button"
+            disabled={roleSaving || isFarmer}
+            onClick={async () => {
+              if (isFarmer) return;
+              setRoleSaving(true);
+              try {
+                await updateProfile({ user_type: "farmer" } as any);
+                toast.success("Switched to Farmer account", {
+                  description: "You can now list produce and manage your farm profile.",
+                });
+                navigate("/farmer/dashboard");
+              } catch (err: any) {
+                toast.error("Could not switch role", { description: err?.message || "Please try again." });
+              } finally {
+                setRoleSaving(false);
+              }
+            }}
+            className={`flex-1 h-10 text-sm font-medium border-2 ${
+              isFarmer
+                ? "bg-[var(--primary-800)] border-[var(--primary-800)] text-white"
+                : "bg-white border-[var(--gray-200)] text-[var(--gray-900)] hover:border-[var(--primary-200)] hover:bg-[var(--primary-50)]"
+            }`}
+          >
+            Farmer
+          </Button>
+          <Button
+            type="button"
+            disabled={roleSaving || !isFarmer}
+            onClick={async () => {
+              if (!isFarmer) return;
+              setRoleSaving(true);
+              try {
+                await updateProfile({ user_type: "buyer" } as any);
+                toast.success("Switched to Buyer account", {
+                  description: "Browse and purchase from farmers across Zimbabwe.",
+                });
+                navigate("/buyer/dashboard");
+              } catch (err: any) {
+                toast.error("Could not switch role", { description: err?.message || "Please try again." });
+              } finally {
+                setRoleSaving(false);
+              }
+            }}
+            className={`flex-1 h-10 text-sm font-medium border-2 ${
+              !isFarmer
+                ? "bg-[var(--primary-800)] border-[var(--primary-800)] text-white"
+                : "bg-white border-[var(--gray-200)] text-[var(--gray-900)] hover:border-[var(--primary-200)] hover:bg-[var(--primary-50)]"
+            }`}
+          >
+            Buyer
+          </Button>
+        </div>
+      </div>
+
       {/* Stats */}
       <div className="bg-white p-4 mt-3 mb-3">
         {statsLoading ? (
           <div className="flex justify-center py-4">
-            <Loader2 className="w-5 h-5 text-[#2D5016] animate-spin" />
+            <Loader2 className="w-5 h-5 text-[var(--primary-700)] animate-spin" />
           </div>
         ) : isFarmer ? (
           <div className="grid grid-cols-2 gap-4">
             <div className="text-center">
-              <Package className="w-4 h-4 text-[#2D5016] mx-auto mb-1" />
-              <p className="text-2xl font-bold text-[#2C2C2C]">{listingCount}</p>
-              <p className="text-xs text-[#757575]">My Listings</p>
+              <Package className="w-4 h-4 text-[var(--primary-800)] mx-auto mb-1" />
+              <p className="text-2xl font-bold text-[var(--gray-900)]">{listingCount}</p>
+              <p className="text-xs text-[var(--gray-600)]">My Listings</p>
             </div>
             <div className="text-center border-l border-[#E0E0E0]">
               <Star className="w-4 h-4 text-[#F5A623] fill-[#F5A623] mx-auto mb-1" />
-              <p className="text-2xl font-bold text-[#2C2C2C]">{user.is_verified ? "✓" : "—"}</p>
-              <p className="text-xs text-[#757575]">{user.is_verified ? "Verified" : "Unverified"}</p>
+              <p className="text-2xl font-bold text-[var(--gray-900)]">{user.is_verified ? "✓" : "—"}</p>
+              <p className="text-xs text-[var(--gray-600)]">{user.is_verified ? "Verified" : "Unverified"}</p>
             </div>
           </div>
         ) : (
@@ -275,21 +351,21 @@ export function Profile() {
           <button
             key={index}
             onClick={item.action}
-            className="w-full px-4 py-4 flex items-center gap-3 hover:bg-[#F5F5F5] transition-colors text-left"
+            className="w-full px-4 py-4 flex items-center gap-3 hover:bg-[var(--gray-50)] transition-colors text-left"
           >
-            <item.icon className="w-5 h-5 text-[#757575]" />
-            <span className="flex-1 text-[#2C2C2C]">{item.label}</span>
+            <item.icon className="w-5 h-5 text-[var(--gray-500)]" />
+            <span className="flex-1 text-[var(--gray-900)]">{item.label}</span>
             {"value" in item && item.value && (
-              <span className="text-sm text-[#757575]">{item.value}</span>
+              <span className="text-sm text-[var(--gray-600)]">{item.value}</span>
             )}
-            <ChevronRight className="w-5 h-5 text-[#757575]" />
+            <ChevronRight className="w-5 h-5 text-[var(--gray-500)]" />
           </button>
         ))}
       </div>
 
       {/* App Version */}
       <div className="px-4 py-4 text-center">
-        <p className="text-xs text-[#757575]">Village to Marketplace v1.0.0</p>
+        <p className="text-xs text-[var(--gray-500)]">Village to Marketplace v1.0.0</p>
       </div>
 
       {/* Logout */}
@@ -316,11 +392,11 @@ export function Profile() {
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-center justify-between mb-5">
-              <h2 className="text-lg font-semibold text-[#2C2C2C]">Edit Profile</h2>
+              <h2 className="text-lg font-semibold text-[var(--gray-900)]">Edit Profile</h2>
               <button
                 onClick={() => setEditOpen(false)}
                 disabled={saving}
-                className="p-1 hover:bg-[#F5F5F5] rounded-full"
+                className="p-1 hover:bg-[var(--gray-100)] rounded-full"
               >
                 <X className="w-5 h-5 text-[#757575]" />
               </button>
@@ -381,7 +457,7 @@ export function Profile() {
                 </Button>
                 <Button
                   type="submit"
-                  className="flex-1 bg-[#2D5016] hover:bg-[#234010] text-white"
+                  className="flex-1 bg-[var(--accent-500)] hover:bg-[var(--accent-600)] text-white"
                   disabled={saving}
                 >
                   {saving ? (

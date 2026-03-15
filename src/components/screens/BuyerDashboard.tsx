@@ -163,60 +163,69 @@ export function BuyerDashboard() {
   }, [priceTrends]);
 
   return (
-    <div className="min-h-screen bg-[#F5F5F5] pb-20">
+    <div className="min-h-screen bg-[var(--gray-50)] pb-20">
       {/* Offline Banner */}
       {!isOnline && (
-        <div className="bg-[#FFA726] text-[#2C2C2C] px-4 py-2 flex items-center gap-2 text-sm font-medium">
+        <div className="offline-banner flex items-center justify-center gap-2 text-sm font-medium">
           <WifiOff className="w-4 h-4 flex-shrink-0" />
           <span>You're offline. Showing cached content.</span>
         </div>
       )}
 
-      {/* Server unreachable notice */}
       {isOnline && usingFallback && !loadingListings && (
         <div className="bg-[#FFF8E1] border-b border-[#FFE082] px-4 py-2 text-xs text-[#856404]">
           ⚠️ Could not reach server — showing demo listings.
         </div>
       )}
 
-      {/* Header */}
-      <div className="bg-white px-4 py-4 shadow-sm">
-        <div className="flex items-center justify-between mb-4">
+      {/* Header + hero strip */}
+      <div className="bg-white shadow-sm">
+        <div className="px-4 pt-4 pb-3 flex items-center justify-between">
           <div>
-            <h1 className="text-xl font-semibold text-[#2C2C2C]">Browse Produce</h1>
-            <div className="flex items-center gap-2 mt-1">
-              <MapPin className="w-4 h-4 text-[#757575]" />
-              <span className="text-sm text-[#757575]">{user?.district ?? "Zimbabwe"}</span>
+            <p className="text-[10px] font-semibold tracking-[0.18em] text-[var(--gray-500)] uppercase mb-1">
+              Marketplace
+            </p>
+            <h1
+              className="text-[var(--gray-900)]"
+              style={{ fontFamily: "var(--font-heading)", fontSize: "1.4rem", fontWeight: 800 }}
+            >
+              Fresh from Zimbabwe's farms
+            </h1>
+            <div className="flex items-center gap-2 mt-1 text-xs text-[var(--gray-600)]">
+              <MapPin className="w-3 h-3" />
+              <span>{user?.district ?? "All districts"}</span>
             </div>
           </div>
-          <button className="relative p-2 hover:bg-[#F5F5F5] rounded-full transition-colors">
-            <Bell className="w-6 h-6 text-[#2C2C2C]" />
-            <span className="absolute top-1 right-1 w-2 h-2 bg-[#EF5350] rounded-full" />
+          <button className="relative p-2 rounded-full bg-[var(--gray-100)] hover:bg-[var(--gray-200)] transition-colors">
+            <Bell className="w-5 h-5 text-[var(--gray-800)]" />
+            <span className="absolute top-1 right-1 w-2 h-2 bg-[var(--error-red)] rounded-full" />
           </button>
         </div>
 
         {/* Search Bar – live filter, no navigation redirect */}
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-[#757575]" />
-          <input
-            type="text"
-            placeholder="Search produce, district, farmer…"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full h-12 pl-10 pr-4 bg-[#F5F5F5] border border-[#E0E0E0] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#4A90E2] focus:border-transparent"
-          />
+        <div className="px-4 pb-4">
+          <div className="relative rounded-xl border border-[var(--gray-200)] bg-[var(--gray-50)] overflow-hidden">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-[var(--gray-500)]" />
+            <input
+              type="text"
+              placeholder="Search produce, district, or farmer…"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full h-11 pl-10 pr-4 bg-transparent border-0 focus:outline-none focus-visible:ring-0 text-sm"
+            />
+          </div>
         </div>
       </div>
 
       {/* Category Pills */}
-      <div className="bg-white border-b border-[#E0E0E0] px-4 py-3 overflow-x-auto">
+      <div className="bg-white border-b border-[var(--gray-200)] px-4 py-3 overflow-x-auto">
         <div className="flex gap-2 min-w-max">
           <button
             onClick={() => setSelectedCategory("all")}
-            className={`px-4 py-2 rounded-full text-sm font-medium transition-all whitespace-nowrap ${
+            className={`px-4 py-2 rounded-full text-xs sm:text-sm font-medium transition-all whitespace-nowrap border ${
               selectedCategory === "all"
-                ? "bg-[#2D5016] text-white"
-                : "bg-[#F5F5F5] text-[#757575] hover:bg-[#E0E0E0]"
+                ? "bg-[var(--primary-700)] text-white border-[var(--primary-700)] shadow-sm"
+                : "bg-[var(--gray-50)] text-[var(--gray-600)] border-[var(--gray-200)] hover:bg-[var(--gray-100)]"
             }`}
           >
             All
@@ -225,10 +234,10 @@ export function BuyerDashboard() {
             <button
               key={cat.id}
               onClick={() => setSelectedCategory(cat.id)}
-              className={`px-4 py-2 rounded-full text-sm font-medium transition-all whitespace-nowrap flex items-center gap-2 ${
+              className={`px-4 py-2 rounded-full text-xs sm:text-sm font-medium transition-all whitespace-nowrap flex items-center gap-2 border ${
                 selectedCategory === cat.id
-                  ? "bg-[#2D5016] text-white"
-                  : "bg-[#F5F5F5] text-[#757575] hover:bg-[#E0E0E0]"
+                  ? "bg-[var(--primary-700)] text-white border-[var(--primary-700)] shadow-sm"
+                  : "bg-[var(--gray-50)] text-[var(--gray-600)] border-[var(--gray-200)] hover:bg-[var(--gray-100)]"
               }`}
             >
               <span>{cat.icon}</span>
@@ -241,7 +250,7 @@ export function BuyerDashboard() {
       {/* Listings Grid */}
       <div className="p-4">
         <div className="flex items-center justify-between mb-3">
-          <h2 className="text-lg font-semibold text-[#2C2C2C]">
+          <h2 className="text-lg font-semibold text-[var(--gray-900)]">
             {searchQuery
               ? `Results for "${searchQuery}"`
               : selectedCategory === "all"
@@ -256,25 +265,25 @@ export function BuyerDashboard() {
                   : "/buyer/search"
               )
             }
-            className="text-sm text-[#4A90E2] font-medium hover:underline"
+            className="text-xs sm:text-sm text-[var(--accent-600)] font-medium hover:underline"
           >
-            View All
+            View all in search
           </button>
         </div>
 
         {loadingListings ? (
           <div className="flex flex-col items-center justify-center py-16">
-            <Loader2 className="w-10 h-10 text-[#2D5016] animate-spin mb-3" />
-            <p className="text-[#757575]">Loading listings…</p>
+            <Loader2 className="w-10 h-10 text-[var(--primary-700)] animate-spin mb-3" />
+            <p className="text-[var(--gray-600)]">Loading listings…</p>
           </div>
         ) : filteredListings.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-16">
             <div className="text-5xl mb-4">🌱</div>
-            <p className="text-[#757575] text-center">No listings found.</p>
+            <p className="text-[var(--gray-600)] text-center">No listings found.</p>
             {searchQuery && (
               <button
                 onClick={() => setSearchQuery("")}
-                className="mt-2 text-sm text-[#4A90E2] hover:underline"
+                className="mt-2 text-sm text-[var(--accent-600)] hover:underline"
               >
                 Clear search
               </button>
@@ -282,7 +291,7 @@ export function BuyerDashboard() {
           </div>
         ) : (
           <>
-            <p className="text-xs text-[#757575] mb-3">
+            <p className="text-xs text-[var(--gray-600)] mb-3">
               {filteredListings.length} listing{filteredListings.length !== 1 ? "s" : ""}
               {usingFallback ? " (demo data)" : ""}
             </p>
@@ -292,10 +301,10 @@ export function BuyerDashboard() {
                 <div
                   key={listing.id}
                   onClick={() => navigate(`/product/${listing.id}`)}
-                  className="bg-white rounded-xl shadow-sm overflow-hidden hover:shadow-md transition-shadow cursor-pointer"
+                  className="bg-white rounded-2xl shadow-sm overflow-hidden hover:shadow-md hover:-translate-y-0.5 transition-all cursor-pointer border border-[var(--gray-100)]"
                 >
                   {/* Image */}
-                  <div className="relative aspect-[4/3] bg-[#F5F5F5]">
+                  <div className="relative aspect-[4/3] bg-[var(--gray-100)]">
                     <img
                       src={listing.imageUrl}
                       alt={listing.title}
@@ -305,7 +314,7 @@ export function BuyerDashboard() {
                       }}
                     />
                     {listing.isOrganic && (
-                      <div className="absolute top-2 left-2 px-2 py-0.5 bg-[#4CAF50] text-white text-[10px] font-semibold rounded">
+                      <div className="absolute top-2 left-2 badge badge-primary text-[9px] px-2 py-0.5">
                         Organic
                       </div>
                     )}
@@ -313,43 +322,48 @@ export function BuyerDashboard() {
                       onClick={(e) => e.stopPropagation()}
                       className="absolute top-2 right-2 w-8 h-8 rounded-full bg-white/90 hover:bg-white flex items-center justify-center shadow-sm transition-colors"
                     >
-                      <Heart className="w-4 h-4 text-[#757575]" />
+                      <Heart className="w-4 h-4 text-[var(--gray-500)]" />
                     </button>
                     {listing.quantity < 100 && (
-                      <div className="absolute bottom-2 left-2 px-2 py-0.5 bg-[#FFA726]/90 rounded text-[10px] text-white font-medium">
-                        Limited Stock
+                      <div className="absolute bottom-2 left-2 px-2 py-0.5 rounded-full bg-[var(--warning-amber)]/90 text-[9px] text-white font-semibold">
+                        Limited stock
                       </div>
                     )}
                   </div>
 
                   {/* Content */}
                   <div className="p-3">
-                    <h3 className="font-semibold text-[#2C2C2C] truncate mb-1">
+                    <h3 className="font-semibold text-[var(--gray-900)] truncate mb-1 text-sm">
                       {listing.title}
                     </h3>
-                    <p className="text-xs text-[#757575] mb-2">
-                      {listing.quantity} {listing.unit} available
+                    <p className="text-[10px] text-[var(--gray-600)] mb-2">
+                      {listing.quantity} {listing.unit} • {listing.district}
                     </p>
 
                     <div className="flex items-baseline gap-1 mb-2">
-                      <span className="text-lg font-bold text-[#2D5016]">
-                        USD {(listing.price * listing.quantity).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                      <span className="text-base font-bold text-[var(--primary-800)]">
+                        USD {(listing.price * listing.quantity).toLocaleString(undefined, {
+                          minimumFractionDigits: 2,
+                          maximumFractionDigits: 2,
+                        })}
                       </span>
-                      <span className="text-xs text-[#757575]">per {listing.quantity} {listing.unit}</span>
+                      <span className="text-[10px] text-[var(--gray-600)]">
+                        per {listing.quantity} {listing.unit}
+                      </span>
                     </div>
 
                     {listing.farmerName && (
                       <div className="flex items-center gap-2 mb-1">
-                        <div className="w-5 h-5 rounded-full bg-[#E0E0E0] flex items-center justify-center text-xs font-semibold text-[#757575]">
+                        <div className="w-5 h-5 rounded-full bg-[var(--gray-200)] flex items-center justify-center text-[10px] font-semibold text-[var(--gray-700)]">
                           {listing.farmerName[0]}
                         </div>
-                        <span className="text-xs text-[#757575] truncate flex-1">
+                        <span className="text-[10px] text-[var(--gray-600)] truncate flex-1">
                           {listing.farmerName}
                         </span>
                       </div>
                     )}
 
-                    <div className="flex items-center gap-1 text-xs text-[#757575]">
+                    <div className="flex items-center gap-1 text-[10px] text-[var(--gray-600)]">
                       <MapPin className="w-3 h-3" />
                       <span className="truncate">{listing.district}</span>
                     </div>
@@ -367,7 +381,7 @@ export function BuyerDashboard() {
                       : "/buyer/search"
                   )
                 }
-                className="w-full mt-4 py-3 rounded-xl border-2 border-[#2D5016] text-[#2D5016] text-sm font-semibold hover:bg-[#2D5016]/5 transition-colors"
+                className="w-full mt-4 py-3 rounded-xl border-2 border-[var(--primary-800)] text-[var(--primary-800)] text-sm font-semibold hover:bg-[var(--primary-50)] transition-colors"
               >
                 View {filteredListings.length - 20} more listings →
               </button>
@@ -378,7 +392,7 @@ export function BuyerDashboard() {
 
       {/* Market Insights */}
       <div className="px-4 pb-6">
-        <h2 className="text-lg font-semibold text-[#2C2C2C] mb-3">Market Insights</h2>
+        <h2 className="text-lg font-semibold text-[var(--gray-900)] mb-3">Market Insights</h2>
         <div className="rounded-xl border border-[#DDE7F6] bg-gradient-to-r from-[#EEF5FF] to-[#F3FAF4] p-4">
           <div className="mb-3 flex items-center justify-between">
             <div className="flex items-center gap-2">
@@ -390,8 +404,8 @@ export function BuyerDashboard() {
                 onClick={() => setTrendWindow(7)}
                 className={`rounded-full px-2.5 py-1 text-xs font-semibold transition-colors ${
                   trendWindow === 7
-                    ? "bg-[#2D5016] text-white"
-                    : "text-[#757575] hover:bg-[#F1F1F1]"
+                    ? "bg-[var(--primary-800)] text-white"
+                    : "text-[var(--gray-600)] hover:bg-[var(--gray-100)]"
                 }`}
               >
                 7D
@@ -400,8 +414,8 @@ export function BuyerDashboard() {
                 onClick={() => setTrendWindow(30)}
                 className={`rounded-full px-2.5 py-1 text-xs font-semibold transition-colors ${
                   trendWindow === 30
-                    ? "bg-[#2D5016] text-white"
-                    : "text-[#757575] hover:bg-[#F1F1F1]"
+                    ? "bg-[var(--primary-800)] text-white"
+                    : "text-[var(--gray-600)] hover:bg-[var(--gray-100)]"
                 }`}
               >
                 30D
@@ -428,14 +442,14 @@ export function BuyerDashboard() {
                   <div key={`${trend.produce_type}-${trend.district}`} className="rounded-lg bg-white p-2.5">
                     <div className="mb-1 flex items-center justify-between text-sm">
                       <span className="font-medium text-[#2C2C2C]">{trend.produce_type}</span>
-                      <span className={`${isUp ? "text-[#2D5016]" : "text-[#D14343]"} font-semibold`}>
+                      <span className={`${isUp ? "text-[var(--success)]" : "text-[#D14343]"} font-semibold`}>
                         {isUp ? "+" : ""}
                         {change.toFixed(1)}%
                       </span>
                     </div>
                     <div className="mb-1 h-2 overflow-hidden rounded-full bg-[#E9EEF4]">
                       <div
-                        className={`h-full rounded-full ${isUp ? "bg-[#3B9A5A]" : "bg-[#E06767]"}`}
+                        className={`h-full rounded-full ${isUp ? "bg-[var(--success)]" : "bg-[#E06767]"}`}
                         style={{ width: `${bar}%` }}
                       />
                     </div>

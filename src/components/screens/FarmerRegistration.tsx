@@ -22,6 +22,8 @@ export function FarmerRegistration() {
     district: "",
     ward: "",
     farmSize: "",
+    farmSizeValue: "",
+    farmSizeUnit: "hectares",
     primaryCrops: [] as string[],
     password: "",
     confirmPassword: "",
@@ -86,17 +88,39 @@ export function FarmerRegistration() {
     }));
   };
 
+  const getPasswordStrength = (pwd: string): "weak" | "fair" | "strong" | null => {
+    if (!pwd) return null;
+    let score = 0;
+    if (pwd.length >= 8) score += 1;
+    if (pwd.length >= 12) score += 1;
+    const variety = [/[a-z]/, /[A-Z]/, /[0-9]/, /[^A-Za-z0-9]/].reduce(
+      (acc, re) => (re.test(pwd) ? acc + 1 : acc),
+      0
+    );
+    score += variety >= 3 ? 2 : variety >= 2 ? 1 : 0;
+    if (score <= 1) return "weak";
+    if (score <= 3) return "fair";
+    return "strong";
+  };
+
+  const passwordStrength = getPasswordStrength(formData.password);
+
   return (
     <div className="min-h-screen bg-white">
       {/* Header */}
-      <div className="sticky top-0 bg-white border-b border-[#E0E0E0] px-4 py-4 flex items-center gap-3 z-10">
+      <div className="sticky top-0 bg-white border-b border-[var(--gray-200)] px-4 py-4 flex items-center gap-3 z-10">
         <button
           onClick={() => navigate(-1)}
-          className="p-2 hover:bg-[#F5F5F5] rounded-full transition-colors"
+          className="p-2 hover:bg-[var(--gray-100)] rounded-full transition-colors"
         >
-          <ArrowLeft className="w-5 h-5 text-[#2C2C2C]" />
+          <ArrowLeft className="w-5 h-5 text-[var(--gray-800)]" />
         </button>
-        <h1 className="text-xl font-semibold text-[#2C2C2C]">Farmer Registration</h1>
+        <h1
+          className="text-xl font-semibold text-[var(--gray-900)]"
+          style={{ fontFamily: "var(--font-heading)", fontWeight: 800 }}
+        >
+          Farmer Registration
+        </h1>
       </div>
 
       {/* Form */}
@@ -112,11 +136,11 @@ export function FarmerRegistration() {
 
         {/* Profile Photo */}
         <div className="mb-8 flex flex-col items-center">
-          <div className="w-24 h-24 rounded-full bg-[#F5F5F5] border-2 border-dashed border-[#E0E0E0] flex items-center justify-center mb-3 relative group cursor-pointer hover:border-[#2D5016] transition-colors">
-            <Camera className="w-8 h-8 text-[#757575] group-hover:text-[#2D5016]" />
+          <div className="w-24 h-24 rounded-full bg-[var(--gray-50)] border-2 border-dashed border-[var(--gray-200)] flex items-center justify-center mb-3 relative group cursor-pointer hover:border-[var(--primary-700)] transition-colors">
+            <Camera className="w-8 h-8 text-[var(--gray-500)] group-hover:text-[var(--primary-700)]" />
             <input type="file" accept="image/*" className="absolute inset-0 opacity-0 cursor-pointer" />
           </div>
-          <p className="text-sm text-[#757575]">Upload Profile Photo</p>
+          <p className="text-sm text-[var(--gray-600)]">Upload Profile Photo</p>
         </div>
 
         {/* Full Name */}
@@ -145,7 +169,7 @@ export function FarmerRegistration() {
             required
             className="mt-2"
           />
-          <p className="text-xs text-[#757575] mt-1">Include Zimbabwe country code +263</p>
+          <p className="text-xs text-[var(--gray-600)] mt-1">Include Zimbabwe country code +263</p>
         </div>
 
         {/* District */}
@@ -156,7 +180,7 @@ export function FarmerRegistration() {
             value={formData.district}
             onChange={(e) => setFormData({ ...formData, district: e.target.value })}
             required
-            className="mt-2 w-full h-12 px-4 bg-[#F5F5F5] border border-[#E0E0E0] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#2D5016] focus:border-transparent"
+            className="mt-2 w-full h-12 px-4 bg-[var(--gray-50)] border border-[var(--gray-200)] rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--accent-600)] focus:border-transparent"
           >
             <option value="">Select your district</option>
             {zimbabweDistricts.map((district) => (
@@ -183,14 +207,26 @@ export function FarmerRegistration() {
         {/* Farm Size */}
         <div className="mb-6">
           <Label htmlFor="farmSize">Farm Size (Optional)</Label>
-          <Input
-            id="farmSize"
-            type="text"
-            placeholder="e.g., 5 hectares"
-            value={formData.farmSize}
-            onChange={(e) => setFormData({ ...formData, farmSize: e.target.value })}
-            className="mt-2"
-          />
+          <div className="mt-2 grid grid-cols-[minmax(0,1fr),auto] gap-2">
+            <Input
+              id="farmSize"
+              type="number"
+              min="0"
+              step="0.1"
+              placeholder="10.5"
+              value={formData.farmSizeValue}
+              onChange={(e) => setFormData({ ...formData, farmSizeValue: e.target.value })}
+            />
+            <select
+              value={formData.farmSizeUnit}
+              onChange={(e) => setFormData({ ...formData, farmSizeUnit: e.target.value })}
+              className="h-12 px-3 bg-[var(--gray-50)] border border-[var(--gray-200)] rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--accent-600)] focus:border-transparent text-sm"
+            >
+              <option value="hectares">Hectares</option>
+              <option value="acres">Acres</option>
+            </select>
+          </div>
+          <p className="text-xs text-[var(--gray-600)] mt-1">e.g., 5 hectares or 12 acres</p>
         </div>
 
         {/* Password */}
@@ -214,7 +250,39 @@ export function FarmerRegistration() {
               {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
             </button>
           </div>
-          <p className="text-xs text-[#757575] mt-1">At least 8 characters</p>
+          <p className="text-xs text-[var(--gray-600)] mt-1">At least 8 characters</p>
+          {passwordStrength && (
+            <>
+              <div className="mt-2 h-1.5 rounded-full bg-[var(--gray-200)] overflow-hidden">
+                <div
+                  className={
+                    "h-full rounded-full transition-all " +
+                    (passwordStrength === "weak"
+                      ? "w-1/3 bg-[var(--error-red)]"
+                      : passwordStrength === "fair"
+                      ? "w-2/3 bg-[var(--accent-500)]"
+                      : "w-full bg-[var(--success)]")
+                  }
+                />
+              </div>
+              <p
+                className={
+                  "mt-1 text-xs font-semibold " +
+                  (passwordStrength === "weak"
+                    ? "text-[var(--error-red)]"
+                    : passwordStrength === "fair"
+                    ? "text-[var(--accent-500)]"
+                    : "text-[var(--success)]")
+                }
+              >
+                {passwordStrength === "weak"
+                  ? "Weak password"
+                  : passwordStrength === "fair"
+                  ? "Fair password"
+                  : "Strong password"}
+              </p>
+            </>
+          )}
         </div>
 
         {/* Confirm Password */}
@@ -243,7 +311,7 @@ export function FarmerRegistration() {
         {/* Primary Crops */}
         <div className="mb-6">
           <Label>Primary Crops *</Label>
-          <p className="text-sm text-[#757575] mb-3">Select all that apply</p>
+          <p className="text-sm text-[var(--gray-600)] mb-3">Select all that apply</p>
           <div className="grid grid-cols-2 gap-3">
             {categories.map((category) => (
               <button
@@ -252,12 +320,12 @@ export function FarmerRegistration() {
                 onClick={() => toggleCrop(category.name)}
                 className={`p-4 rounded-lg border-2 transition-all text-left ${
                   formData.primaryCrops.includes(category.name)
-                    ? "border-[#2D5016] bg-[#2D5016]/5"
-                    : "border-[#E0E0E0] hover:border-[#2D5016]/30"
+                    ? "border-[var(--primary-700)] bg-[var(--primary-50)]"
+                    : "border-[var(--gray-200)] hover:border-[var(--primary-200)]"
                 }`}
               >
                 <div className="text-2xl mb-1">{category.icon}</div>
-                <div className="text-sm font-medium text-[#2C2C2C]">{category.name}</div>
+                <div className="text-sm font-medium text-[var(--gray-900)]">{category.name}</div>
               </button>
             ))}
           </div>
@@ -270,10 +338,10 @@ export function FarmerRegistration() {
             checked={formData.terms}
             onCheckedChange={(checked) => setFormData({ ...formData, terms: checked as boolean })}
           />
-          <label htmlFor="terms" className="text-sm text-[#757575] leading-relaxed cursor-pointer">
+          <label htmlFor="terms" className="text-sm text-[var(--gray-600)] leading-relaxed cursor-pointer">
             I agree to the{" "}
-            <span className="text-[#2D5016] font-medium">Terms & Conditions</span> and{" "}
-            <span className="text-[#2D5016] font-medium">Privacy Policy</span>
+            <span className="text-[var(--primary-800)] font-medium">Terms & Conditions</span> and{" "}
+            <span className="text-[var(--primary-800)] font-medium">Privacy Policy</span>
           </label>
         </div>
 
@@ -290,7 +358,7 @@ export function FarmerRegistration() {
             formData.primaryCrops.length === 0 ||
             loading
           }
-          className="w-full h-12 bg-[#2D5016] hover:bg-[#234010] text-white rounded-lg disabled:opacity-50 disabled:cursor-not-allowed"
+          className="w-full h-12 bg-[var(--accent-500)] hover:bg-[var(--accent-600)] text-white rounded-lg disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {loading ? (
             <>
@@ -304,12 +372,12 @@ export function FarmerRegistration() {
 
         {/* Login Link */}
         <div className="mt-6 text-center">
-          <p className="text-sm text-[#757575]">
+          <p className="text-sm text-[var(--gray-600)]">
             Already have an account?{" "}
             <button
               type="button"
               onClick={() => navigate("/login")}
-              className="text-[#2D5016] font-medium hover:underline"
+              className="text-[var(--primary-800)] font-medium hover:underline"
             >
               Sign In
             </button>

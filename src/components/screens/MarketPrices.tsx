@@ -1,17 +1,17 @@
 import {
-  ArrowDownRight,
-  ArrowLeft,
-  ArrowUpRight,
-  Flame,
-  Info,
-  Loader2,
-  Minus,
-  RefreshCw,
-  Search,
-  Tag,
-  TrendingDown,
-  TrendingUp,
-  WifiOff,
+    ArrowDownRight,
+    ArrowLeft,
+    ArrowUpRight,
+    Flame,
+    Info,
+    Loader2,
+    Minus,
+    RefreshCw,
+    Search,
+    Tag,
+    TrendingDown,
+    TrendingUp,
+    WifiOff,
 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router";
@@ -219,7 +219,7 @@ function deriveTrend(p: PriceWithMeta): "up" | "down" | "stable" {
 
 function TrendBadge({ trend, change }: { trend: "up" | "down" | "stable"; change?: number }) {
   if (trend === "up") return (
-    <span className="inline-flex items-center gap-0.5 px-2 py-0.5 rounded-full text-xs font-semibold bg-[#E8F5E9] text-[#2D5016]">
+    <span className="inline-flex items-center gap-0.5 px-2 py-0.5 rounded-full text-xs font-semibold bg-[var(--success-bg)] text-[var(--success)]">
       <ArrowUpRight className="w-3 h-3" />
       {change != null ? `+${change}%` : "Up"}
     </span>
@@ -341,10 +341,10 @@ export function MarketPrices() {
   };
 
   return (
-    <div className="min-h-screen bg-[#F5F5F5] pb-20">
+    <div className="min-h-screen bg-[var(--gray-50)] pb-20">
       {/* Offline banner */}
       {!isOnline && (
-        <div className="bg-[#FFA726] text-[#2C2C2C] px-4 py-2 flex items-center gap-2 text-sm font-medium">
+        <div className="offline-banner flex items-center gap-2 text-sm font-medium">
           <WifiOff className="w-4 h-4 flex-shrink-0" />
           <span>You're offline — showing estimated prices.</span>
         </div>
@@ -356,39 +356,44 @@ export function MarketPrices() {
       )}
 
       {/* Header */}
-      <div className="sticky top-0 bg-white border-b border-[#E0E0E0] z-10 shadow-sm">
+      <div className="sticky top-0 bg-white border-b border-[var(--gray-200)] z-10 shadow-sm">
         <div className="px-4 py-4 flex items-center gap-3">
           <button
             onClick={() => navigate(-1)}
-            className="p-2 hover:bg-[#F5F5F5] rounded-full transition-colors"
+            className="p-2 hover:bg-[var(--gray-100)] rounded-full transition-colors"
           >
-            <ArrowLeft className="w-5 h-5 text-[#2C2C2C]" />
+            <ArrowLeft className="w-5 h-5 text-[var(--gray-800)]" />
           </button>
           <div className="flex-1">
-            <h1 className="text-xl font-semibold text-[#2C2C2C]">Market Prices</h1>
-            <p className="text-xs text-[#757575]">
+            <h1
+              className="text-[var(--gray-900)]"
+              style={{ fontFamily: "var(--font-heading)", fontSize: "1.4rem", fontWeight: 800 }}
+            >
+              Market Prices
+            </h1>
+            <p className="text-xs text-[var(--gray-600)]">
               {usingFallback ? "Estimated data" : `Updated ${getTimeSinceUpdate()}`}
             </p>
           </div>
           <button
             onClick={() => fetchPrices(true)}
             disabled={refreshing || !isOnline}
-            className="p-2 hover:bg-[#F5F5F5] rounded-full transition-colors disabled:opacity-40"
+            className="p-2 hover:bg-[var(--gray-100)] rounded-full transition-colors disabled:opacity-40"
           >
-            <RefreshCw className={`w-5 h-5 text-[#2C2C2C] ${refreshing ? "animate-spin" : ""}`} />
+            <RefreshCw className={`w-5 h-5 text-[var(--gray-800)] ${refreshing ? "animate-spin" : ""}`} />
           </button>
         </div>
 
         {/* Search */}
         <div className="px-4 pb-3">
           <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-[#757575]" />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-[var(--gray-500)]" />
             <input
               type="text"
               placeholder="Search produce…"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full h-10 pl-10 pr-4 bg-[#F5F5F5] border border-[#E0E0E0] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#2D5016] focus:border-transparent"
+              className="w-full h-10 pl-10 pr-4 bg-[var(--gray-50)] border border-[var(--gray-200)] rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--accent-600)] focus:border-transparent text-sm"
             />
           </div>
         </div>
@@ -400,10 +405,10 @@ export function MarketPrices() {
               <button
                 key={cat.id}
                 onClick={() => { setSelectedCategory(cat.id); setSelectedDistrict("All"); }}
-                className={`px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition-all flex items-center gap-1 ${
+                className={`px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition-all flex items-center gap-1 border ${
                   selectedCategory === cat.id
-                    ? "bg-[#2D5016] text-white"
-                    : "bg-[#F5F5F5] text-[#757575] hover:bg-[#E0E0E0]"
+                    ? "bg-[var(--primary-700)] text-white border-[var(--primary-700)] shadow-sm"
+                    : "bg-[var(--gray-50)] text-[var(--gray-600)] border-[var(--gray-200)] hover:bg-[var(--gray-100)]"
                 }`}
               >
                 <span>{cat.icon}</span>{cat.label}
@@ -420,10 +425,10 @@ export function MarketPrices() {
                 <button
                   key={d}
                   onClick={() => setSelectedDistrict(d)}
-                  className={`px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition-all ${
+                  className={`px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition-all border ${
                     selectedDistrict === d
-                      ? "bg-[#4A90E2] text-white"
-                      : "bg-[#F5F5F5] text-[#757575] hover:bg-[#E0E0E0]"
+                      ? "bg-[var(--accent-600)] text-white border-[var(--accent-600)] shadow-sm"
+                      : "bg-[var(--gray-50)] text-[var(--gray-600)] border-[var(--gray-200)] hover:bg-[var(--gray-100)]"
                   }`}
                 >
                   {d}
@@ -439,53 +444,53 @@ export function MarketPrices() {
         <div className="px-4 pt-4 space-y-4">
 
           {/* 1. Market Pulse */}
-          <div className="bg-white rounded-xl p-4 shadow-sm">
+          <div className="card bg-white shadow-sm">
             <div className="flex items-center justify-between mb-3">
               <div>
-                <h2 className="text-sm font-semibold text-[#2C2C2C] flex items-center gap-1.5">
-                  <TrendingUp className="w-4 h-4 text-[#2D5016]" />
+                <h2 className="text-sm font-semibold text-[var(--gray-900)] flex items-center gap-1.5">
+                  <TrendingUp className="w-4 h-4 text-[var(--primary-700)]" />
                   Market Pulse
                 </h2>
-                <p className="text-xs text-[#757575] mt-0.5">
+                <p className="text-xs text-[var(--gray-600)] mt-0.5">
                   {filteredPrices.length} items tracked
                   {selectedCategory !== "All" ? ` · ${PRICE_RANGES[selectedCategory]?.label ?? selectedCategory}` : ""}
                 </p>
               </div>
               <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ${
-                usingFallback ? "bg-amber-100 text-amber-700" : "bg-[#E8F5E9] text-[#2D5016]"
+                usingFallback ? "bg-amber-100 text-amber-700" : "bg-[var(--success-bg)] text-[var(--success)]"
               }`}>
                 {usingFallback ? "Estimated" : "Live"}
               </span>
             </div>
             {/* Stacked proportion bar */}
-            <div className="flex rounded-full overflow-hidden h-3 mb-3 bg-[#E0E0E0]">
+            <div className="flex rounded-full overflow-hidden h-3 mb-3 bg-[var(--gray-200)]">
               {trendingUp > 0 && (
                 <div
-                  className="bg-[#4CAF50] transition-all h-full"
+                  className="bg-[var(--success)] transition-all h-full"
                   style={{ width: `${(trendingUp / filteredPrices.length) * 100}%` }}
                 />
               )}
               {trendingStable > 0 && (
                 <div
-                  className="bg-[#BDBDBD] h-full"
+                  className="bg-[var(--gray-400)] h-full"
                   style={{ width: `${(trendingStable / filteredPrices.length) * 100}%` }}
                 />
               )}
               {trendingDown > 0 && (
                 <div
-                  className="bg-[#EF5350] h-full"
+                  className="bg-[var(--error-red)] h-full"
                   style={{ width: `${(trendingDown / filteredPrices.length) * 100}%` }}
                 />
               )}
             </div>
             <div className="flex justify-between">
-              <span className="flex items-center gap-1 text-xs font-semibold text-[#4CAF50]">
+              <span className="flex items-center gap-1 text-xs font-semibold text-[var(--success)]">
                 <ArrowUpRight className="w-3.5 h-3.5" />{trendingUp} Rising
               </span>
-              <span className="flex items-center gap-1 text-xs text-[#757575]">
+              <span className="flex items-center gap-1 text-xs text-[var(--gray-600)]">
                 <Minus className="w-3.5 h-3.5" />{trendingStable} Stable
               </span>
-              <span className="flex items-center gap-1 text-xs font-semibold text-[#EF5350]">
+              <span className="flex items-center gap-1 text-xs font-semibold text-[var(--error-red)]">
                 <ArrowDownRight className="w-3.5 h-3.5" />{trendingDown} Falling
               </span>
             </div>
@@ -496,24 +501,24 @@ export function MarketPrices() {
             <div>
               <div className="flex items-center gap-1.5 mb-2">
                 <Flame className="w-4 h-4 text-[#FF6D00]" />
-                <h2 className="text-sm font-semibold text-[#2C2C2C]">Hot Right Now</h2>
-                <span className="text-xs text-[#9E9E9E] ml-auto">Biggest gainers</span>
+                <h2 className="text-sm font-semibold text-[var(--gray-900)]">Hot Right Now</h2>
+                <span className="text-xs text-[var(--gray-400)] ml-auto">Biggest gainers</span>
               </div>
               <div className="flex gap-3 overflow-x-auto pb-1">
                 {topGainers.map((item) => (
                   <div
                     key={item.produce_type}
-                    className="bg-white rounded-xl p-3 shadow-sm flex-shrink-0 w-36 border-l-4 border-[#4CAF50]"
+                    className="card bg-white flex-shrink-0 w-36 border-l-4 border-[var(--success)]"
                   >
-                    <p className="text-xs font-semibold text-[#2C2C2C] truncate mb-0.5">{item.produce_type}</p>
-                    <p className="text-xl font-bold text-[#2D5016]">
+                    <p className="text-xs font-semibold text-[var(--gray-900)] truncate mb-0.5">{item.produce_type}</p>
+                    <p className="text-xl font-bold text-[var(--primary-800)]">
                       ${item.price_avg.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                     </p>
                     <div className="flex items-center gap-0.5 mt-1">
-                      <ArrowUpRight className="w-3 h-3 text-[#4CAF50]" />
-                      <span className="text-xs font-bold text-[#4CAF50]">+{item._change}%</span>
+                      <ArrowUpRight className="w-3 h-3 text-[var(--success)]" />
+                      <span className="text-xs font-bold text-[var(--success)]">+{item._change}%</span>
                     </div>
-                    <p className="text-[10px] text-[#9E9E9E] mt-1">per {item.unit} · {item.district}</p>
+                    <p className="text-[10px] text-[var(--gray-400)] mt-1">per {item.unit} · {item.district}</p>
                   </div>
                 ))}
               </div>
@@ -524,25 +529,25 @@ export function MarketPrices() {
           {topLosers.length > 0 && (
             <div>
               <div className="flex items-center gap-1.5 mb-2">
-                <TrendingDown className="w-4 h-4 text-[#EF5350]" />
-                <h2 className="text-sm font-semibold text-[#2C2C2C]">Price Drops</h2>
-                <span className="text-xs text-[#9E9E9E] ml-auto">Best deals this week</span>
+                <TrendingDown className="w-4 h-4 text-[var(--error-red)]" />
+                <h2 className="text-sm font-semibold text-[var(--gray-900)]">Price Drops</h2>
+                <span className="text-xs text-[var(--gray-400)] ml-auto">Best deals this week</span>
               </div>
               <div className="flex gap-3 overflow-x-auto pb-1">
                 {topLosers.map((item) => (
                   <div
                     key={item.produce_type}
-                    className="bg-white rounded-xl p-3 shadow-sm flex-shrink-0 w-36 border-l-4 border-[#EF5350]"
+                    className="card bg-white flex-shrink-0 w-36 border-l-4 border-[var(--error-red)]"
                   >
-                    <p className="text-xs font-semibold text-[#2C2C2C] truncate mb-0.5">{item.produce_type}</p>
-                    <p className="text-xl font-bold text-[#EF5350]">
+                    <p className="text-xs font-semibold text-[var(--gray-900)] truncate mb-0.5">{item.produce_type}</p>
+                    <p className="text-xl font-bold text-[var(--error-red)]">
                       ${item.price_avg.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                     </p>
                     <div className="flex items-center gap-0.5 mt-1">
-                      <ArrowDownRight className="w-3 h-3 text-[#EF5350]" />
-                      <span className="text-xs font-bold text-[#EF5350]">{item._change}%</span>
+                      <ArrowDownRight className="w-3 h-3 text-[var(--error-red)]" />
+                      <span className="text-xs font-bold text-[var(--error-red)]">{item._change}%</span>
                     </div>
-                    <p className="text-[10px] text-[#9E9E9E] mt-1">per {item.unit} · {item.district}</p>
+                    <p className="text-[10px] text-[var(--gray-400)] mt-1">per {item.unit} · {item.district}</p>
                   </div>
                 ))}
               </div>
@@ -551,12 +556,12 @@ export function MarketPrices() {
 
           {/* 4. Best Value Buys */}
           {bestValue.length > 0 && (
-            <div className="bg-[#E8F5E9] rounded-xl p-4">
+            <div className="bg-[var(--success-bg)] rounded-xl p-4">
               <div className="flex items-center gap-1.5 mb-1">
-                <Tag className="w-4 h-4 text-[#2D5016]" />
-                <h2 className="text-sm font-semibold text-[#2D5016]">Best Value Buys</h2>
+                <Tag className="w-4 h-4 text-[var(--primary-800)]" />
+                <h2 className="text-sm font-semibold text-[var(--primary-800)]">Best Value Buys</h2>
               </div>
-              <p className="text-xs text-[#556B2F] mb-3">Priced near seasonal low — good buying opportunity</p>
+              <p className="text-xs text-[var(--primary-800)]/80 mb-3">Priced near seasonal low — good buying opportunity</p>
               <div className="space-y-2">
                 {bestValue.map((item) => {
                   const range = item.price_max - item.price_min;
@@ -569,16 +574,16 @@ export function MarketPrices() {
                       className="flex items-center justify-between bg-white/80 rounded-lg px-3 py-2.5"
                     >
                       <div>
-                        <p className="text-xs font-semibold text-[#2C2C2C]">{item.produce_type}</p>
-                        <p className="text-[10px] text-[#757575] mt-0.5">
+                        <p className="text-xs font-semibold text-[var(--gray-900)]">{item.produce_type}</p>
+                        <p className="text-[10px] text-[var(--gray-600)] mt-0.5">
                           {pctFromLow}% above seasonal low · {item.district}
                         </p>
                       </div>
                       <div className="text-right">
-                        <p className="text-sm font-bold text-[#2D5016]">
+                        <p className="text-sm font-bold text-[var(--primary-800)]">
                           ${item.price_avg.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                         </p>
-                        <p className="text-[10px] text-[#9E9E9E]">/{item.unit}</p>
+                        <p className="text-[10px] text-[var(--gray-400)]">/{item.unit}</p>
                       </div>
                     </div>
                   );
@@ -605,16 +610,16 @@ export function MarketPrices() {
       <div className="p-4 space-y-3">
         {loading ? (
           <div className="flex flex-col items-center justify-center py-12">
-            <Loader2 className="w-10 h-10 text-[#2D5016] animate-spin mb-3" />
-            <p className="text-[#757575]">Loading market prices…</p>
+            <Loader2 className="w-10 h-10 text-[var(--primary-700)] animate-spin mb-3" />
+            <p className="text-[var(--gray-600)]">Loading market prices…</p>
           </div>
         ) : filteredPrices.length === 0 ? (
           <div className="text-center py-12">
-            <p className="text-[#757575]">No prices found</p>
+            <p className="text-[var(--gray-600)]">No prices found</p>
             {searchQuery && (
               <button
                 onClick={() => setSearchQuery("")}
-                className="mt-2 text-sm text-[#2D5016] hover:underline"
+                className="mt-2 text-sm text-[var(--primary-700)] hover:underline"
               >
                 Clear search
               </button>
@@ -627,14 +632,14 @@ export function MarketPrices() {
             return (
               <div
                 key={`${item.produce_type}-${item.district}`}
-                className="bg-white rounded-xl shadow-sm overflow-hidden hover:shadow-md transition-shadow"
+                className="card bg-white shadow-sm overflow-hidden hover:shadow-md transition-shadow border border-[var(--gray-100)]"
               >
                 <div className="p-4">
                   {/* Title row */}
                   <div className="flex items-start justify-between mb-3">
                     <div className="flex-1">
-                      <h3 className="font-semibold text-[#2C2C2C] mb-0.5">{item.produce_type}</h3>
-                      <p className="text-xs text-[#757575]">
+                      <h3 className="font-semibold text-[var(--gray-900)] mb-0.5">{item.produce_type}</h3>
+                      <p className="text-xs text-[var(--gray-600)]">
                         {item.district !== "National" ? item.district : "National avg"} • per {item.unit}
                       </p>
                     </div>
@@ -643,10 +648,10 @@ export function MarketPrices() {
 
                   {/* Avg price */}
                   <div className="flex items-baseline gap-2 mb-4">
-                    <span className="text-3xl font-bold text-[#2D5016]">
+                    <span className="text-3xl font-bold text-[var(--primary-800)]">
                       ${item.price_avg.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                     </span>
-                    <span className="text-sm text-[#757575]">{item.currency ?? "USD"}</span>
+                    <span className="text-sm text-[var(--gray-600)]">{item.currency ?? "USD"}</span>
                   </div>
 
                   {/* Range bar */}
@@ -657,17 +662,29 @@ export function MarketPrices() {
                       : 50;
                     return (
                       <div className="mb-4">
-                        <div className="flex justify-between text-xs text-[#757575] mb-1">
-                          <span>$ {item.price_min.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
-                          <span>$ {item.price_max.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                        <div className="flex justify-between text-xs text-[var(--gray-600)] mb-1">
+                          <span>
+                            $
+                            {item.price_min.toLocaleString(undefined, {
+                              minimumFractionDigits: 2,
+                              maximumFractionDigits: 2,
+                            })}
+                          </span>
+                          <span>
+                            $
+                            {item.price_max.toLocaleString(undefined, {
+                              minimumFractionDigits: 2,
+                              maximumFractionDigits: 2,
+                            })}
+                          </span>
                         </div>
-                        <div className="relative h-1.5 bg-[#E0E0E0] rounded-full">
+                        <div className="relative h-1.5 bg-[var(--gray-200)] rounded-full">
                           <div
-                            className="absolute inset-y-0 left-0 bg-[#2D5016] rounded-full"
+                            className="absolute inset-y-0 left-0 bg-[var(--primary-700)] rounded-full"
                             style={{ width: `${pct}%` }}
                           />
                           <div
-                            className="absolute top-1/2 -translate-y-1/2 w-3 h-3 rounded-full bg-[#2D5016] border-2 border-white shadow"
+                            className="absolute top-1/2 -translate-y-1/2 w-3 h-3 rounded-full bg-[var(--primary-700)] border-2 border-white shadow"
                             style={{ left: `calc(${pct}% - 6px)` }}
                           />
                         </div>
@@ -677,23 +694,23 @@ export function MarketPrices() {
 
                   {/* Per-card trend insight */}
                   <div className="flex items-start gap-1.5 mb-3">
-                    <Info className="w-3.5 h-3.5 text-[#9E9E9E] flex-shrink-0 mt-0.5" />
-                    <p className="text-xs text-[#757575] leading-snug italic">{getTrendInsight(item)}</p>
+                    <Info className="w-3.5 h-3.5 text-[var(--gray-400)] flex-shrink-0 mt-0.5" />
+                    <p className="text-xs text-[var(--gray-600)] leading-snug italic">{getTrendInsight(item)}</p>
                   </div>
 
                   {/* Footer */}
-                  <div className="flex items-center justify-between pt-3 border-t border-[#E0E0E0]">
+                  <div className="flex items-center justify-between pt-3 border-t border-[var(--gray-200)]">
                     <div>
-                      <p className="text-xs text-[#757575]">{usingFallback ? "Estimated" : "Price Range"}</p>
-                      <p className="text-sm font-medium text-[#2C2C2C]">
+                      <p className="text-xs text-[var(--gray-600)]">{usingFallback ? "Estimated" : "Price Range"}</p>
+                      <p className="text-sm font-medium text-[var(--gray-900)]">
                         ${item.price_min.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} – ${item.price_max.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}/{item.unit}
                       </p>
                     </div>
                     <div className="text-right">
-                      <p className="text-xs text-[#757575]">
+                      <p className="text-xs text-[var(--gray-600)]">
                         Avg: ${item.price_avg.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}/{item.unit} · {item.district}
                       </p>
-                      <p className="text-xs text-[#9E9E9E] mt-0.5">
+                      <p className="text-xs text-[var(--gray-400)] mt-0.5">
                         {new Date(item.recorded_date).toLocaleDateString()}
                       </p>
                     </div>
@@ -708,7 +725,7 @@ export function MarketPrices() {
       {/* Market Summary */}
       {!loading && filteredPrices.length > 0 && (
         <div className="px-4 pb-6">
-          <div className="bg-gradient-to-br from-[#2D5016] to-[#7CB342] rounded-xl p-6 text-white">
+          <div className="bg-gradient-to-br from-[var(--primary-800)] to-[var(--success)] rounded-xl p-6 text-white">
             <h3 className="font-semibold mb-1">This Week's Summary</h3>
             <p className="text-sm text-white/80 mb-4">
               {trendingUp > trendingDown

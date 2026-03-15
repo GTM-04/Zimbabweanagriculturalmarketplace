@@ -26,7 +26,7 @@ export function BottomNav({ userType }: BottomNavProps) {
   const navItems = userType === "farmer" ? farmerNav : buyerNav;
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-[#E0E0E0] px-4 py-2 z-50">
+    <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-[var(--gray-200)] px-4 py-2 z-50">
       <div className="max-w-2xl mx-auto flex items-center justify-around">
         {navItems.map((item) => {
           const Icon = item.icon;
@@ -40,12 +40,16 @@ export function BottomNav({ userType }: BottomNavProps) {
             >
               <Icon
                 className={`w-6 h-6 transition-colors ${
-                  isActive ? "text-[#2D5016]" : "text-[#757575] group-hover:text-[#2D5016]"
+                  isActive
+                    ? "text-[var(--primary-800)]"
+                    : "text-[var(--gray-500)] group-hover:text-[var(--primary-800)]"
                 }`}
               />
               <span
                 className={`text-xs transition-colors ${
-                  isActive ? "text-[#2D5016] font-medium" : "text-[#757575] group-hover:text-[#2D5016]"
+                  isActive
+                    ? "text-[var(--primary-800)] font-medium"
+                    : "text-[var(--gray-500)] group-hover:text-[var(--primary-800)]"
                 }`}
               >
                 {item.label}

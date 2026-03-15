@@ -156,10 +156,10 @@ export function ChatScreen() {
   }, [isOnline, connected]);
 
   return (
-    <div className="h-screen flex flex-col bg-[#F5F5F5]">
+    <div className="h-screen flex flex-col bg-[var(--gray-50)]">
       {/* Offline Banner */}
       {!isOnline && (
-        <div className="bg-[#FFA726] text-[#2C2C2C] px-4 py-2 flex items-center gap-2 text-sm font-medium">
+        <div className="offline-banner flex items-center gap-2 text-sm font-medium">
           <WifiOff className="w-4 h-4 flex-shrink-0" />
           <span>You're offline — messages will sync when you reconnect.</span>
         </div>
@@ -167,24 +167,24 @@ export function ChatScreen() {
 
       {/* Connection Status */}
       {isOnline && !connected && (
-        <div className="bg-[#FFA726] text-[#2C2C2C] px-4 py-2 flex items-center justify-center gap-2 text-sm font-medium">
+        <div className="bg-[var(--accent-soft)] text-[var(--gray-900)] px-4 py-2 flex items-center justify-center gap-2 text-sm font-medium">
           <Loader2 className="w-4 h-4 animate-spin" />
           <span>Connecting to chat...</span>
         </div>
       )}
 
       {/* Header */}
-      <div className="bg-white border-b border-[#E0E0E0] px-4 py-3 flex items-center gap-3 shadow-sm">
+      <div className="bg-white border-b border-[var(--gray-200)] px-4 py-3 flex items-center gap-3 shadow-sm">
         <button
           onClick={() => navigate(-1)}
-          className="p-2 hover:bg-[#F5F5F5] rounded-full transition-colors"
+          className="p-2 hover:bg-[var(--gray-100)] rounded-full transition-colors"
         >
-          <ArrowLeft className="w-5 h-5 text-[#2C2C2C]" />
+          <ArrowLeft className="w-5 h-5 text-[var(--gray-800)]" />
         </button>
 
         {/* User Info */}
         <div className="flex items-center gap-3 flex-1">
-          <div className="w-10 h-10 rounded-full bg-[#2D5016] flex items-center justify-center text-white font-semibold overflow-hidden">
+          <div className="w-10 h-10 rounded-full bg-[var(--primary-700)] flex items-center justify-center text-white font-semibold overflow-hidden">
             {conversation?.other_user?.profile_picture ? (
               <img
                 src={conversation.other_user.profile_picture}
@@ -196,20 +196,20 @@ export function ChatScreen() {
             )}
           </div>
           <div>
-            <h2 className="font-semibold text-[#2C2C2C]">
+            <h2 className="font-semibold text-[var(--gray-900)]">
               {conversation?.other_user?.name ?? "Loading..."}
             </h2>
             <p className="text-xs flex items-center gap-1">
-              <span className={`w-2 h-2 rounded-full ${isOnline ? "bg-[#4CAF50]" : "bg-[#757575]"}`}></span>
-              <span className={isOnline ? "text-[#4CAF50]" : "text-[#757575]"}>
+              <span className={`w-2 h-2 rounded-full ${isOnline ? "bg-[var(--success)]" : "bg-[var(--gray-500)]"}`}></span>
+              <span className={isOnline ? "text-[var(--success)]" : "text-[var(--gray-500)]"}>
                 {isOnline ? "Online" : "Offline"}
               </span>
             </p>
           </div>
         </div>
 
-        <button className="p-2 hover:bg-[#F5F5F5] rounded-full transition-colors">
-          <MoreVertical className="w-5 h-5 text-[#2C2C2C]" />
+        <button className="p-2 hover:bg-[var(--gray-100)] rounded-full transition-colors">
+          <MoreVertical className="w-5 h-5 text-[var(--gray-800)]" />
         </button>
       </div>
 
@@ -237,15 +237,15 @@ export function ChatScreen() {
           ? resolveImageUrl(lst.images?.[0], FALLBACK_IMG)
           : FALLBACK_IMG;
         return (
-          <div className="bg-white border-b border-[#E0E0E0] px-4 py-3">
-            <div className="flex items-center gap-3 p-3 bg-[#F5F5F5] rounded-lg">
-              <div className="w-12 h-12 rounded-lg overflow-hidden bg-[#E0E0E0] flex-shrink-0">
+          <div className="bg-white border-b border-[var(--gray-200)] px-4 py-3">
+            <div className="flex items-center gap-3 p-3 bg-[var(--gray-50)] rounded-lg">
+              <div className="w-12 h-12 rounded-lg overflow-hidden bg-[var(--gray-200)] flex-shrink-0">
                 <img src={imgSrc} alt={title} className="w-full h-full object-cover" />
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-semibold text-[#2C2C2C] truncate">{title}</p>
+                <p className="text-sm font-semibold text-[var(--gray-900)] truncate">{title}</p>
                 {totalPrice && (
-                  <p className="text-sm text-[#2D5016] font-bold">
+                  <p className="text-sm text-[var(--primary-800)] font-bold">
                     USD {totalPrice} per {qty} {unit}
                   </p>
                 )}
@@ -267,7 +267,7 @@ export function ChatScreen() {
       <div className="flex-1 overflow-y-auto px-4 py-4 space-y-4">
         {loading ? (
           <div className="flex items-center justify-center h-full">
-            <Loader2 className="w-8 h-8 text-[#2D5016] animate-spin" />
+            <Loader2 className="w-8 h-8 text-[var(--primary-700)] animate-spin" />
           </div>
         ) : error ? (
           <div className="flex items-center justify-center h-full">
@@ -291,15 +291,15 @@ export function ChatScreen() {
                     <div
                       className={`rounded-2xl px-4 py-2 ${
                         isMe
-                          ? "bg-[#2D5016] text-white rounded-br-sm"
+                          ? "bg-[var(--accent-500)] text-white rounded-br-sm"
                           : "bg-white text-[#2C2C2C] rounded-bl-sm"
                       }`}
                     >
                       <p className="text-sm leading-relaxed">{msg.text}</p>
                     </div>
                     <div className="flex items-center gap-1 px-2">
-                      <span className="text-xs text-[#757575]">{timestamp}</span>
-                      {isMe && msg.is_read && <span className="text-xs text-[#757575]"> • Read</span>}
+                      <span className="text-xs text-[var(--gray-500)]">{timestamp}</span>
+                      {isMe && msg.is_read && <span className="text-xs text-[var(--gray-500)]"> • Read</span>}
                       {isMe && msg.id?.startsWith("offline-") && (
                         <span className="flex items-center gap-0.5 text-[10px] text-[#FFA726]">
                           <Clock className="w-3 h-3" /> Will sync when online
@@ -330,13 +330,13 @@ export function ChatScreen() {
       </div>
 
       {/* Quick Replies */}
-      <div className="bg-white border-t border-[#E0E0E0] px-4 py-2">
+      <div className="bg-white border-t border-[var(--gray-200)] px-4 py-2">
         <div className="flex gap-2 overflow-x-auto pb-2">
           {["Is this still available?", "Can you negotiate?", "Do you offer delivery?"].map((quick) => (
             <button
               key={quick}
               onClick={() => setMessage(quick)}
-              className="px-3 py-1.5 bg-[#F5F5F5] hover:bg-[#E0E0E0] rounded-full text-xs text-[#2C2C2C] whitespace-nowrap transition-colors"
+              className="px-3 py-1.5 bg-[var(--gray-100)] hover:bg-[var(--gray-200)] rounded-full text-xs text-[var(--gray-800)] whitespace-nowrap transition-colors"
             >
               {quick}
             </button>
@@ -345,13 +345,13 @@ export function ChatScreen() {
       </div>
 
       {/* Input */}
-      <div className="bg-white border-t border-[#E0E0E0] px-4 py-3">
+      <div className="bg-white border-t border-[var(--gray-200)] px-4 py-3">
         <div className="flex items-end gap-2">
-          <button className="p-2 hover:bg-[#F5F5F5] rounded-full transition-colors mb-1">
-            <Paperclip className="w-5 h-5 text-[#757575]" />
+          <button className="p-2 hover:bg-[var(--gray-100)] rounded-full transition-colors mb-1">
+            <Paperclip className="w-5 h-5 text-[var(--gray-500)]" />
           </button>
 
-          <div className="flex-1 bg-[#F5F5F5] rounded-2xl border border-[#E0E0E0] px-4 py-2 focus-within:ring-2 focus-within:ring-[#2D5016] focus-within:border-transparent">
+          <div className="flex-1 bg-[var(--gray-50)] rounded-2xl border border-[var(--gray-200)] px-4 py-2 focus-within:ring-2 focus-within:ring-[var(--accent-600)] focus-within:border-transparent">
             <textarea
               value={message}
               onChange={(e) => {
@@ -360,7 +360,7 @@ export function ChatScreen() {
               }}
               placeholder={!isOnline ? "You're offline — message will queue" : connected ? "Type a message..." : "Connecting..."}
               rows={1}
-              className="w-full bg-transparent focus:outline-none resize-none text-sm text-[#2C2C2C] placeholder:text-[#757575]"
+              className="w-full bg-transparent focus:outline-none resize-none text-sm text-[var(--gray-900)] placeholder:text-[var(--gray-500)]"
               onKeyDown={(e) => {
                 if (e.key === "Enter" && !e.shiftKey) {
                   e.preventDefault();
@@ -376,7 +376,7 @@ export function ChatScreen() {
             className={`p-3 rounded-full mb-1 transition-all ${
               message.trim()
                 ? isOnline && connected
-                  ? "bg-[#2D5016] hover:bg-[#234010] text-white"
+                  ? "bg-[var(--accent-500)] hover:bg-[var(--accent-600)] text-white"
                   : "bg-[#FFA726] hover:bg-[#FB8C00] text-white"
                 : "bg-[#E0E0E0] text-[#757575] cursor-not-allowed"
             }`}

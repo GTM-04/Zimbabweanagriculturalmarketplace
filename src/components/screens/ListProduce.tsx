@@ -416,10 +416,10 @@ export function ListProduce() {
   };
 
   return (
-    <div className="min-h-screen bg-[#F5F5F5]">
+    <div className="min-h-screen bg-[var(--gray-50)]">
       {/* Offline Banner */}
       {(!isOnline || demoOfflineMode) && (
-        <div className="bg-[#FFA726] text-[#2C2C2C] px-4 py-2 flex items-center gap-2 text-sm font-medium">
+        <div className="offline-banner flex items-center gap-2 text-sm font-medium">
           <WifiOff className="w-4 h-4 flex-shrink-0" />
           <span>
             {demoOfflineMode ? "[DEMO MODE] " : ""}You're offline. Listings will be saved locally and synced when online.
@@ -429,7 +429,7 @@ export function ListProduce() {
 
       {/* Pending Sync Banner */}
       {isOnline && pendingCount > 0 && (
-        <div className="bg-[#2D5016] text-white px-4 py-3 text-sm">
+        <div className="bg-[var(--primary-800)] text-white px-4 py-3 text-sm">
           <div className="mb-2 flex items-center justify-between gap-2">
             <span>
               {pendingCount} offline listing{pendingCount > 1 ? "s" : ""} waiting to sync
@@ -437,7 +437,7 @@ export function ListProduce() {
             <button
               onClick={handleSync}
               disabled={syncing}
-              className="flex items-center gap-1.5 bg-white text-[#2D5016] font-semibold px-3 py-1 rounded-full hover:bg-[#F5F5F5] transition-colors disabled:opacity-60"
+              className="flex items-center gap-1.5 bg-white text-[var(--primary-800)] font-semibold px-3 py-1 rounded-full hover:bg-[var(--gray-50)] transition-colors disabled:opacity-60"
             >
               {syncing ? (
                 <Loader2 className="w-3.5 h-3.5 animate-spin" />
@@ -464,18 +464,23 @@ export function ListProduce() {
       )}
 
       {/* Header */}
-      <div className="sticky top-0 bg-white border-b border-[#E0E0E0] px-4 py-4 flex items-center justify-between gap-3 z-10 shadow-sm">
+      <div className="sticky top-0 bg-white border-b border-[var(--gray-200)] px-4 py-4 flex items-center justify-between gap-3 z-10 shadow-sm">
         <div className="flex items-center gap-3">
           <button
             onClick={() => navigate(-1)}
-            className="p-2 hover:bg-[#F5F5F5] rounded-full transition-colors"
+            className="p-2 hover:bg-[var(--gray-100)] rounded-full transition-colors"
           >
-            <ArrowLeft className="w-5 h-5 text-[#2C2C2C]" />
+            <ArrowLeft className="w-5 h-5 text-[var(--gray-800)]" />
           </button>
-          <h1 className="text-xl font-semibold text-[#2C2C2C]">List Your Produce</h1>
+          <h1
+            className="text-[var(--gray-900)]"
+            style={{ fontFamily: "var(--font-heading)", fontSize: "1.4rem", fontWeight: 800 }}
+          >
+            List Your Produce
+          </h1>
         </div>
-        <div className="flex items-center gap-2 px-3 py-2 bg-[#2D5016] border border-[#1a3d0a] rounded-lg">
-          <span className="text-sm text-white font-medium">Offline Mode:</span>
+        <div className="flex items-center gap-2 px-3 py-2 bg-[var(--primary-800)] border border-[var(--primary-900)] rounded-lg">
+          <span className="text-xs text-white font-medium">Offline Mode</span>
           <Switch
             checked={demoOfflineMode}
             onCheckedChange={setDemoOfflineMode}
@@ -495,8 +500,8 @@ export function ListProduce() {
         )}
 
         {/* Section 1: Produce Details */}
-        <div className="bg-white rounded-xl p-4 shadow-sm mb-4">
-          <h2 className="text-lg font-semibold text-[#2C2C2C] mb-4">Produce Details</h2>
+        <div className="card bg-white mb-4">
+          <h2 className="text-base font-semibold text-[var(--gray-900)] mb-4">Produce Details</h2>
 
           {/* Category */}
           <div className="mb-4">
@@ -507,14 +512,14 @@ export function ListProduce() {
                   key={cat.id}
                   type="button"
                   onClick={() => setFormData({ ...formData, category: cat.id, produce: "" })}
-                  className={`p-3 rounded-lg border-2 transition-all ${
+                  className={`p-3 rounded-xl border transition-all text-left ${
                     formData.category === cat.id
-                      ? "border-[#2D5016] bg-[#2D5016]/5"
-                      : "border-[#E0E0E0] hover:border-[#2D5016]/30"
+                      ? "border-[var(--primary-700)] bg-[var(--primary-50)] shadow-sm"
+                      : "border-[var(--gray-200)] hover:border-[var(--primary-200)] bg-white"
                   }`}
                 >
                   <div className="text-2xl mb-1">{cat.icon}</div>
-                  <div className="text-xs font-medium text-[#2C2C2C]">{cat.name}</div>
+                  <div className="text-xs font-medium text-[var(--gray-900)]">{cat.name}</div>
                 </button>
               ))}
             </div>
@@ -529,7 +534,7 @@ export function ListProduce() {
                 value={formData.produce}
                 onChange={(e) => setFormData({ ...formData, produce: e.target.value })}
                 required
-                className="mt-2 w-full h-12 px-4 bg-[#F5F5F5] border border-[#E0E0E0] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#2D5016] focus:border-transparent"
+                className="mt-2 w-full h-12 px-4 bg-[var(--gray-50)] border border-[var(--gray-200)] rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--accent-600)] focus:border-transparent"
               >
                 <option value="">Select produce</option>
                 {specificProduce[formData.category]?.map((prod) => (
@@ -568,7 +573,7 @@ export function ListProduce() {
               <select
                 value={formData.unit}
                 onChange={(e) => setFormData({ ...formData, unit: e.target.value })}
-                className="w-28 h-12 px-3 bg-[#F5F5F5] border border-[#E0E0E0] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#2D5016] focus:border-transparent"
+                className="w-28 h-12 px-3 bg-[var(--gray-50)] border border-[var(--gray-200)] rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--accent-600)] focus:border-transparent"
               >
                 {units.map((unit) => (
                   <option key={unit} value={unit}>{unit}</option>
@@ -580,7 +585,7 @@ export function ListProduce() {
 
         {/* Section 2: Pricing */}
         <div className="bg-white rounded-xl p-4 shadow-sm mb-4">
-          <h2 className="text-lg font-semibold text-[#2C2C2C] mb-4">Pricing</h2>
+          <h2 className="text-lg font-semibold text-[var(--gray-900)] mb-4">Pricing</h2>
 
           <div className="mb-4">
             <Label htmlFor="price">Your Price per Unit (USD) *</Label>
@@ -602,18 +607,18 @@ export function ListProduce() {
               </p>
             )}
             {!marketPriceLoading && marketPrice && (
-              <div className="mt-2 p-3 bg-[#2D5016]/5 border border-[#2D5016]/20 rounded-lg">
+              <div className="mt-2 p-3 bg-[var(--primary-50)] border border-[var(--primary-200)] rounded-lg">
                 <div className="flex items-center justify-between gap-2">
                   <div className="flex items-center gap-1.5">
-                    <TrendingUp className="w-4 h-4 text-[#2D5016] flex-shrink-0" />
+                    <TrendingUp className="w-4 h-4 text-[var(--primary-800)] flex-shrink-0" />
                     <div>
                       <div className="flex items-center gap-1.5 mb-0.5">
-                        <p className="text-xs font-semibold text-[#2D5016]">
+                        <p className="text-xs font-semibold text-[var(--primary-800)]">
                           USD {marketPrice.price_min.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}–{marketPrice.price_max.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}/{marketPrice.unit}
                         </p>
                         <span className={`text-[10px] font-medium px-1.5 py-0.5 rounded-full ${
                           marketPriceIsLive
-                            ? "bg-[#4CAF50] text-white"
+                            ? "bg-[var(--success)] text-white"
                             : "bg-[#FFA726] text-[#2C2C2C]"
                         }`}>
                           {marketPriceIsLive ? "Live" : "Estimated"}
@@ -630,7 +635,7 @@ export function ListProduce() {
                     onClick={() =>
                       setFormData({ ...formData, price: String(marketPrice.price_avg) })
                     }
-                    className="text-xs font-medium text-white bg-[#2D5016] hover:bg-[#234010] px-2.5 py-1 rounded-full whitespace-nowrap transition-colors"
+                    className="text-xs font-medium text-white bg-[var(--accent-500)] hover:bg-[var(--accent-600)] px-2.5 py-1 rounded-full whitespace-nowrap transition-colors"
                   >
                     Use avg
                   </button>
@@ -648,7 +653,7 @@ export function ListProduce() {
               id="negotiable"
               checked={formData.negotiable}
               onChange={(e) => setFormData({ ...formData, negotiable: e.target.checked })}
-              className="w-4 h-4 text-[#2D5016] rounded focus:ring-[#2D5016]"
+              className="w-4 h-4 text-[var(--primary-800)] rounded focus:ring-[var(--primary-800)]"
             />
             <Label htmlFor="negotiable" className="cursor-pointer">Price is negotiable</Label>
           </div>
@@ -659,7 +664,7 @@ export function ListProduce() {
               id="isOrganic"
               checked={formData.isOrganic}
               onChange={(e) => setFormData({ ...formData, isOrganic: e.target.checked })}
-              className="w-4 h-4 text-[#2D5016] rounded focus:ring-[#2D5016]"
+              className="w-4 h-4 text-[var(--primary-800)] rounded focus:ring-[var(--primary-800)]"
             />
             <Label htmlFor="isOrganic" className="cursor-pointer">Organic produce</Label>
           </div>
@@ -667,13 +672,13 @@ export function ListProduce() {
 
         {/* Section 3: Photos */}
         <div className="bg-white rounded-xl p-4 shadow-sm mb-4">
-          <h2 className="text-lg font-semibold text-[#2C2C2C] mb-4">Photos</h2>
+          <h2 className="text-lg font-semibold text-[var(--gray-900)] mb-4">Photos</h2>
           
           <div className="grid grid-cols-3 gap-3">
             {[0, 1, 2].map((i) => (
               <div
                 key={i}
-                className="aspect-square rounded-lg bg-[#F5F5F5] border-2 border-dashed border-[#E0E0E0] flex flex-col items-center justify-center cursor-pointer hover:border-[#2D5016] transition-colors relative group"
+                className="aspect-square rounded-lg bg-[var(--gray-50)] border-2 border-dashed border-[var(--gray-200)] flex flex-col items-center justify-center cursor-pointer hover:border-[var(--primary-700)] transition-colors relative group"
               >
                 {uploadedImages[i] ? (
                   <img
@@ -683,8 +688,8 @@ export function ListProduce() {
                   />
                 ) : (
                   <>
-                    <Camera className="w-8 h-8 text-[#757575] group-hover:text-[#2D5016]" />
-                    <span className="text-xs text-[#757575] mt-1 group-hover:text-[#2D5016]">Add Photo</span>
+                    <Camera className="w-8 h-8 text-[var(--gray-500)] group-hover:text-[var(--primary-700)]" />
+                    <span className="text-xs text-[var(--gray-500)] mt-1 group-hover:text-[var(--primary-700)]">Add Photo</span>
                   </>
                 )}
                 <input
@@ -696,12 +701,12 @@ export function ListProduce() {
               </div>
             ))}
           </div>
-          <p className="text-xs text-[#757575] mt-2">Add up to 5 photos. First photo will be the cover.</p>
+          <p className="text-xs text-[var(--gray-600)] mt-2">Add up to 5 photos. First photo will be the cover.</p>
         </div>
 
         {/* Section 4: Location & Availability */}
         <div className="bg-white rounded-xl p-4 shadow-sm mb-4">
-          <h2 className="text-lg font-semibold text-[#2C2C2C] mb-4">Location & Availability</h2>
+          <h2 className="text-lg font-semibold text-[var(--gray-900)] mb-4">Location & Availability</h2>
 
           <div className="mb-4">
             <Label htmlFor="district">District *</Label>
@@ -710,7 +715,7 @@ export function ListProduce() {
               value={formData.district}
               onChange={(e) => setFormData({ ...formData, district: e.target.value })}
               required
-              className="mt-2 w-full h-12 px-4 bg-[#F5F5F5] border border-[#E0E0E0] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#2D5016] focus:border-transparent"
+              className="mt-2 w-full h-12 px-4 bg-[var(--gray-50)] border border-[var(--gray-200)] rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--accent-600)] focus:border-transparent"
             >
               {zimbabweDistricts.map((district) => (
                 <option key={district} value={district}>{district}</option>
@@ -754,7 +759,7 @@ export function ListProduce() {
               id="delivery"
               checked={formData.delivery}
               onChange={(e) => setFormData({ ...formData, delivery: e.target.checked })}
-              className="w-4 h-4 text-[#2D5016] rounded focus:ring-[#2D5016]"
+              className="w-4 h-4 text-[var(--primary-800)] rounded focus:ring-[var(--primary-800)]"
             />
             <Label htmlFor="delivery" className="cursor-pointer">Delivery available</Label>
           </div>
@@ -762,7 +767,7 @@ export function ListProduce() {
 
         {/* Section 5: Description */}
         <div className="bg-white rounded-xl p-4 shadow-sm mb-4">
-          <h2 className="text-lg font-semibold text-[#2C2C2C] mb-4">Description</h2>
+          <h2 className="text-lg font-semibold text-[var(--gray-900)] mb-4">Description</h2>
 
           <Textarea
             placeholder="Tell buyers about your produce quality, organic status, farming methods, etc."
@@ -772,7 +777,7 @@ export function ListProduce() {
             className="resize-none"
             maxLength={500}
           />
-          <p className="text-xs text-[#757575] mt-1 text-right">{formData.description.length}/500</p>
+          <p className="text-xs text-[var(--gray-600)] mt-1 text-right">{formData.description.length}/500</p>
         </div>
 
         {/* Action Buttons */}
@@ -782,14 +787,14 @@ export function ListProduce() {
             variant="outline"
             onClick={() => navigate(-1)}
             disabled={loading}
-            className="flex-1 h-12 border-2 border-[#E0E0E0] hover:bg-[#F5F5F5]"
+            className="flex-1 h-12 border-2 border-[var(--gray-200)] hover:bg-[var(--gray-50)]"
           >
             Cancel
           </Button>
           <Button
             type="submit"
             disabled={checking || loading || !formData.category || !formData.produce || !formData.quantity || !formData.price}
-            className="flex-1 h-12 bg-[#2D5016] hover:bg-[#234010] text-white disabled:opacity-50"
+            className="flex-1 h-12 bg-[var(--accent-500)] hover:bg-[var(--accent-600)] text-white disabled:opacity-50"
           >
             {checking ? (
               <>

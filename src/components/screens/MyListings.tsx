@@ -275,10 +275,10 @@ export function MyListings() {
     resolveImageUrl(images?.[0], FALLBACK_IMG);
 
   return (
-    <div className="min-h-screen bg-[#F5F5F5] pb-20">
+    <div className="min-h-screen bg-[var(--gray-50)] pb-20">
       {/* Offline Banner */}
       {!isOnline && (
-        <div className="bg-[#FFA726] text-[#2C2C2C] px-4 py-2 flex items-center justify-center gap-2 text-sm font-medium">
+        <div className="offline-banner flex items-center justify-center gap-2 text-sm font-medium">
           <WifiOff className="w-4 h-4" />
           <span>You're offline. Showing cached listings.</span>
         </div>
@@ -286,7 +286,7 @@ export function MyListings() {
 
       {/* Pending Sync Banner – shows when online and there are pending offline listings */}
       {isOnline && pendingListings.length > 0 && (
-        <div className="bg-[#2D5016] text-white px-4 py-2.5 flex items-center justify-between gap-3">
+        <div className="bg-[var(--primary-800)] text-white px-4 py-2.5 flex items-center justify-between gap-3">
           <div className="flex items-center gap-2 text-sm">
             <CloudUpload className="w-4 h-4 flex-shrink-0" />
             <span>
@@ -296,7 +296,7 @@ export function MyListings() {
           <button
             onClick={handleSyncAll}
             disabled={syncing}
-            className="flex items-center gap-1.5 bg-white text-[#2D5016] font-semibold text-xs px-3 py-1.5 rounded-full hover:bg-[#F5F5F5] transition-colors disabled:opacity-60 flex-shrink-0"
+            className="flex items-center gap-1.5 bg-white text-[var(--primary-800)] font-semibold text-xs px-3 py-1.5 rounded-full hover:bg-[var(--gray-50)] transition-colors disabled:opacity-60 flex-shrink-0"
           >
             {syncing ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <CloudUpload className="w-3.5 h-3.5" />}
             {syncing ? "Syncing…" : "Sync Now"}
@@ -321,93 +321,98 @@ export function MyListings() {
       )}
 
       {/* Header */}
-      <div className="sticky top-0 bg-white border-b border-[#E0E0E0] z-10 shadow-sm">
+      <div className="sticky top-0 bg-white border-b border-[var(--gray-200)] z-10 shadow-sm">
         <div className="px-4 py-4 flex items-center gap-3">
           <button
             onClick={() => navigate("/farmer/dashboard")}
-            className="p-2 hover:bg-[#F5F5F5] rounded-full transition-colors"
+            className="p-2 hover:bg-[var(--gray-100)] rounded-full transition-colors"
           >
-            <ArrowLeft className="w-5 h-5 text-[#2C2C2C]" />
+            <ArrowLeft className="w-5 h-5 text-[var(--gray-800)]" />
           </button>
-          <h1 className="text-xl font-semibold text-[#2C2C2C] flex-1">My Listings</h1>
-          <button className="p-2 hover:bg-[#F5F5F5] rounded-full transition-colors">
-            <Filter className="w-5 h-5 text-[#2C2C2C]" />
+          <h1
+            className="flex-1 text-[var(--gray-900)]"
+            style={{ fontFamily: "var(--font-heading)", fontSize: "1.4rem", fontWeight: 800 }}
+          >
+            My Listings
+          </h1>
+          <button className="p-2 hover:bg-[var(--gray-100)] rounded-full transition-colors">
+            <Filter className="w-5 h-5 text-[var(--gray-800)]" />
           </button>
         </div>
 
         {/* Search Bar */}
         <div className="px-4 pb-4">
           <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-[#757575]" />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-[var(--gray-500)]" />
             <input
               type="text"
               placeholder="Search listings..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full h-12 pl-10 pr-4 bg-[#F5F5F5] border border-[#E0E0E0] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#2D5016] focus:border-transparent"
+              className="w-full h-12 pl-10 pr-4 bg-[var(--gray-50)] border border-[var(--gray-200)] rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--accent-600)] focus:border-transparent text-sm"
             />
           </div>
         </div>
 
         {/* Tabs */}
-        <div className="flex border-b border-[#E0E0E0] overflow-x-auto">
+        <div className="flex border-b border-[var(--gray-200)] overflow-x-auto bg-white">
           <button
             onClick={() => setActiveTab("active")}
-            className={`flex-1 min-w-[80px] px-4 py-3 text-sm font-medium transition-colors relative whitespace-nowrap ${
+            className={`flex-1 min-w-[80px] px-4 py-3 text-xs font-medium transition-colors relative whitespace-nowrap ${
               activeTab === "active"
-                ? "text-[#2D5016]"
-                : "text-[#757575] hover:text-[#2C2C2C]"
+                ? "text-[var(--primary-800)]"
+                : "text-[var(--gray-600)] hover:text-[var(--gray-800)]"
             }`}
           >
             Active ({countByStatus("active")})
             {activeTab === "active" && (
-              <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#2D5016]"></div>
+              <div className="absolute bottom-0 left-4 right-4 h-0.5 bg-[var(--primary-700)] rounded-full"></div>
             )}
           </button>
           <button
             onClick={() => setActiveTab("sold")}
-            className={`flex-1 min-w-[70px] px-4 py-3 text-sm font-medium transition-colors relative whitespace-nowrap ${
+            className={`flex-1 min-w-[70px] px-4 py-3 text-xs font-medium transition-colors relative whitespace-nowrap ${
               activeTab === "sold"
-                ? "text-[#2D5016]"
-                : "text-[#757575] hover:text-[#2C2C2C]"
+                ? "text-[var(--primary-800)]"
+                : "text-[var(--gray-600)] hover:text-[var(--gray-800)]"
             }`}
           >
             Sold ({countByStatus("sold")})
             {activeTab === "sold" && (
-              <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#2D5016]"></div>
+              <div className="absolute bottom-0 left-4 right-4 h-0.5 bg-[var(--primary-700)] rounded-full"></div>
             )}
           </button>
           <button
             onClick={() => setActiveTab("expired")}
-            className={`flex-1 min-w-[80px] px-4 py-3 text-sm font-medium transition-colors relative whitespace-nowrap ${
+            className={`flex-1 min-w-[80px] px-4 py-3 text-xs font-medium transition-colors relative whitespace-nowrap ${
               activeTab === "expired"
-                ? "text-[#2D5016]"
-                : "text-[#757575] hover:text-[#2C2C2C]"
+                ? "text-[var(--primary-800)]"
+                : "text-[var(--gray-600)] hover:text-[var(--gray-800)]"
             }`}
           >
             Expired ({countByStatus("expired")})
             {activeTab === "expired" && (
-              <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#2D5016]"></div>
+              <div className="absolute bottom-0 left-4 right-4 h-0.5 bg-[var(--primary-700)] rounded-full"></div>
             )}
           </button>
           <button
             onClick={() => setActiveTab("pending")}
-            className={`flex-1 min-w-[80px] px-4 py-3 text-sm font-medium transition-colors relative whitespace-nowrap ${
+            className={`flex-1 min-w-[80px] px-4 py-3 text-xs font-medium transition-colors relative whitespace-nowrap ${
               activeTab === "pending"
-                ? "text-[#E65100]"
-                : "text-[#757575] hover:text-[#2C2C2C]"
+                ? "text-[var(--warning-amber)]"
+                : "text-[var(--gray-600)] hover:text-[var(--gray-800)]"
             }`}
           >
             <span className="flex items-center justify-center gap-1.5">
               Pending
               {pendingListings.length > 0 && (
-                <span className="inline-flex items-center justify-center w-4 h-4 text-[10px] font-bold rounded-full bg-[#E65100] text-white">
+                <span className="inline-flex items-center justify-center w-4 h-4 text-[10px] font-bold rounded-full bg-[var(--warning-amber)] text-white">
                   {pendingListings.length}
                 </span>
               )}
             </span>
             {activeTab === "pending" && (
-              <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#E65100]"></div>
+              <div className="absolute bottom-0 left-4 right-4 h-0.5 bg-[var(--warning-amber)] rounded-full"></div>
             )}
           </button>
         </div>
@@ -419,8 +424,8 @@ export function MyListings() {
           {/* Section header */}
           <div className="flex items-center justify-between mb-1">
             <div>
-              <h2 className="text-base font-semibold text-[#2C2C2C]">Offline – Pending Sync</h2>
-              <p className="text-xs text-[#757575] mt-0.5">
+              <h2 className="text-base font-semibold text-[var(--gray-900)]">Offline – Pending Sync</h2>
+              <p className="text-xs text-[var(--gray-600)] mt-0.5">
                 {pendingListings.length === 0
                   ? "No pending listings. All synced!"
                   : `${pendingListings.length} listing${pendingListings.length > 1 ? "s" : ""} saved offline, waiting to be uploaded.`}
@@ -430,7 +435,7 @@ export function MyListings() {
               <button
                 onClick={handleSyncAll}
                 disabled={syncing}
-                className="flex items-center gap-1.5 bg-[#2D5016] text-white font-semibold text-xs px-3 py-2 rounded-full hover:bg-[#234010] transition-colors disabled:opacity-60"
+                className="flex items-center gap-1.5 bg-[var(--primary-800)] text-white font-semibold text-xs px-3 py-2 rounded-full hover:bg-[var(--primary-900)] transition-colors disabled:opacity-60"
               >
                 {syncing ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <CloudUpload className="w-3.5 h-3.5" />}
                 {syncing ? "Syncing…" : "Sync All"}
@@ -447,16 +452,16 @@ export function MyListings() {
 
           {pendingListings.length === 0 && (
             <div className="flex flex-col items-center justify-center py-16 text-center">
-              <div className="w-16 h-16 rounded-full bg-[#E8F5E9] flex items-center justify-center mx-auto mb-4">
-                <CheckCircle2 className="w-8 h-8 text-[#4CAF50]" />
+              <div className="w-16 h-16 rounded-full bg-[var(--success-bg)] flex items-center justify-center mx-auto mb-4">
+                <CheckCircle2 className="w-8 h-8 text-[var(--success)]" />
               </div>
-              <p className="text-[#2C2C2C] font-medium">All caught up!</p>
-              <p className="text-sm text-[#757575] mt-1">No offline listings waiting to sync.</p>
+              <p className="text-[var(--gray-900)] font-medium">All caught up!</p>
+              <p className="text-sm text-[var(--gray-600)] mt-1">No offline listings waiting to sync.</p>
             </div>
           )}
 
           {pendingListings.map((item) => (
-            <div key={item.localId} className="bg-white rounded-xl shadow-sm overflow-hidden">
+            <div key={item.localId} className="card bg-white overflow-hidden">
               <div className="p-4">
                 <div className="flex items-start justify-between gap-3 mb-2">
                   <div className="flex-1 min-w-0">
@@ -465,17 +470,17 @@ export function MyListings() {
                         Pending Sync
                       </span>
                     </div>
-                    <h3 className="font-semibold text-[#2C2C2C] truncate">
+                    <h3 className="font-semibold text-[var(--gray-900)] truncate">
                       {item.data.produceName || `Produce #${item.localId.slice(-4)}`}
                     </h3>
-                    <p className="text-sm text-[#757575]">
+                    <p className="text-sm text-[var(--gray-600)]">
                       {item.data.quantity_available} {item.data.unit}
                       {item.data.districtName ? ` · ${item.data.districtName}` : ""}
                     </p>
                   </div>
                   <button
                     onClick={() => handleDiscardPending(item.localId)}
-                    className="p-1.5 hover:bg-red-50 rounded-full text-[#9E9E9E] hover:text-red-500 transition-colors flex-shrink-0"
+                    className="p-1.5 hover:bg-red-50 rounded-full text-[var(--gray-400)] hover:text-red-500 transition-colors flex-shrink-0"
                     title="Discard this pending listing"
                   >
                     <Trash2 className="w-4 h-4" />
@@ -483,16 +488,16 @@ export function MyListings() {
                 </div>
 
                 <div className="flex items-center justify-between text-sm">
-                  <span className="font-bold text-[#2D5016]">
+                  <span className="font-bold text-[var(--primary-800)]">
                     USD {(Number(item.data.price_per_unit) * Number(item.data.quantity_available)).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} per {item.data.quantity_available} {item.data.unit}
                   </span>
-                  <span className="text-xs text-[#9E9E9E]">
+                  <span className="text-xs text-[var(--gray-400)]">
                     Saved {new Date(item.savedAt).toLocaleDateString(undefined, { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })}
                   </span>
                 </div>
 
                 {item.data.categoryName && (
-                  <p className="text-xs text-[#757575] mt-1">
+                  <p className="text-xs text-[var(--gray-600)] mt-1">
                     Category: {item.data.categoryName}
                     {item.data.deliveryAvailable ? " · Delivery available" : ""}
                     {item.data.negotiable ? " · Negotiable" : ""}
@@ -510,8 +515,8 @@ export function MyListings() {
         {/* Loading state */}
         {loading && (
           <div className="flex flex-col items-center justify-center py-16 gap-3">
-            <Loader2 className="w-8 h-8 text-[#2D5016] animate-spin" />
-            <p className="text-[#757575] text-sm">Loading listings...</p>
+            <Loader2 className="w-8 h-8 text-[var(--primary-700)] animate-spin" />
+            <p className="text-[var(--gray-600)] text-sm">Loading listings...</p>
           </div>
         )}
 
@@ -523,7 +528,7 @@ export function MyListings() {
             <Button
               onClick={fetchListings}
               variant="outline"
-              className="border-[#2D5016] text-[#2D5016]"
+              className="border-[var(--primary-700)] text-[var(--primary-700)] hover:bg-[var(--primary-50)]"
             >
               Retry
             </Button>
@@ -535,11 +540,11 @@ export function MyListings() {
           <div
             key={listing.id}
             onClick={() => navigate(`/product/${listing.id}`)}
-            className="bg-white rounded-xl shadow-sm overflow-hidden hover:shadow-md transition-shadow cursor-pointer"
+            className="card bg-white overflow-hidden hover:shadow-md transition-shadow cursor-pointer border border-[var(--gray-100)]"
           >
             <div className="flex gap-4 p-4">
               {/* Image */}
-              <div className="w-24 h-24 rounded-lg overflow-hidden bg-[#F5F5F5] flex-shrink-0">
+              <div className="w-24 h-24 rounded-lg overflow-hidden bg-[var(--gray-100)] flex-shrink-0">
                 <img
                   src={getImageUrl(listing.images)}
                   alt={listing.title || listing.produce_type?.name}
@@ -558,10 +563,10 @@ export function MyListings() {
               <div className="flex-1 min-w-0">
                 <div className="flex items-start justify-between gap-2 mb-2">
                   <div className="flex-1 min-w-0">
-                    <h3 className="font-semibold text-[#2C2C2C] truncate">
+                    <h3 className="font-semibold text-[var(--gray-900)] truncate">
                       {listing.title || listing.produce_type?.name}
                     </h3>
-                    <p className="text-sm text-[#757575]">
+                    <p className="text-sm text-[var(--gray-600)]">
                       {listing.quantity_available} {listing.unit}
                     </p>
                   </div>
@@ -574,9 +579,9 @@ export function MyListings() {
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
                         <button
-                          className="p-1 hover:bg-[#F5F5F5] rounded-full transition-colors"
+                          className="p-1 hover:bg-[var(--gray-100)] rounded-full transition-colors"
                         >
-                          <MoreVertical className="w-5 h-5 text-[#757575]" />
+                          <MoreVertical className="w-5 h-5 text-[var(--gray-500)]" />
                         </button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
@@ -588,14 +593,14 @@ export function MyListings() {
                         </DropdownMenuItem>
                         <DropdownMenuItem
                           onClick={(e: React.MouseEvent) => { e.stopPropagation(); openEdit(listing); }}
-                          className="gap-2 text-[#2D5016]"
+                          className="gap-2 text-[var(--primary-800)]"
                         >
                           <Pencil className="w-4 h-4" /> Edit Listing
                         </DropdownMenuItem>
                         {listing.status !== "active" && (
                           <DropdownMenuItem
                             onClick={(e: React.MouseEvent) => { e.stopPropagation(); handleStatusChange(listing, "active"); }}
-                            className="gap-2 text-[#4CAF50]"
+                            className="gap-2 text-[var(--success)]"
                           >
                             <CheckCircle2 className="w-4 h-4" /> Mark as Active
                           </DropdownMenuItem>
@@ -611,7 +616,7 @@ export function MyListings() {
                         {listing.status !== "expired" && (
                           <DropdownMenuItem
                             onClick={(e: React.MouseEvent) => { e.stopPropagation(); handleStatusChange(listing, "expired"); }}
-                            className="gap-2 text-[#757575]"
+                            className="gap-2 text-[var(--gray-600)]"
                           >
                             <CheckCircle2 className="w-4 h-4" /> Mark as Expired
                           </DropdownMenuItem>
@@ -630,29 +635,29 @@ export function MyListings() {
                 </div>
 
                 <div className="flex items-center gap-2 mb-3">
-                  <span className="text-lg font-bold text-[#2D5016]">
+                  <span className="text-lg font-bold text-[var(--primary-800)]">
                     USD {(Number(listing.price_per_unit) * Number(listing.quantity_available)).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                   </span>
-                  <span className="text-sm text-[#757575]">
+                  <span className="text-sm text-[var(--gray-600)]">
                     per {listing.quantity_available} {listing.unit}
                   </span>
                 </div>
 
                 <div className="flex items-center gap-4 text-sm">
-                  <div className="flex items-center gap-1 text-[#757575]">
+                  <div className="flex items-center gap-1 text-[var(--gray-600)]">
                     <Eye className="w-4 h-4" />
                     <span>{listing.views ?? 0}</span>
                   </div>
-                  <div className="flex items-center gap-1 text-[#757575]">
+                  <div className="flex items-center gap-1 text-[var(--gray-600)]">
                     <MessageCircle className="w-4 h-4" />
                     <span>{listing.inquiries ?? 0}</span>
                   </div>
                   <span className={`text-xs px-2 py-0.5 rounded-full font-medium ml-auto capitalize ${
                     listing.status === "active"
-                      ? "bg-[#4CAF50]/10 text-[#4CAF50]"
+                      ? "bg-[var(--success-bg)] text-[var(--success)]"
                       : listing.status === "sold"
                       ? "bg-blue-50 text-blue-600"
-                      : "bg-gray-100 text-gray-500"
+                      : "bg-[var(--gray-100)] text-[var(--gray-600)]"
                   }`}>
                     {listing.status}
                   </span>
@@ -665,22 +670,22 @@ export function MyListings() {
         {/* Empty state */}
         {!loading && !error && filteredListings.length === 0 && (
           <div className="text-center py-12">
-            <div className="w-20 h-20 rounded-full bg-[#F5F5F5] flex items-center justify-center mx-auto mb-4">
-              <Package className="w-10 h-10 text-[#757575]" />
+            <div className="w-20 h-20 rounded-full bg-[var(--gray-100)] flex items-center justify-center mx-auto mb-4">
+              <Package className="w-10 h-10 text-[var(--gray-500)]" />
             </div>
             {activeTab === "active" ? (
               <>
-                <p className="text-[#757575] mb-4">You haven't listed any produce yet</p>
+                <p className="text-[var(--gray-600)] mb-4">You haven't listed any produce yet</p>
                 <Button
                   onClick={() => navigate("/farmer/list-produce")}
-                  className="bg-[#2D5016] hover:bg-[#234010] text-white"
+                  className="bg-[var(--accent-500)] hover:bg-[var(--accent-600)] text-white rounded-xl"
                 >
                   <Plus className="w-5 h-5 mr-2" />
                   Create Your First Listing
                 </Button>
               </>
             ) : (
-              <p className="text-[#757575]">No {activeTab} listings found</p>
+              <p className="text-[var(--gray-600)]">No {activeTab} listings found</p>
             )}
           </div>
         )}
@@ -690,7 +695,7 @@ export function MyListings() {
       {/* Floating Action Button */}
       <button
         onClick={() => navigate("/farmer/list-produce")}
-        className="fixed bottom-24 right-6 w-14 h-14 rounded-full bg-[#2D5016] hover:bg-[#234010] text-white shadow-lg flex items-center justify-center transition-all hover:scale-110 z-40"
+        className="fixed bottom-24 right-6 w-14 h-14 rounded-full bg-[var(--accent-500)] hover:bg-[var(--accent-600)] text-white shadow-lg flex items-center justify-center transition-all hover:scale-110 z-40"
       >
         <Plus className="w-6 h-6" />
       </button>
@@ -708,8 +713,8 @@ export function MyListings() {
             <div className="flex items-center justify-center w-12 h-12 rounded-full bg-red-50 mx-auto mb-4">
               <Trash2 className="w-6 h-6 text-red-500" />
             </div>
-            <h3 className="text-lg font-semibold text-[#2C2C2C] text-center mb-2">Delete Listing?</h3>
-            <p className="text-sm text-[#757575] text-center mb-6">
+            <h3 className="text-lg font-semibold text-[var(--gray-900)] text-center mb-2">Delete Listing?</h3>
+            <p className="text-sm text-[var(--gray-600)] text-center mb-6">
               This listing will be permanently removed and cannot be undone.
             </p>
             <div className="flex gap-3">
@@ -741,12 +746,12 @@ export function MyListings() {
             className="bg-white w-full sm:max-w-md rounded-t-2xl sm:rounded-2xl shadow-xl overflow-y-auto max-h-[90vh]"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="flex items-center justify-between px-5 pt-5 pb-3 border-b border-[#E0E0E0]">
-              <h2 className="text-lg font-semibold text-[#2C2C2C]">Edit Listing</h2>
+            <div className="flex items-center justify-between px-5 pt-5 pb-3 border-b border-[var(--gray-200)]">
+              <h2 className="text-lg font-semibold text-[var(--gray-900)]">Edit Listing</h2>
               <button
                 onClick={() => setEditListing(null)}
                 disabled={editSaving}
-                className="p-1 hover:bg-[#F5F5F5] rounded-full"
+                className="p-1 hover:bg-[var(--gray-100)] rounded-full"
               >
                 <Trash2 className="w-4 h-4 text-[#757575] rotate-45" />
               </button>
@@ -828,7 +833,7 @@ export function MyListings() {
                 </Button>
                 <Button
                   type="submit"
-                  className="flex-1 bg-[#2D5016] hover:bg-[#234010] text-white"
+                  className="flex-1 bg-[var(--accent-500)] hover:bg-[var(--accent-600)] text-white"
                   disabled={editSaving}
                 >
                   {editSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : "Save Changes"}

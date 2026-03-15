@@ -14,6 +14,7 @@ import {
 import type { MarketPrice } from "../../lib/types";
 import { useAuth } from "../../lib/useAuth";
 import { useOnlineStatus } from "../../lib/useOnlineStatus";
+import { AppShell } from "../layout/AppShell";
 import { Alert } from "../ui/alert";
 import { Button } from "../ui/button";
 import { Input } from "../ui/input";
@@ -416,7 +417,11 @@ export function ListProduce() {
   };
 
   return (
-    <div className="min-h-screen bg-[var(--gray-50)]">
+    <AppShell
+      title="List produce"
+      subtitle="Create a new listing with offline-friendly syncing"
+      userTypeOverride="farmer"
+    >
       {/* Offline Banner */}
       {(!isOnline || demoOfflineMode) && (
         <div className="offline-banner flex items-center gap-2 text-sm font-medium">
@@ -817,6 +822,6 @@ export function ListProduce() {
           </Button>
         </div>
       </form>
-    </div>
+    </AppShell>
   );
 }

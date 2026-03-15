@@ -6,7 +6,7 @@ import { getPendingListings } from "../../lib/offlineStorage";
 import type { Listing, Notification } from "../../lib/types";
 import { useAuth } from "../../lib/useAuth";
 import { useOnlineStatus } from "../../lib/useOnlineStatus";
-import { BottomNav } from "../BottomNav";
+import { AppShell } from "../layout/AppShell";
 import { Button } from "../ui/button";
 
 export function FarmerDashboard() {
@@ -112,7 +112,11 @@ export function FarmerDashboard() {
   };
 
   return (
-    <div className="min-h-screen bg-[var(--gray-50)] pb-20">
+    <AppShell
+      title="Farmer dashboard"
+      subtitle="Track your listings, activity, and market insights"
+      userTypeOverride="farmer"
+    >
       {/* Offline Banner */}
       {!isOnline && (
         <div className="offline-banner flex items-center gap-2 text-sm font-medium">
@@ -335,7 +339,7 @@ export function FarmerDashboard() {
       </div>
 
       {/* Market Insights */}
-      <div className="px-4 mb-6">
+      <div className="px-4 mb-2 md:mb-6">
         <h2 className="text-lg font-semibold text-[var(--gray-900)] mb-3">Market Insights</h2>
         <div className="space-y-3">
           <div className="bg-gradient-to-r from-[#F5A623]/10 to-[#FF6B35]/10 rounded-xl p-4 border-l-4 border-[#F5A623]">
@@ -359,9 +363,6 @@ export function FarmerDashboard() {
           </div>
         </div>
       </div>
-
-      {/* Bottom Navigation */}
-      <BottomNav userType="farmer" />
-    </div>
+    </AppShell>
   );
 }

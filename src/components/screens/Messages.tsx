@@ -4,7 +4,7 @@ import { useNavigate } from "react-router";
 import { messagingApi } from "../../lib/api";
 import type { Conversation } from "../../lib/types";
 import { useOnlineStatus } from "../../lib/useOnlineStatus";
-import { BottomNav } from "../BottomNav";
+import { AppShell } from "../layout/AppShell";
 
 // Static fallback conversations
 const FALLBACK_CONVERSATIONS: Conversation[] = [
@@ -73,7 +73,10 @@ export function Messages() {
   );
 
   return (
-    <div className="min-h-screen bg-[var(--gray-50)] pb-20">
+    <AppShell
+      title="Messages"
+      subtitle="Conversations between farmers and buyers"
+    >
       {/* Offline Banner */}
       {!isOnline && (
         <div className="offline-banner flex items-center gap-2 text-sm font-medium">
@@ -188,8 +191,6 @@ export function Messages() {
           ))}
         </div>
       )}
-
-      <BottomNav userType="farmer" />
-    </div>
+    </AppShell>
   );
 }

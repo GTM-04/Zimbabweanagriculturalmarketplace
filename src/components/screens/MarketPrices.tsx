@@ -18,7 +18,7 @@ import { useNavigate } from "react-router";
 import { pricingApi } from "../../lib/api";
 import type { MarketPrice } from "../../lib/types";
 import { useOnlineStatus } from "../../lib/useOnlineStatus";
-import { BottomNav } from "../BottomNav";
+import { AppShell } from "../layout/AppShell";
 
 type PriceWithMeta = MarketPrice & { _change?: number; _trend?: string; category?: string };
 
@@ -341,7 +341,10 @@ export function MarketPrices() {
   };
 
   return (
-    <div className="min-h-screen bg-[var(--gray-50)] pb-20">
+    <AppShell
+      title="Market prices"
+      subtitle="District-level price trends across Zimbabwe"
+    >
       {/* Offline banner */}
       {!isOnline && (
         <div className="offline-banner flex items-center gap-2 text-sm font-medium">
@@ -757,7 +760,6 @@ export function MarketPrices() {
         </div>
       )}
 
-      <BottomNav userType="farmer" />
-    </div>
+    </AppShell>
   );
 }

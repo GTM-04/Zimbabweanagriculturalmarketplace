@@ -1,14 +1,14 @@
 import {
-    ArrowLeft,
-    Calendar,
-    CheckCircle,
-    Heart,
-    Loader2,
-    MapPin,
-    MessageCircle,
-    Phone,
-    Share2,
-    Star
+  ArrowLeft,
+  Calendar,
+  CheckCircle,
+  Heart,
+  Loader2,
+  MapPin,
+  MessageCircle,
+  Phone,
+  Share2,
+  Star
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router";
@@ -254,10 +254,10 @@ export function ProductDetail() {
       </div>
 
       {/* Content */}
-      <div className="p-4">
+      <div className="p-4 space-y-6">
         {/* Product Header */}
-        <div className="mb-4">
-          <div className="flex items-start justify-between gap-3 mb-2">
+        <div className="mb-6">
+          <div className="flex items-start justify-between gap-4 mb-3">
             <h1
               className="flex-1 text-[var(--gray-900)]"
               style={{ fontFamily: "var(--font-heading)", fontSize: "1.6rem", fontWeight: 800 }}
@@ -272,8 +272,8 @@ export function ProductDetail() {
         </div>
 
         {/* Price Card */}
-        <div className="card bg-white border border-[var(--primary-50)] mb-4">
-          <div className="flex items-baseline gap-2 mb-2">
+        <div className="card bg-white border border-[var(--primary-50)] mb-6">
+          <div className="flex items-baseline gap-2 mb-3">
             <span className="text-3xl font-bold text-[var(--primary-800)]">
               {currency} {(Number(listing.price_per_unit) * Number(listing.quantity_available)).toLocaleString(
                 undefined,
@@ -303,10 +303,10 @@ export function ProductDetail() {
         </div>
 
         {/* Quantity & Availability */}
-        <div className="card bg-white border border-[var(--gray-200)] mb-4">
-          <div className="grid grid-cols-2 gap-4">
+        <div className="card bg-white border border-[var(--gray-200)] mb-6">
+          <div className="grid grid-cols-2 gap-5">
             <div>
-              <p className="text-xs text-[var(--gray-600)] mb-1">Available Quantity</p>
+              <p className="text-xs text-[var(--gray-600)] mb-2">Available Quantity</p>
               <p className="text-lg font-semibold text-[var(--gray-900)]">
                 {listing.quantity_available} {listing.unit}
               </p>

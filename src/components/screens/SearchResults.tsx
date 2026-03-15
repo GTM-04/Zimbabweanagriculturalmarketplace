@@ -5,7 +5,7 @@ import { listingsApi, resolveImageUrl } from "../../lib/api";
 import { getFarmerById, produceListings } from "../../lib/data";
 import type { Listing } from "../../lib/types";
 import { useOnlineStatus } from "../../lib/useOnlineStatus";
-import { BottomNav } from "../BottomNav";
+import { AppShell } from "../layout/AppShell";
 
 const fallbackImage = "https://images.unsplash.com/photo-1761370980657-22586ea44093?w=400";
 
@@ -93,7 +93,11 @@ export function SearchResults() {
   }, [listings, searchQuery]);
 
   return (
-    <div className="min-h-screen bg-[var(--gray-50)] pb-20">
+    <AppShell
+      title="Search results"
+      subtitle="Browse active listings that match your search"
+      userTypeOverride="buyer"
+    >
       {/* Header */}
       <div className="sticky top-0 bg-white border-b border-[var(--gray-200)] z-10 shadow-sm">
         <div className="px-4 py-3 flex items-center gap-3">
@@ -173,9 +177,9 @@ export function SearchResults() {
       </div>
 
       {/* Results */}
-      <div className="p-4">
+      <div className="p-4 space-y-4">
         {!isOnline && (
-          <div className="mb-3 rounded-xl border border-[#FFD28A] bg-[#FFF6E6] px-3 py-2 text-xs text-[#7A4A00]">
+          <div className="mb-4 rounded-xl border border-[#FFD28A] bg-[#FFF6E6] px-4 py-3 text-xs text-[#7A4A00]">
             You are offline. Searching cached listings only.
           </div>
         )}
@@ -196,7 +200,7 @@ export function SearchResults() {
             </button>
           </div>
         ) : viewMode === "grid" ? (
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-2 gap-4">
             {filteredListings.map((listing) => (
                 <div
                   key={listing.id}
@@ -325,7 +329,6 @@ export function SearchResults() {
         )}
       </div>
 
-      <BottomNav userType="buyer" />
-    </div>
+    </AppShell>
   );
 }

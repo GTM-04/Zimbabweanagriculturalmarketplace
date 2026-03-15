@@ -1,5 +1,4 @@
 import {
-    ArrowLeft,
     Bell,
     Building2,
     CheckCircle,
@@ -21,7 +20,7 @@ import {
     ShoppingBag,
     Star,
     WifiOff,
-    X,
+    X
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router";
@@ -29,7 +28,7 @@ import { toast } from "sonner";
 import { listingsApi } from "../../lib/api";
 import type { User as UserType } from "../../lib/types";
 import { useAuth } from "../../lib/useAuth";
-import { BottomNav } from "../BottomNav";
+import { AppShell } from "../layout/AppShell";
 import { Button } from "../ui/button";
 import { Input } from "../ui/input";
 import { Label } from "../ui/label";
@@ -143,9 +142,11 @@ export function Profile() {
     { icon: Shield,    label: "Privacy Policy",                  action: () => toast.info("Coming soon") },
     { icon: Info,      label: "About Village to Marketplace",    action: () => toast.info("Village to Marketplace v1.0.0", { description: "Connecting Zimbabwe's farmers with buyers." }) },
   ];
-
   return (
-    <div className="min-h-screen bg-[var(--gray-50)] pb-20">
+    <AppShell
+      title="Profile"
+      subtitle="Account details, role, and preferences"
+    >
       {/* Offline banner */}
       {isOffline && (
         <div className="offline-banner flex items-center gap-2 text-sm font-medium">
@@ -154,32 +155,8 @@ export function Profile() {
         </div>
       )}
 
-      {/* Header */}
-      <div className="sticky top-0 bg-white border-b border-[var(--gray-200)] px-4 py-4 flex items-center gap-3 z-10 shadow-sm">
-        <button
-          onClick={() => navigate(-1)}
-          className="p-2 hover:bg-[var(--gray-100)] rounded-full transition-colors"
-        >
-          <ArrowLeft className="w-5 h-5 text-[var(--gray-800)]" />
-        </button>
-        <h1
-          className="flex-1 text-[var(--gray-900)]"
-          style={{ fontFamily: "var(--font-heading)", fontSize: "1.4rem", fontWeight: 800 }}
-        >
-          Profile
-        </h1>
-        {!isOffline && (
-          <button
-            onClick={handleRefresh}
-            className="text-xs text-[var(--accent-600)] font-medium hover:underline"
-          >
-            Refresh
-          </button>
-        )}
-      </div>
-
       {/* Cover & Avatar */}
-      <div className="relative">
+      <div className="relative mb-4">
         <div className="h-32 bg-gradient-to-r from-[var(--primary-800)] to-[var(--success)]" />
         <div className="absolute -bottom-12 left-4">
           <div className="w-24 h-24 rounded-full bg-white p-1 shadow-md">
@@ -379,8 +356,6 @@ export function Profile() {
         </button>
       </div>
 
-      <BottomNav userType={isFarmer ? "farmer" : "buyer"} />
-
       {/* Edit Profile Modal */}
       {editOpen && (
         <div
@@ -474,6 +449,6 @@ export function Profile() {
           </div>
         </div>
       )}
-    </div>
+    </AppShell>
   );
 }

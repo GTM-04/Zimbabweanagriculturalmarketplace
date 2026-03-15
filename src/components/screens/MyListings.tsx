@@ -4,20 +4,20 @@ import { useNavigate } from "react-router";
 import { toast } from "sonner";
 import { listingsApi, resolveImageUrl } from "../../lib/api";
 import {
-    getPendingListings,
-    markListingSynced,
-    removeSyncedListings,
-    type PendingListing,
+  getPendingListings,
+  markListingSynced,
+  removeSyncedListings,
+  type PendingListing,
 } from "../../lib/offlineStorage";
 import type { Listing } from "../../lib/types";
-import { BottomNav } from "../BottomNav";
+import { AppShell } from "../layout/AppShell";
 import { Button } from "../ui/button";
 import {
-    DropdownMenu,
-    DropdownMenuContent,
-    DropdownMenuItem,
-    DropdownMenuSeparator,
-    DropdownMenuTrigger,
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
 } from "../ui/dropdown-menu";
 import { Input } from "../ui/input";
 import { Label } from "../ui/label";
@@ -275,7 +275,11 @@ export function MyListings() {
     resolveImageUrl(images?.[0], FALLBACK_IMG);
 
   return (
-    <div className="min-h-screen bg-[var(--gray-50)] pb-20">
+    <AppShell
+      title="My listings"
+      subtitle="Review and manage all of your produce listings"
+      userTypeOverride="farmer"
+    >
       {/* Offline Banner */}
       {!isOnline && (
         <div className="offline-banner flex items-center justify-center gap-2 text-sm font-medium">
@@ -420,17 +424,17 @@ export function MyListings() {
 
       {/* Pending Sync Tab Content */}
       {activeTab === "pending" && (
-        <div className="p-4 space-y-3">
-          {/* Section header */}
-          <div className="flex items-center justify-between mb-1">
-            <div>
-              <h2 className="text-base font-semibold text-[var(--gray-900)]">Offline – Pending Sync</h2>
-              <p className="text-xs text-[var(--gray-600)] mt-0.5">
-                {pendingListings.length === 0
-                  ? "No pending listings. All synced!"
-                  : `${pendingListings.length} listing${pendingListings.length > 1 ? "s" : ""} saved offline, waiting to be uploaded.`}
-              </p>
-            </div>
+      <div className="p-4 space-y-4">
+        {/* Section header */}
+        <div className="flex items-center justify-between mb-2">
+          <div>
+            <h2 className="text-base font-semibold text-[var(--gray-900)]">Offline – Pending Sync</h2>
+            <p className="text-xs text-[var(--gray-600)] mt-1">
+              {pendingListings.length === 0
+                ? "No pending listings. All synced!"
+                : `${pendingListings.length} listing${pendingListings.length > 1 ? "s" : ""} saved offline, waiting to be uploaded.`}
+            </p>
+          </div>
             {isOnline && pendingListings.length > 0 && (
               <button
                 onClick={handleSyncAll}
@@ -463,9 +467,9 @@ export function MyListings() {
           {pendingListings.map((item) => (
             <div key={item.localId} className="card bg-white overflow-hidden">
               <div className="p-4">
-                <div className="flex items-start justify-between gap-3 mb-2">
+              <div className="flex items-start justify-between gap-3 mb-3">
                   <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 mb-1">
+                    <div className="flex items-center gap-2 mb-2">
                       <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-amber-100 text-amber-700">
                         Pending Sync
                       </span>
@@ -511,14 +515,14 @@ export function MyListings() {
 
       {/* Listings */}
       {activeTab !== "pending" && (
-      <div className="p-4 space-y-3">
-        {/* Loading state */}
-        {loading && (
-          <div className="flex flex-col items-center justify-center py-16 gap-3">
-            <Loader2 className="w-8 h-8 text-[var(--primary-700)] animate-spin" />
-            <p className="text-[var(--gray-600)] text-sm">Loading listings...</p>
-          </div>
-        )}
+        <div className="p-4 space-y-4">
+          {/* Loading state */}
+          {loading && (
+            <div className="flex flex-col items-center justify-center py-20 gap-4">
+              <Loader2 className="w-8 h-8 text-[var(--primary-700)] animate-spin" />
+              <p className="text-[var(--gray-600)] text-sm">Loading listings...</p>
+            </div>
+          )}
 
         {/* Error state */}
         {!loading && error && (
@@ -844,8 +848,7 @@ export function MyListings() {
         </div>
       )}
 
-      <BottomNav userType="farmer" />
-    </div>
+    </AppShell>
   );
 }
 

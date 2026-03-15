@@ -124,10 +124,10 @@ export function FarmerRegistration() {
       </div>
 
       {/* Form */}
-      <form onSubmit={handleSubmit} className="p-6 max-w-2xl mx-auto pb-24">
+      <form onSubmit={handleSubmit} className="p-6 max-w-2xl mx-auto pb-24 space-y-8">
         {/* Error Alert */}
         {error && (
-          <div className="mb-6">
+          <div className="mb-8">
             <Alert variant="destructive">
               <p className="text-sm">{error}</p>
             </Alert>
@@ -135,8 +135,8 @@ export function FarmerRegistration() {
         )}
 
         {/* Profile Photo */}
-        <div className="mb-8 flex flex-col items-center">
-          <div className="w-24 h-24 rounded-full bg-[var(--gray-50)] border-2 border-dashed border-[var(--gray-200)] flex items-center justify-center mb-3 relative group cursor-pointer hover:border-[var(--primary-700)] transition-colors">
+        <div className="flex flex-col items-center space-y-3">
+          <div className="w-24 h-24 rounded-full bg-[var(--gray-50)] border-2 border-dashed border-[var(--gray-200)] flex items-center justify-center relative group cursor-pointer hover:border-[var(--primary-700)] transition-colors">
             <Camera className="w-8 h-8 text-[var(--gray-500)] group-hover:text-[var(--primary-700)]" />
             <input type="file" accept="image/*" className="absolute inset-0 opacity-0 cursor-pointer" />
           </div>
@@ -144,7 +144,7 @@ export function FarmerRegistration() {
         </div>
 
         {/* Full Name */}
-        <div className="mb-6">
+        <div>
           <Label htmlFor="fullName">Full Name *</Label>
           <Input
             id="fullName"
@@ -153,12 +153,12 @@ export function FarmerRegistration() {
             value={formData.fullName}
             onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
             required
-            className="mt-2"
+            className="mt-3"
           />
         </div>
 
         {/* Phone Number */}
-        <div className="mb-6">
+        <div>
           <Label htmlFor="phone">Phone Number *</Label>
           <Input
             id="phone"
@@ -167,7 +167,7 @@ export function FarmerRegistration() {
             value={formData.phone}
             onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
             required
-            className="mt-2"
+            className="mt-3"
           />
           <p className="text-xs text-[var(--gray-600)] mt-1">Include Zimbabwe country code +263</p>
         </div>

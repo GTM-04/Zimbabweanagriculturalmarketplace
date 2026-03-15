@@ -83,14 +83,14 @@ export function BuyerRegistration() {
   return (
     <div className="min-h-screen bg-white">
       {/* Header */}
-      <div className="sticky top-0 bg-white border-b border-[#E0E0E0] px-4 py-4 flex items-center gap-3 z-10">
+      <div className="sticky top-0 bg-white border-b border-[var(--gray-200)] px-4 py-4 flex items-center gap-3 z-10">
         <button
           onClick={() => navigate(-1)}
-          className="p-2 hover:bg-[#F5F5F5] rounded-full transition-colors"
+          className="p-2 hover:bg-[var(--gray-100)] rounded-full transition-colors"
         >
-          <ArrowLeft className="w-5 h-5 text-[#2C2C2C]" />
+          <ArrowLeft className="w-5 h-5 text-[var(--gray-900)]" />
         </button>
-        <h1 className="text-xl font-semibold text-[#2C2C2C]">Buyer Registration</h1>
+        <h1 className="text-xl font-semibold text-[var(--gray-900)]">Buyer Registration</h1>
       </div>
 
       {/* Form */}
@@ -106,11 +106,11 @@ export function BuyerRegistration() {
 
         {/* Profile Photo */}
         <div className="mb-8 flex flex-col items-center">
-          <div className="w-24 h-24 rounded-full bg-[#F5F5F5] border-2 border-dashed border-[#E0E0E0] flex items-center justify-center mb-3 relative group cursor-pointer hover:border-[#4A90E2] transition-colors">
-            <Camera className="w-8 h-8 text-[#757575] group-hover:text-[#4A90E2]" />
+          <div className="w-24 h-24 rounded-full bg-[var(--gray-100)] border-2 border-dashed border-[var(--gray-200)] flex items-center justify-center mb-3 relative group cursor-pointer hover:border-[var(--info)] transition-colors">
+            <Camera className="w-8 h-8 text-[var(--gray-500)] group-hover:text-[var(--info)]" />
             <input type="file" accept="image/*" className="absolute inset-0 opacity-0 cursor-pointer" />
           </div>
-          <p className="text-sm text-[#757575]">Upload Profile Photo</p>
+          <p className="text-sm text-[var(--gray-500)]">Upload Profile Photo</p>
         </div>
 
         {/* Business/Full Name */}
@@ -139,7 +139,7 @@ export function BuyerRegistration() {
             required
             className="mt-2"
           />
-          <p className="text-xs text-[#757575] mt-1">Include Zimbabwe country code +263</p>
+          <p className="text-xs text-[var(--gray-500)] mt-1">Include Zimbabwe country code +263</p>
         </div>
 
         {/* Buyer Type */}
@@ -150,7 +150,7 @@ export function BuyerRegistration() {
             value={formData.buyerType}
             onChange={(e) => setFormData({ ...formData, buyerType: e.target.value })}
             required
-            className="mt-2 w-full h-12 px-4 bg-[#F5F5F5] border border-[#E0E0E0] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#4A90E2] focus:border-transparent"
+            className="mt-2 w-full h-12 px-4 bg-[var(--gray-100)] border border-[var(--gray-200)] rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary-700)] focus:border-transparent"
           >
             <option value="">Select buyer type</option>
             {buyerTypes.map((type) => (
@@ -169,7 +169,7 @@ export function BuyerRegistration() {
             value={formData.district}
             onChange={(e) => setFormData({ ...formData, district: e.target.value })}
             required
-            className="mt-2 w-full h-12 px-4 bg-[#F5F5F5] border border-[#E0E0E0] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#4A90E2] focus:border-transparent"
+            className="mt-2 w-full h-12 px-4 bg-[var(--gray-100)] border border-[var(--gray-200)] rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary-700)] focus:border-transparent"
           >
             <option value="">Select your district</option>
             {zimbabweDistricts.map((district) => (
@@ -209,12 +209,12 @@ export function BuyerRegistration() {
             <button
               type="button"
               onClick={() => setShowPassword(!showPassword)}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-[#757575] hover:text-[#2C2C2C]"
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--gray-500)] hover:text-[var(--gray-900)]"
             >
               {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
             </button>
           </div>
-          <p className="text-xs text-[#757575] mt-1">At least 8 characters</p>
+          <p className="text-xs text-[var(--gray-500)] mt-1">At least 8 characters</p>
         </div>
 
         {/* Confirm Password */}
@@ -233,7 +233,7 @@ export function BuyerRegistration() {
             <button
               type="button"
               onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-[#757575] hover:text-[#2C2C2C]"
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--gray-500)] hover:text-[var(--gray-900)]"
             >
               {showConfirmPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
             </button>
@@ -247,10 +247,10 @@ export function BuyerRegistration() {
             checked={formData.terms}
             onCheckedChange={(checked: boolean) => setFormData({ ...formData, terms: checked })}
           />
-          <label htmlFor="terms" className="text-sm text-[#757575] leading-relaxed cursor-pointer">
+          <label htmlFor="terms" className="text-sm text-[var(--gray-500)] leading-relaxed cursor-pointer">
             I agree to the{" "}
-            <span className="text-[#4A90E2] font-medium">Terms & Conditions</span> and{" "}
-            <span className="text-[#4A90E2] font-medium">Privacy Policy</span>
+            <span className="text-[var(--info)] font-medium">Terms & Conditions</span> and{" "}
+            <span className="text-[var(--info)] font-medium">Privacy Policy</span>
           </label>
         </div>
 
@@ -267,7 +267,7 @@ export function BuyerRegistration() {
             !formData.confirmPassword ||
             loading
           }
-          className="w-full h-12 bg-[#4A90E2] hover:bg-[#3A7BC2] text-white rounded-lg disabled:opacity-50 disabled:cursor-not-allowed"
+          className="w-full h-12 bg-[var(--primary-700)] hover:bg-[var(--primary-800)] text-white rounded-lg disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {loading ? (
             <>
@@ -281,12 +281,12 @@ export function BuyerRegistration() {
 
         {/* Login Link */}
         <div className="mt-6 text-center">
-          <p className="text-sm text-[#757575]">
+          <p className="text-sm text-[var(--gray-500)]">
             Already have an account?{" "}
             <button
               type="button"
               onClick={() => navigate("/login")}
-              className="text-[#4A90E2] font-medium hover:underline"
+              className="text-[var(--info)] font-medium hover:underline"
             >
               Sign In
             </button>

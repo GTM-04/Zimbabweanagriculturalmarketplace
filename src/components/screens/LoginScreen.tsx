@@ -475,7 +475,7 @@ export function LoginScreen() {
                   Your code is shown below and has been auto-filled in the next step.
                   It expires in 15 minutes.
                   {fpCountdown > 0 && (
-                    <span className="ml-1 text-[#FFA726] font-semibold">({fpCountdown}s remaining)</span>
+                    <span className="ml-1 text-[var(--accent-500)] font-semibold">({fpCountdown}s remaining)</span>
                   )}
                 </p>
 

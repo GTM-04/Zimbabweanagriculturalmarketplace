@@ -1,4 +1,4 @@
-import { AlertCircle, ArrowLeft, CheckCircle2, CloudUpload, Eye, Filter, Loader2, MessageCircle, MoreVertical, Pencil, Plus, Search, Trash2, WifiOff } from "lucide-react";
+import { AlertCircle, CheckCircle2, CloudUpload, Eye, Filter, Loader2, MessageCircle, MoreVertical, Pencil, Plus, Search, Trash2, WifiOff } from "lucide-react";
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router";
 import { toast } from "sonner";
@@ -324,42 +324,24 @@ export function MyListings() {
         </div>
       )}
 
-      {/* Header */}
-      <div className="sticky top-0 bg-white border-b border-[var(--gray-200)] z-10 shadow-sm">
-        <div className="px-4 py-4 flex items-center gap-3">
-          <button
-            onClick={() => navigate("/farmer/dashboard")}
-            className="p-2 hover:bg-[var(--gray-100)] rounded-full transition-colors"
-          >
-            <ArrowLeft className="w-5 h-5 text-[var(--gray-800)]" />
-          </button>
-          <h1
-            className="flex-1 text-[var(--gray-900)]"
-            style={{ fontFamily: "var(--font-heading)", fontSize: "1.4rem", fontWeight: 800 }}
-          >
-            My Listings
-          </h1>
-          <button className="p-2 hover:bg-[var(--gray-100)] rounded-full transition-colors">
-            <Filter className="w-5 h-5 text-[var(--gray-800)]" />
-          </button>
-        </div>
-
+      {/* Search + Tabs */}
+      <div className="mb-4">
         {/* Search Bar */}
-        <div className="px-4 pb-4">
+        <div className="mb-3">
           <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-[var(--gray-500)]" />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--gray-500)]" />
             <input
               type="text"
               placeholder="Search listings..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full h-12 pl-10 pr-4 bg-[var(--gray-50)] border border-[var(--gray-200)] rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--accent-600)] focus:border-transparent text-sm"
+              className="w-full h-10 pl-9 pr-4 bg-[var(--gray-50)] border border-[var(--gray-200)] rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--accent-600)] focus:border-transparent text-sm"
             />
           </div>
         </div>
 
         {/* Tabs */}
-        <div className="flex border-b border-[var(--gray-200)] overflow-x-auto bg-white">
+        <div className="flex border-b border-[var(--gray-200)] overflow-x-auto bg-white rounded-t-lg -mx-3 md:-mx-6 px-3 md:px-6">
           <button
             onClick={() => setActiveTab("active")}
             className={`flex-1 min-w-[80px] px-4 py-3 text-xs font-medium transition-colors relative whitespace-nowrap ${
@@ -576,7 +558,7 @@ export function MyListings() {
                   </div>
                   {actionLoadingId === listing.id ? (
                     <div className="p-1">
-                      <Loader2 className="w-5 h-5 text-[#757575] animate-spin" />
+                      <Loader2 className="w-5 h-5 text-[var(--gray-500)] animate-spin" />
                     </div>
                   ) : (
                     <div onClick={(e) => e.stopPropagation()}>
@@ -757,7 +739,7 @@ export function MyListings() {
                 disabled={editSaving}
                 className="p-1 hover:bg-[var(--gray-100)] rounded-full"
               >
-                <Trash2 className="w-4 h-4 text-[#757575] rotate-45" />
+                <Trash2 className="w-4 h-4 text-[var(--gray-500)] rotate-45" />
               </button>
             </div>
 

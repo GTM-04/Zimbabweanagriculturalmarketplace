@@ -1,6 +1,5 @@
 import {
     ArrowDownRight,
-    ArrowLeft,
     ArrowUpRight,
     Flame,
     Info,
@@ -14,7 +13,6 @@ import {
     WifiOff,
 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
-import { useNavigate } from "react-router";
 import { pricingApi } from "../../lib/api";
 import type { MarketPrice } from "../../lib/types";
 import { useOnlineStatus } from "../../lib/useOnlineStatus";
@@ -225,13 +223,13 @@ function TrendBadge({ trend, change }: { trend: "up" | "down" | "stable"; change
     </span>
   );
   if (trend === "down") return (
-    <span className="inline-flex items-center gap-0.5 px-2 py-0.5 rounded-full text-xs font-semibold bg-[#FFEBEE] text-[#EF5350]">
+    <span className="inline-flex items-center gap-0.5 px-2 py-0.5 rounded-full text-xs font-semibold bg-[var(--error-soft)] text-[var(--error)]">
       <ArrowDownRight className="w-3 h-3" />
       {change != null ? `${change}%` : "Down"}
     </span>
   );
   return (
-    <span className="inline-flex items-center gap-0.5 px-2 py-0.5 rounded-full text-xs font-semibold bg-[#F5F5F5] text-[#757575]">
+    <span className="inline-flex items-center gap-0.5 px-2 py-0.5 rounded-full text-xs font-semibold bg-[var(--gray-100)] text-[var(--gray-500)]">
       <Minus className="w-3 h-3" />
       Stable
     </span>
@@ -239,7 +237,6 @@ function TrendBadge({ trend, change }: { trend: "up" | "down" | "stable"; change
 }
 
 export function MarketPrices() {
-  const navigate = useNavigate();
   const isOnline = useOnlineStatus();
 
   const [searchQuery, setSearchQuery] = useState("");
@@ -353,56 +350,27 @@ export function MarketPrices() {
         </div>
       )}
       {isOnline && usingFallback && !loading && (
-        <div className="bg-[#FFF8E1] border-b border-[#FFE082] px-4 py-2 text-xs text-[#856404]">
+        <div className="bg-[var(--gray-50)] border-b border-[var(--gray-200)] px-4 py-2 text-xs text-[var(--gray-700)]">
           ⚠️ Could not reach server — showing estimated prices.
         </div>
       )}
 
-      {/* Header */}
-      <div className="sticky top-0 bg-white border-b border-[var(--gray-200)] z-10 shadow-sm">
-        <div className="px-4 py-4 flex items-center gap-3">
-          <button
-            onClick={() => navigate(-1)}
-            className="p-2 hover:bg-[var(--gray-100)] rounded-full transition-colors"
-          >
-            <ArrowLeft className="w-5 h-5 text-[var(--gray-800)]" />
-          </button>
-          <div className="flex-1">
-            <h1
-              className="text-[var(--gray-900)]"
-              style={{ fontFamily: "var(--font-heading)", fontSize: "1.4rem", fontWeight: 800 }}
-            >
-              Market Prices
-            </h1>
-            <p className="text-xs text-[var(--gray-600)]">
-              {usingFallback ? "Estimated data" : `Updated ${getTimeSinceUpdate()}`}
-            </p>
-          </div>
-          <button
-            onClick={() => fetchPrices(true)}
-            disabled={refreshing || !isOnline}
-            className="p-2 hover:bg-[var(--gray-100)] rounded-full transition-colors disabled:opacity-40"
-          >
-            <RefreshCw className={`w-5 h-5 text-[var(--gray-800)] ${refreshing ? "animate-spin" : ""}`} />
-          </button>
-        </div>
-
+      {/* Filters */}
+      <div className="mb-4 space-y-3">
         {/* Search */}
-        <div className="px-4 pb-3">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-[var(--gray-500)]" />
-            <input
-              type="text"
-              placeholder="Search produce…"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full h-10 pl-10 pr-4 bg-[var(--gray-50)] border border-[var(--gray-200)] rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--accent-600)] focus:border-transparent text-sm"
-            />
-          </div>
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--gray-500)]" />
+          <input
+            type="text"
+            placeholder="Search produce…"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="w-full h-10 pl-9 pr-4 bg-[var(--gray-50)] border border-[var(--gray-200)] rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--accent-600)] focus:border-transparent text-sm"
+          />
         </div>
 
         {/* Category filter chips */}
-        <div className="px-4 pb-3 overflow-x-auto">
+        <div className="overflow-x-auto pb-1">
           <div className="flex gap-2 min-w-max">
             {([{ id: "All", label: "All", icon: "🛒" }, ...Object.entries(PRICE_RANGES).map(([id, c]) => ({ id, label: c.label, icon: c.icon }))] as { id: string; label: string; icon: string }[]).map((cat) => (
               <button
@@ -422,7 +390,7 @@ export function MarketPrices() {
 
         {/* District filter – only show when we have multi-district data */}
         {districts.length > 2 && (
-          <div className="px-4 pb-3 overflow-x-auto">
+          <div className="overflow-x-auto pb-1">
             <div className="flex gap-2 min-w-max">
               {districts.map((d) => (
                 <button
@@ -444,7 +412,7 @@ export function MarketPrices() {
 
       {/* ── Trend Insights Panel ───────────────────────────────────────────── */}
       {!loading && filteredPrices.length > 0 && (
-        <div className="px-4 pt-4 space-y-4">
+        <div className="space-y-4">
 
           {/* 1. Market Pulse */}
           <div className="card bg-white shadow-sm">
@@ -503,7 +471,7 @@ export function MarketPrices() {
           {topGainers.length > 0 && (
             <div>
               <div className="flex items-center gap-1.5 mb-2">
-                <Flame className="w-4 h-4 text-[#FF6D00]" />
+                <Flame className="w-4 h-4 text-[var(--accent-600)]" />
                 <h2 className="text-sm font-semibold text-[var(--gray-900)]">Hot Right Now</h2>
                 <span className="text-xs text-[var(--gray-400)] ml-auto">Biggest gainers</span>
               </div>
@@ -596,12 +564,12 @@ export function MarketPrices() {
           )}
 
           {/* 5. Seasonal Tip */}
-          <div className="bg-gradient-to-r from-[#FFF8E1] to-[#FFFDE7] border border-[#FFE082] rounded-xl p-4">
+          <div className="bg-gradient-to-r from-[var(--accent-50)] to-[var(--accent-100)] border border-[var(--accent-200)] rounded-xl p-4">
             <div className="flex items-start gap-3">
               <span className="text-2xl leading-none mt-0.5">{activeTip.icon}</span>
               <div>
-                <p className="text-xs font-semibold text-[#856404] mb-1">March Seasonal Insight</p>
-                <p className="text-sm text-[#614F00] leading-snug">{activeTip.text}</p>
+                <p className="text-xs font-semibold text-[var(--gray-700)] mb-1">March Seasonal Insight</p>
+                <p className="text-sm text-[var(--gray-800)] leading-snug">{activeTip.text}</p>
               </div>
             </div>
           </div>
@@ -727,7 +695,7 @@ export function MarketPrices() {
 
       {/* Market Summary */}
       {!loading && filteredPrices.length > 0 && (
-        <div className="px-4 pb-6">
+        <div className="pb-6">
           <div className="bg-gradient-to-br from-[var(--primary-800)] to-[var(--success)] rounded-xl p-6 text-white">
             <h3 className="font-semibold mb-1">This Week's Summary</h3>
             <p className="text-sm text-white/80 mb-4">

@@ -39,15 +39,15 @@ export function FarmerDashboard() {
     switch (type) {
       case "new_message":
       case "inquiry":
-        return { icon: <MessageCircle className="w-5 h-5 text-[#F5A623]" />, bg: "bg-[#F5A623]/10" };
+        return { icon: <MessageCircle className="w-5 h-5 text-[var(--accent-600)]" />, bg: "bg-[var(--accent-50)]" };
       case "price_alert":
         return { icon: <TrendingUp className="w-5 h-5 text-[var(--success)]" />, bg: "bg-[var(--success-bg)]" };
       case "new_listing":
         return { icon: <Package className="w-5 h-5 text-[var(--primary-800)]" />, bg: "bg-[var(--primary-50)]" };
       case "order_status":
-        return { icon: <DollarSign className="w-5 h-5 text-[#4A90E2]" />, bg: "bg-[#4A90E2]/10" };
+        return { icon: <DollarSign className="w-5 h-5 text-[var(--info)]" />, bg: "bg-[var(--info-bg)]" };
       default:
-        return { icon: <Eye className="w-5 h-5 text-[#4A90E2]" />, bg: "bg-[#4A90E2]/10" };
+        return { icon: <Eye className="w-5 h-5 text-[var(--info)]" />, bg: "bg-[var(--info-bg)]" };
     }
   };
 
@@ -220,7 +220,7 @@ export function FarmerDashboard() {
       {/* Offline sync summary for pending listings */}
       {pendingOfflineCount > 0 && (
         <div className="mb-4">
-            <div className="rounded-xl border border-[#FFE082] bg-[#FFF8E1] px-3 py-2 text-xs text-[#7A4A00] flex flex-col gap-1">
+            <div className="rounded-xl border border-[var(--accent-200)] bg-[var(--accent-50)] px-3 py-2 text-xs text-[var(--gray-800)] flex flex-col gap-1">
             <div className="flex items-center justify-between gap-2">
               <span className="font-semibold">
                 {pendingOfflineCount} offline listing{pendingOfflineCount > 1 ? "s" : ""} waiting to sync
@@ -296,8 +296,8 @@ export function FarmerDashboard() {
               <div key={i} className="bg-white rounded-xl p-4 shadow-sm flex items-center gap-3">
                 <div className="w-10 h-10 rounded-full bg-[var(--gray-200)] animate-pulse flex-shrink-0" />
                 <div className="flex-1 space-y-2">
-                  <div className="h-3 bg-[#E0E0E0] rounded animate-pulse w-3/4" />
-                  <div className="h-2 bg-[#E0E0E0] rounded animate-pulse w-1/4" />
+                  <div className="h-3 bg-[var(--gray-200)] rounded animate-pulse w-3/4" />
+                  <div className="h-2 bg-[var(--gray-200)] rounded animate-pulse w-1/4" />
                 </div>
               </div>
             ))}

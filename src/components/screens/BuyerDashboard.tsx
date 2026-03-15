@@ -170,26 +170,32 @@ export function BuyerDashboard() {
       )}
 
       {/* Header summary */}
-      <div className="px-4 pt-2 pb-3 flex items-center justify-between gap-3">
+      <div className="rounded-2xl bg-white shadow-sm border border-[var(--gray-100)] p-4 mb-3 flex items-center justify-between gap-3">
         <div>
-          <p className="text-xs text-[var(--gray-600)] mb-1">Welcome back</p>
+          <p className="text-xs text-[var(--gray-500)] mb-0.5">Welcome back,</p>
           <h1
-            className="text-lg font-semibold text-[var(--gray-900)]"
+            className="text-lg font-bold text-[var(--gray-900)]"
             style={{ fontFamily: "var(--font-heading)", fontWeight: 800 }}
           >
             {user?.full_name || "Buyer"}
           </h1>
+          {user?.district && (
+            <div className="flex items-center gap-1 mt-0.5 text-[11px] text-[var(--gray-500)]">
+              <MapPin className="w-3 h-3" />
+              <span>{user.district}</span>
+            </div>
+          )}
         </div>
-        <button className="relative rounded-full p-2 bg-white shadow-sm">
-          <Bell className="h-4 w-4 text-[var(--gray-700)]" />
-          <span className="absolute -top-1 -right-1 inline-flex h-4 w-4 items-center justify-center rounded-full bg-[var(--accent-500)] text-[10px] text-white">
+        <button className="relative rounded-full p-2.5 bg-[var(--gray-100)] hover:bg-[var(--gray-200)] transition-colors">
+          <Bell className="h-5 w-5 text-[var(--gray-800)]" />
+          <span className="absolute -top-0.5 -right-0.5 inline-flex h-4 w-4 items-center justify-center rounded-full bg-[var(--accent-500)] text-[10px] text-white font-bold">
             3
           </span>
         </button>
       </div>
 
       {/* Search & category filters */}
-      <div className="px-4 pb-3">
+      <div className="mb-4">
         <div className="relative mb-3">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[var(--gray-500)]" />
           <input
@@ -200,7 +206,7 @@ export function BuyerDashboard() {
             className="w-full h-10 rounded-lg border border-[var(--gray-200)] bg-[var(--gray-50)] pl-9 pr-3 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--accent-600)] focus:border-transparent"
           />
         </div>
-        <div className="flex gap-2 overflow-x-auto">
+        <div className="flex gap-2 overflow-x-auto pb-1">
           <button
             onClick={() => setSelectedCategory("all")}
             className={`px-3 py-1.5 whitespace-nowrap rounded-full text-xs font-medium border transition-colors ${
@@ -229,7 +235,7 @@ export function BuyerDashboard() {
       </div>
 
       {/* Listings */}
-      <div className="px-4 pb-4">
+      <div className="pb-4">
         {loadingListings ? (
           <div className="flex flex-col items-center justify-center py-10 gap-2">
             <Loader2 className="h-6 w-6 animate-spin text-[var(--primary-700)]" />
@@ -290,13 +296,13 @@ export function BuyerDashboard() {
       </div>
 
       {/* Market insights */}
-      <div className="px-4 pb-4 md:pb-6">
+      <div className="pb-6">
         <h2 className="mb-2 text-lg font-semibold text-[var(--gray-900)]">Market insights</h2>
-        <div className="rounded-xl border border-[#DDE7F6] bg-gradient-to-r from-[#EEF5FF] to-[#F3FAF4] p-4">
+        <div className="rounded-xl border border-[var(--gray-200)] bg-gradient-to-r from-[var(--primary-50)] to-[var(--gray-50)] p-4">
           <div className="mb-3 flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <TrendingUp className="h-5 w-5 text-[#3D7EDB]" />
-              <p className="font-medium text-[#2C2C2C]">Price trends</p>
+              <TrendingUp className="h-5 w-5 text-[var(--info)]" />
+              <p className="font-medium text-[var(--gray-900)]">Price trends</p>
             </div>
             <div className="flex items-center gap-1 rounded-full bg-white p-1">
               <button
@@ -323,12 +329,12 @@ export function BuyerDashboard() {
           </div>
 
           {loadingTrends ? (
-            <div className="flex items-center gap-2 py-2 text-sm text-[#5E6A78]">
+            <div className="flex items-center gap-2 py-2 text-sm text-[var(--gray-600)]">
               <Loader2 className="h-4 w-4 animate-spin" />
               <span>Loading trend signals…</span>
             </div>
           ) : topTrendItems.length === 0 ? (
-            <p className="text-sm text-[#5E6A78]">
+            <p className="text-sm text-[var(--gray-600)]">
               No live trend data yet. Use Market Prices for current averages.
             </p>
           ) : (
@@ -343,17 +349,17 @@ export function BuyerDashboard() {
                     className="rounded-lg bg-white p-2.5"
                   >
                     <div className="mb-1 flex items-center justify-between text-sm">
-                      <span className="font-medium text-[#2C2C2C]">{trend.produce_type}</span>
+                      <span className="font-medium text-[var(--gray-900)]">{trend.produce_type}</span>
                       <span
-                        className={`${isUp ? "text-[var(--success)]" : "text-[#D14343]"} font-semibold`}
+                        className={`${isUp ? "text-[var(--success)]" : "text-[var(--error)]"} font-semibold`}
                       >
                         {isUp ? "+" : ""}
                         {change.toFixed(1)}%
                       </span>
                     </div>
-                    <div className="mb-1 h-2 overflow-hidden rounded-full bg-[#E9EEF4]">
+                    <div className="mb-1 h-2 overflow-hidden rounded-full bg-[var(--gray-200)]">
                       <div
-                        className={`h-full ${isUp ? "bg-[var(--success)]" : "bg-[#D14343]"}`}
+                        className={`h-full ${isUp ? "bg-[var(--success)]" : "bg-[var(--error)]"}`}
                         style={{ width: `${bar}%` }}
                       />
                     </div>
@@ -365,7 +371,7 @@ export function BuyerDashboard() {
 
           <button
             onClick={() => navigate("/market-prices")}
-            className="mt-3 text-sm font-medium text-[#3D7EDB] hover:underline"
+            className="mt-3 text-sm font-medium text-[var(--info)] hover:underline"
           >
             View all prices →
           </button>

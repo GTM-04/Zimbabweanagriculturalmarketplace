@@ -373,7 +373,7 @@ export function Profile() {
                 disabled={saving}
                 className="p-1 hover:bg-[var(--gray-100)] rounded-full"
               >
-                <X className="w-5 h-5 text-[#757575]" />
+                <X className="w-5 h-5 text-[var(--gray-500)]" />
               </button>
             </div>
 

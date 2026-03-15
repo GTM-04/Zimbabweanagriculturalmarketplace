@@ -207,7 +207,7 @@ export function FarmerDashboard() {
                 : `$${
                     totalEarnings > 0
                       ? totalEarnings.toLocaleString(undefined, {
-                          minimumFractionDigits: 0,
+                          minimumFractionDigits: 2,
                           maximumFractionDigits: 2,
                         })
                       : "—"

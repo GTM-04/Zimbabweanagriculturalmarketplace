@@ -146,7 +146,7 @@ export function AppShell({ children, title, subtitle, userTypeOverride }: AppShe
             <button
               type="button"
               title="Sign out"
-              onClick={() => { logout(); navigate("/login"); }}
+              onClick={async () => { await Promise.resolve(logout()); navigate("/login"); }}
               className="flex h-8 w-8 items-center justify-center rounded-md hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-colors"
             >
               <LogOut className="h-4 w-4" />

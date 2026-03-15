@@ -2639,6 +2639,10 @@ html {
   --info: #2196F3;
   --info-light: #42A5F5;
   --info-bg: #E3F2FD;
+  --error: #EF5350;
+  --error-light: #E57373;
+  --error-soft: rgba(239, 83, 80, 0.1);
+  --accent-soft: rgba(232, 167, 79, 0.12);
 
   /* Neutrals */
   --gray-50: #F9FAFB;

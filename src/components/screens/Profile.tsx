@@ -96,8 +96,8 @@ export function Profile() {
     }
   };
 
-  const handleLogout = () => {
-    logout();
+  const handleLogout = async () => {
+    await Promise.resolve(logout());
     navigate("/login");
   };
 
@@ -157,7 +157,7 @@ export function Profile() {
 
       {/* Cover & Avatar */}
       <div className="relative mb-4">
-        <div className="h-32 bg-gradient-to-r from-[var(--primary-800)] to-[var(--success)]" />
+        <div className="h-32 rounded-2xl bg-gradient-to-r from-[var(--primary-800)] to-[var(--success)]" />
         <div className="absolute -bottom-12 left-4">
           <div className="w-24 h-24 rounded-full bg-white p-1 shadow-md">
             <div className="w-full h-full rounded-full bg-[var(--primary-700)] flex items-center justify-center text-white text-3xl font-bold select-none">
@@ -167,7 +167,7 @@ export function Profile() {
         </div>
         <button
           onClick={() => setEditOpen(true)}
-          className="absolute top-4 right-4 flex items-center gap-1.5 px-3 py-1.5 bg-white/90 hover:bg-white rounded-lg text-sm font-medium text-[#2C2C2C] transition-colors shadow"
+          className="absolute top-4 right-4 flex items-center gap-1.5 px-3 py-1.5 bg-white/90 hover:bg-white rounded-lg text-sm font-medium text-[var(--gray-900)] transition-colors shadow"
         >
           <Edit3 className="w-3.5 h-3.5" />
           Edit Profile
@@ -175,12 +175,12 @@ export function Profile() {
       </div>
 
       {/* User Info */}
-      <div className="mt-14 px-4 pb-4 bg-white">
-        <div className="mb-2">
+      <div className="mt-14 px-4 pb-4 bg-white rounded-2xl shadow-sm border border-[var(--gray-100)]">
+        <div className="pt-4 mb-2">
           <div className="flex items-center gap-2 mb-1">
             <h2 className="text-xl font-bold text-[var(--gray-900)]">{displayName}</h2>
             {user.is_verified && (
-              <CheckCircle className="w-5 h-5 text-[#4A90E2]" />
+              <CheckCircle className="w-5 h-5 text-[var(--info)]" />
             )}
           </div>
           {orgName && (
@@ -213,12 +213,12 @@ export function Profile() {
               <span className="truncate">{user.email}</span>
             </div>
           )}
-          {memberSince && <p className="text-xs">Member since {memberSince}</p>}
+          {memberSince && <p className="text-xs text-[var(--gray-400)] mt-1">Member since {memberSince}</p>}
         </div>
       </div>
 
       {/* Role Switcher */}
-      <div className="bg-white px-4 py-4 mt-3 mb-3">
+      <div className="bg-white px-4 py-4 mt-3 mb-3 rounded-2xl shadow-sm border border-[var(--gray-100)]">
         <div className="flex items-center justify-between mb-2">
           <p className="text-sm font-semibold text-[var(--gray-900)]">Account role</p>
           {roleSaving && (
@@ -288,7 +288,7 @@ export function Profile() {
       </div>
 
       {/* Stats */}
-      <div className="bg-white p-4 mt-3 mb-3">
+      <div className="bg-white p-4 mt-3 mb-3 rounded-2xl shadow-sm border border-[var(--gray-100)]">
         {statsLoading ? (
           <div className="flex justify-center py-4">
             <Loader2 className="w-5 h-5 text-[var(--primary-700)] animate-spin" />
@@ -298,32 +298,32 @@ export function Profile() {
             <div className="text-center">
               <Package className="w-4 h-4 text-[var(--primary-800)] mx-auto mb-1" />
               <p className="text-2xl font-bold text-[var(--gray-900)]">{listingCount}</p>
-              <p className="text-xs text-[var(--gray-600)]">My Listings</p>
+              <p className="text-xs text-[var(--gray-500)]">My Listings</p>
             </div>
-            <div className="text-center border-l border-[#E0E0E0]">
-              <Star className="w-4 h-4 text-[#F5A623] fill-[#F5A623] mx-auto mb-1" />
+            <div className="text-center border-l border-[var(--gray-200)]">
+              <Star className="w-4 h-4 text-[var(--accent-500)] fill-[var(--accent-500)] mx-auto mb-1" />
               <p className="text-2xl font-bold text-[var(--gray-900)]">{user.is_verified ? "✓" : "—"}</p>
-              <p className="text-xs text-[var(--gray-600)]">{user.is_verified ? "Verified" : "Unverified"}</p>
+              <p className="text-xs text-[var(--gray-500)]">{user.is_verified ? "Verified" : "Unverified"}</p>
             </div>
           </div>
         ) : (
           <div className="grid grid-cols-2 gap-4">
             <div className="text-center">
-              <ShoppingBag className="w-4 h-4 text-[#4A90E2] mx-auto mb-1" />
-              <p className="text-2xl font-bold text-[#2C2C2C]">—</p>
-              <p className="text-xs text-[#757575]">Orders</p>
+              <ShoppingBag className="w-4 h-4 text-[var(--info)] mx-auto mb-1" />
+              <p className="text-2xl font-bold text-[var(--gray-900)]">—</p>
+              <p className="text-xs text-[var(--gray-500)]">Orders</p>
             </div>
-            <div className="text-center border-l border-[#E0E0E0]">
-              <Star className="w-4 h-4 text-[#F5A623] fill-[#F5A623] mx-auto mb-1" />
-              <p className="text-2xl font-bold text-[#2C2C2C]">{user.is_verified ? "✓" : "—"}</p>
-              <p className="text-xs text-[#757575]">{user.is_verified ? "Verified" : "Unverified"}</p>
+            <div className="text-center border-l border-[var(--gray-200)]">
+              <Star className="w-4 h-4 text-[var(--accent-500)] fill-[var(--accent-500)] mx-auto mb-1" />
+              <p className="text-2xl font-bold text-[var(--gray-900)]">{user.is_verified ? "✓" : "—"}</p>
+              <p className="text-xs text-[var(--gray-500)]">{user.is_verified ? "Verified" : "Unverified"}</p>
             </div>
           </div>
         )}
       </div>
 
       {/* Menu */}
-      <div className="bg-white divide-y divide-[#E0E0E0]">
+      <div className="bg-white divide-y divide-[var(--gray-100)] rounded-2xl shadow-sm border border-[var(--gray-100)] overflow-hidden mt-3 mb-3">
         {menuItems.map((item, index) => (
           <button
             key={index}
@@ -333,26 +333,26 @@ export function Profile() {
             <item.icon className="w-5 h-5 text-[var(--gray-500)]" />
             <span className="flex-1 text-[var(--gray-900)]">{item.label}</span>
             {"value" in item && item.value && (
-              <span className="text-sm text-[var(--gray-600)]">{item.value}</span>
+              <span className="text-sm text-[var(--gray-500)]">{item.value}</span>
             )}
-            <ChevronRight className="w-5 h-5 text-[var(--gray-500)]" />
+            <ChevronRight className="w-4 w-4 text-[var(--gray-400)]" />
           </button>
         ))}
       </div>
 
       {/* App Version */}
-      <div className="px-4 py-4 text-center">
-        <p className="text-xs text-[var(--gray-500)]">Village to Marketplace v1.0.0</p>
+      <div className="py-3 text-center">
+        <p className="text-xs text-[var(--gray-400)]">Village to Marketplace v1.0.0</p>
       </div>
 
       {/* Logout */}
-      <div className="px-4 pb-6">
+      <div className="pb-6">
         <button
           onClick={handleLogout}
-          className="w-full h-12 bg-white border-2 border-[#EF5350] text-[#EF5350] rounded-lg hover:bg-[#EF5350] hover:text-white transition-colors flex items-center justify-center gap-2 font-medium"
+          className="w-full h-12 bg-white border-2 border-[var(--error)] text-[var(--error)] rounded-xl hover:bg-[var(--error)] hover:text-white transition-colors flex items-center justify-center gap-2 font-medium"
         >
           <LogOut className="w-5 h-5" />
-          Logout
+          Sign Out
         </button>
       </div>
 
@@ -373,7 +373,7 @@ export function Profile() {
                 disabled={saving}
                 className="p-1 hover:bg-[var(--gray-100)] rounded-full"
               >
-                <X className="w-5 h-5 text-[#757575]" />
+                <X className="w-5 h-5 text-[var(--gray-500)]" />
               </button>
             </div>
 

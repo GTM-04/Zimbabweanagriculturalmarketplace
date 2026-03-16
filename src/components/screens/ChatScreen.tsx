@@ -253,7 +253,7 @@ export function ChatScreen() {
               {listingId && (
                 <button
                   onClick={() => navigate(`/product/${listingId}`)}
-                  className="text-xs text-[#4A90E2] font-medium hover:underline whitespace-nowrap"
+                  className="text-xs text-[var(--info)] font-medium hover:underline whitespace-nowrap"
                 >
                   View Listing
                 </button>
@@ -271,7 +271,7 @@ export function ChatScreen() {
           </div>
         ) : error ? (
           <div className="flex items-center justify-center h-full">
-            <p className="text-[#EF5350]">{error}</p>
+            <p className="text-[var(--error)]">{error}</p>
           </div>
         ) : (
           <>
@@ -292,7 +292,7 @@ export function ChatScreen() {
                       className={`rounded-2xl px-4 py-2 ${
                         isMe
                           ? "bg-[var(--accent-500)] text-white rounded-br-sm"
-                          : "bg-white text-[#2C2C2C] rounded-bl-sm"
+                          : "bg-white text-[var(--gray-900)] rounded-bl-sm"
                       }`}
                     >
                       <p className="text-sm leading-relaxed">{msg.text}</p>
@@ -301,7 +301,7 @@ export function ChatScreen() {
                       <span className="text-xs text-[var(--gray-500)]">{timestamp}</span>
                       {isMe && msg.is_read && <span className="text-xs text-[var(--gray-500)]"> • Read</span>}
                       {isMe && msg.id?.startsWith("offline-") && (
-                        <span className="flex items-center gap-0.5 text-[10px] text-[#FFA726]">
+                        <span className="flex items-center gap-0.5 text-[10px] text-[var(--accent-500)]">
                           <Clock className="w-3 h-3" /> Will sync when online
                         </span>
                       )}
@@ -316,9 +316,9 @@ export function ChatScreen() {
               <div className="flex justify-start">
                 <div className="bg-white rounded-2xl rounded-bl-sm px-4 py-2">
                   <div className="flex gap-1">
-                    <span className="w-2 h-2 bg-[#757575] rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></span>
-                    <span className="w-2 h-2 bg-[#757575] rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></span>
-                    <span className="w-2 h-2 bg-[#757575] rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></span>
+                    <span className="w-2 h-2 bg-[var(--gray-500)] rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></span>
+                    <span className="w-2 h-2 bg-[var(--gray-500)] rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></span>
+                    <span className="w-2 h-2 bg-[var(--gray-500)] rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></span>
                   </div>
                 </div>
               </div>
@@ -377,8 +377,8 @@ export function ChatScreen() {
               message.trim()
                 ? isOnline && connected
                   ? "bg-[var(--accent-500)] hover:bg-[var(--accent-600)] text-white"
-                  : "bg-[#FFA726] hover:bg-[#FB8C00] text-white"
-                : "bg-[#E0E0E0] text-[#757575] cursor-not-allowed"
+                  : "bg-[var(--warning-amber)] hover:bg-[var(--accent-600)] text-white"
+                : "bg-[var(--gray-200)] text-[var(--gray-500)] cursor-not-allowed"
             }`}
           >
             {isOnline && connected ? <Send className="w-5 h-5" /> : <Clock className="w-5 h-5" />}

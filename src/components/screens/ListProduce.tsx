@@ -606,7 +606,7 @@ export function ListProduce() {
 
             {/* Market price hint */}
             {marketPriceLoading && (
-              <p className="text-xs text-[#757575] mt-1 flex items-center gap-1">
+              <p className="text-xs text-[var(--gray-500)] mt-1 flex items-center gap-1">
                 <Loader2 className="w-3 h-3 animate-spin" />
                 Fetching live market price...
               </p>
@@ -624,12 +624,12 @@ export function ListProduce() {
                         <span className={`text-[10px] font-medium px-1.5 py-0.5 rounded-full ${
                           marketPriceIsLive
                             ? "bg-[var(--success)] text-white"
-                            : "bg-[#FFA726] text-[#2C2C2C]"
+                            : "bg-[var(--warning-amber)] text-[var(--gray-900)]"
                         }`}>
                           {marketPriceIsLive ? "Live" : "Estimated"}
                         </span>
                       </div>
-                      <p className="text-xs text-[#757575]">
+                      <p className="text-xs text-[var(--gray-500)]">
                         Avg: USD {marketPrice.price_avg.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}/{marketPrice.unit}
                         {marketPrice.district ? ` · ${marketPrice.district}` : ""}
                       </p>
@@ -648,7 +648,7 @@ export function ListProduce() {
               </div>
             )}
             {!marketPriceLoading && !marketPrice && formData.produce && (
-              <p className="text-xs text-[#757575] mt-1">No market price data available for this produce.</p>
+              <p className="text-xs text-[var(--gray-500)] mt-1">No market price data available for this produce.</p>
             )}
           </div>
 
@@ -739,7 +739,7 @@ export function ListProduce() {
                   onChange={(e) => setFormData({ ...formData, availableFrom: e.target.value })}
                   required
                 />
-                <Calendar className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-[#757575] pointer-events-none" />
+                <Calendar className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-[var(--gray-500)] pointer-events-none" />
               </div>
             </div>
 
@@ -753,7 +753,7 @@ export function ListProduce() {
                   onChange={(e) => setFormData({ ...formData, availableUntil: e.target.value })}
                   required
                 />
-                <Calendar className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-[#757575] pointer-events-none" />
+                <Calendar className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-[var(--gray-500)] pointer-events-none" />
               </div>
             </div>
           </div>

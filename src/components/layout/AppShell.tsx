@@ -1,4 +1,4 @@
-import { Sprout } from "lucide-react";
+import { BarChart3, Home, LayoutDashboard, List, LogOut, MessageCircle, Package, PlusCircle, Search, Sprout, TrendingUp, User } from "lucide-react";
 import { ReactNode, useMemo } from "react";
 import { useLocation, useNavigate } from "react-router";
 import { useAuth } from "../../lib/useAuth";
@@ -37,7 +37,7 @@ interface NavItem {
 }
 
 export function AppShell({ children, title, subtitle, userTypeOverride }: AppShellProps) {
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -45,25 +45,23 @@ export function AppShell({ children, title, subtitle, userTypeOverride }: AppShe
     userTypeOverride || (user?.user_type === "buyer" ? "buyer" : "farmer");
 
   const navItems = useMemo(() => {
-    const base: NavItem[] = [];
-
     if (userType === "farmer") {
       return [
-        { path: "/farmer/dashboard", label: "Dashboard", icon: Sprout },
-        { path: "/farmer/my-listings", label: "My Listings", icon: Sprout },
-        { path: "/farmer/list-produce", label: "List Produce", icon: Sprout },
-        { path: "/messages", label: "Messages", icon: Sprout },
-        { path: "/market-prices", label: "Market Prices", icon: Sprout },
-        { path: "/profile", label: "Profile", icon: Sprout },
+        { path: "/farmer/dashboard", label: "Dashboard", icon: LayoutDashboard },
+        { path: "/farmer/my-listings", label: "My Listings", icon: Package },
+        { path: "/farmer/list-produce", label: "List Produce", icon: PlusCircle },
+        { path: "/messages", label: "Messages", icon: MessageCircle },
+        { path: "/market-prices", label: "Market Prices", icon: TrendingUp },
+        { path: "/profile", label: "Profile", icon: User },
       ] as NavItem[];
     }
 
     return [
-      { path: "/buyer/dashboard", label: "Explore", icon: Sprout },
-      { path: "/buyer/search", label: "Search", icon: Sprout },
-      { path: "/market-prices", label: "Market Prices", icon: Sprout },
-      { path: "/messages", label: "Messages", icon: Sprout },
-      { path: "/profile", label: "Profile", icon: Sprout },
+      { path: "/buyer/dashboard", label: "Explore", icon: Home },
+      { path: "/buyer/search", label: "Search", icon: Search },
+      { path: "/market-prices", label: "Market Prices", icon: BarChart3 },
+      { path: "/messages", label: "Messages", icon: MessageCircle },
+      { path: "/profile", label: "Profile", icon: User },
     ] as NavItem[];
   }, [userType]);
 
@@ -145,11 +143,15 @@ export function AppShell({ children, title, subtitle, userTypeOverride }: AppShe
                 {user?.district || "Zimbabwe"}
               </p>
             </div>
+            <button
+              type="button"
+              title="Sign out"
+              onClick={async () => { await Promise.resolve(logout()); navigate("/login"); }}
+              className="flex h-8 w-8 items-center justify-center rounded-md hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-colors"
+            >
+              <LogOut className="h-4 w-4" />
+            </button>
           </div>
-          <p className="px-3 pt-1 text-[10px] text-muted-foreground/80">
-            Press <span className="rounded bg-muted px-1 py-0.5 font-mono text-[10px]">Ctrl/Cmd + B</span> to toggle
-            sidebar.
-          </p>
         </SidebarFooter>
       </Sidebar>
 

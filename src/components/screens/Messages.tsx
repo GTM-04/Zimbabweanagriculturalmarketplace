@@ -1,4 +1,4 @@
-import { ArrowLeft, Loader2, MessageCircle, Search, WifiOff } from "lucide-react";
+import { Loader2, MessageCircle, Search, WifiOff } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router";
 import { messagingApi } from "../../lib/api";
@@ -85,42 +85,23 @@ export function Messages() {
         </div>
       )}
 
-      {/* Header */}
-      <div className="sticky top-0 bg-white border-b border-[var(--gray-200)] z-10 shadow-sm">
-        <div className="px-4 py-4 flex items-center gap-3">
-          <button
-            onClick={() => navigate(-1)}
-            className="p-2 hover:bg-[var(--gray-100)] rounded-full transition-colors"
-          >
-            <ArrowLeft className="w-5 h-5 text-[var(--gray-800)]" />
-          </button>
-          <h1
-            className="flex-1 text-[var(--gray-900)]"
-            style={{ fontFamily: "var(--font-heading)", fontSize: "1.4rem", fontWeight: 800 }}
-          >
-            Messages
-          </h1>
-          {loading && <Loader2 className="w-5 h-5 text-[var(--primary-700)] animate-spin" />}
-        </div>
-
-        {/* Search */}
-        <div className="px-4 pb-4">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-[var(--gray-500)]" />
-            <input
-              type="text"
-              placeholder="Search conversations…"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full h-10 pl-10 pr-4 bg-[var(--gray-50)] border border-[var(--gray-200)] rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--accent-600)] focus:border-transparent text-sm"
-            />
-          </div>
+      {/* Search */}
+      <div className="mb-4">
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--gray-500)]" />
+          <input
+            type="text"
+            placeholder="Search conversations…"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="w-full h-10 pl-9 pr-4 bg-[var(--gray-50)] border border-[var(--gray-200)] rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--accent-600)] focus:border-transparent text-sm"
+          />
         </div>
       </div>
 
       {/* Fallback notice */}
       {isOnline && usingFallback && !loading && (
-        <div className="px-4 py-2 bg-[#FFF8E1] border-b border-[#FFE082] text-xs text-[#856404]">
+        <div className="px-4 py-2 bg-[var(--gray-50)] border-b border-[var(--gray-200)] text-xs text-[var(--gray-700)]">
           ⚠️ Could not load conversations from server — showing demo data.
         </div>
       )}
@@ -154,20 +135,20 @@ export function Messages() {
           )}
         </div>
       ) : (
-        <div className="divide-y divide-[var(--gray-200)]">
+        <div className="space-y-2">
           {filtered.map((conversation) => (
             <button
               key={conversation.id}
               onClick={() => navigate(`/messages/${conversation.id}`)}
-              className="w-full bg-white hover:bg-[var(--gray-50)] transition-colors p-4 flex items-center gap-3 text-left"
+              className="w-full bg-white hover:bg-[var(--gray-50)] transition-colors p-4 flex items-center gap-3 text-left rounded-xl border border-[var(--gray-100)] shadow-sm"
             >
               {/* Avatar */}
               <div className="relative flex-shrink-0">
-                <div className="w-12 h-12 rounded-full bg-[var(--primary-700)] flex items-center justify-center text-white font-semibold">
+                <div className="w-12 h-12 rounded-full bg-[var(--primary-700)] flex items-center justify-center text-white font-semibold text-base">
                   {conversation.other_user.name[0]}
                 </div>
                 {conversation.unread_count > 0 && (
-                  <span className="absolute -top-0.5 -right-0.5 w-5 h-5 bg-[#4A90E2] rounded-full flex items-center justify-center text-[10px] text-white font-bold">
+                  <span className="absolute -top-0.5 -right-0.5 w-5 h-5 bg-[var(--info)] rounded-full flex items-center justify-center text-[10px] text-white font-bold">
                     {conversation.unread_count > 9 ? "9+" : conversation.unread_count}
                   </span>
                 )}
@@ -176,14 +157,14 @@ export function Messages() {
               {/* Content */}
               <div className="flex-1 min-w-0">
                 <div className="flex items-center justify-between gap-2 mb-0.5">
-                  <h3 className={`font-semibold truncate ${conversation.unread_count > 0 ? "text-[var(--gray-900)]" : "text-[var(--gray-600)]"}`}>
+                  <h3 className={`text-sm font-semibold truncate ${conversation.unread_count > 0 ? "text-[var(--gray-900)]" : "text-[var(--gray-700)]"}`}>
                     {conversation.other_user.name}
                   </h3>
-                  <span className="text-xs text-[var(--gray-500)] whitespace-nowrap flex-shrink-0">
+                  <span className="text-[11px] text-[var(--gray-400)] whitespace-nowrap flex-shrink-0">
                     {formatTime(conversation.last_message_at)}
                   </span>
                 </div>
-                <p className={`text-sm truncate ${conversation.unread_count > 0 ? "text-[var(--gray-900)] font-medium" : "text-[var(--gray-600)]"}`}>
+                <p className={`text-xs truncate ${conversation.unread_count > 0 ? "text-[var(--gray-800)] font-medium" : "text-[var(--gray-500)]"}`}>
                   {conversation.last_message ?? "Start a conversation"}
                 </p>
               </div>

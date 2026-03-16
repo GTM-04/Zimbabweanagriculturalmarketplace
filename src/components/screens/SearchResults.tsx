@@ -103,9 +103,9 @@ export function SearchResults() {
         <div className="px-4 py-3 flex items-center gap-3">
           <button
             onClick={() => navigate(-1)}
-            className="p-2 hover:bg-[#F5F5F5] rounded-full transition-colors"
+            className="p-2 hover:bg-[var(--gray-100)] rounded-full transition-colors"
           >
-            <ArrowLeft className="w-5 h-5 text-[#2C2C2C]" />
+            <ArrowLeft className="w-5 h-5 text-[var(--gray-900)]" />
           </button>
           
           {/* Search Input */}
@@ -144,7 +144,7 @@ export function SearchResults() {
                 viewMode === "grid" ? "bg-white shadow-sm" : "hover:bg-[var(--gray-100)]"
               }`}
             >
-              <Grid className="w-4 h-4 text-[#2C2C2C]" />
+              <Grid className="w-4 h-4 text-[var(--gray-900)]" />
             </button>
             <button
               onClick={() => setViewMode("list")}
@@ -152,7 +152,7 @@ export function SearchResults() {
                 viewMode === "list" ? "bg-white shadow-sm" : "hover:bg-[var(--gray-100)]"
               }`}
             >
-              <ListIcon className="w-4 h-4 text-[#2C2C2C]" />
+              <ListIcon className="w-4 h-4 text-[var(--gray-900)]" />
             </button>
           </div>
         </div>
@@ -179,7 +179,7 @@ export function SearchResults() {
       {/* Results */}
       <div className="p-4 space-y-4">
         {!isOnline && (
-          <div className="mb-4 rounded-xl border border-[#FFD28A] bg-[#FFF6E6] px-4 py-3 text-xs text-[#7A4A00]">
+          <div className="mb-4 rounded-xl border border-[var(--accent-200)] bg-[var(--accent-50)] px-4 py-3 text-xs text-[var(--gray-800)]">
             You are offline. Searching cached listings only.
           </div>
         )}

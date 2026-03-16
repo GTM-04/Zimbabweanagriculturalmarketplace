@@ -196,13 +196,13 @@ export function WelcomeScreen() {
                 <div className="stat-number text-[2.2rem]" style={{ backgroundImage: "var(--gradient-primary)" }}>
                   24k+
                 </div>
-                <div className="stat-label">Active farmers</div>
+                <div className="stat-label text-sm">Active farmers</div>
               </div>
               <div className="card">
                 <div className="stat-number text-[2.2rem]" style={{ backgroundImage: "var(--gradient-accent)" }}>
                   3.8k
                 </div>
-                <div className="stat-label">Active buyers</div>
+                <div className="stat-label text-sm">Active buyers</div>
               </div>
               <div className="card">
                 <div
@@ -211,7 +211,7 @@ export function WelcomeScreen() {
                 >
                   10
                 </div>
-                <div className="stat-label">Provinces</div>
+                <div className="stat-label text-sm">Provinces</div>
               </div>
               <div className="card">
                 <div
@@ -220,7 +220,7 @@ export function WelcomeScreen() {
                 >
                   99.8%
                 </div>
-                <div className="stat-label">Target uptime</div>
+                <div className="stat-label text-sm">Target uptime</div>
               </div>
             </div>
           </div>

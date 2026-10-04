@@ -1,0 +1,12 @@
+{
+  "outputDirectory": "build",
+  "rewrites": [
+    { "source": "/(.*)", "destination": "/index.html" }
+  ],
+  "build": {
+    "env": {
+      "VITE_API_URL": "https://villagetomarketbackend-production.up.railway.app/api/v1",
+      "VITE_WS_URL": "wss://villagetomarketbackend-production.up.railway.app/ws"
+    }
+  }
+}
